@@ -684,4 +684,8 @@ let pulling = null;
 window.addEventListener('resize', () => emit('overlay:resize', { width: innerWidth, height: innerHeight, gap: 0 }));
 
 // she's up: Kotlin can show her (the WebView stays hidden until the page has drawn once)
-ready.then(() => requestAnimationFrame(() => requestAnimationFrame(() => send('overlay:ready'))));
+ready.then(() => setTimeout(() => send('overlay:ready'), 0));
+
+// her page's errors, to the app's screen (MainActivity), so a phone with no developer tools can tell
+window.addEventListener('error', (e) => send('log', { level: 'E', text: `${e.message} (${String(e.filename).split('/').pop()}:${e.lineno})` }));
+window.addEventListener('unhandledrejection', (e) => send('log', { level: 'E', text: `unhandled: ${e.reason?.stack || e.reason}` }));

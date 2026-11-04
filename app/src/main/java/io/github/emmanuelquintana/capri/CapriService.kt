@@ -45,12 +45,19 @@ class CapriService : Service() {
         visible = bridge.store.configFlag("visible", true)
         createChannel()
         startForegroundCompat()
+        Diag.add("I", "service started (Android ${Build.VERSION.RELEASE}, API ${Build.VERSION.SDK_INT})")
         if (!Settings.canDrawOverlays(this)) {
+            Diag.add("E", "no permission to show over other apps")
             // no right to be on top: the app asks for it (MainActivity), she starts from there
             stopSelf()
             return
         }
-        overlay = Overlay(this, bridge).also { it.show() }
+        overlay = try {
+            Overlay(this, bridge).also { it.show() }
+        } catch (e: Exception) {
+            Diag.add("E", "her window could not open: ${e.message}")
+            null
+        }
         hooks = HookServer(assets) { evt -> overlay?.emit("claude:event", evt) }.also { it.start() }
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -92,6 +99,7 @@ class CapriService : Service() {
 
     override fun onDestroy() {
         running = false
+        Diag.add("I", "service stopped")
         try { unregisterReceiver(screen) } catch (_: Exception) {}
         hooks?.stop()
         overlay?.destroy()

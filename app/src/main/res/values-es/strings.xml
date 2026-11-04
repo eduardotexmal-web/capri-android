@@ -10,12 +10,21 @@
     <string name="action_show">Traerla</string>
     <string name="action_quit">Salir</string>
     <string name="main_intro">Capri vive encima de tus apps y te cuenta lo que hace Claude Code, Codex o Antigravity (en Termux en este teléfono, o en tu PC por Wi-Fi).</string>
-    <string name="main_overlay">1. Dejar que se muestre sobre otras apps</string>
-    <string name="main_notify">2. Dejar que muestre su notificación</string>
     <string name="main_start">Iniciar Capri</string>
     <string name="main_stop">Detener Capri</string>
     <string name="main_ok">Listo</string>
-    <string name="main_running">Está en tu pantalla. Mantén pulsado sobre ella para abrir su menú.</string>
     <string name="main_license">Port no oficial para Android de capri-desktop de mochiiwuff. Gratis, nunca a la venta (PolyForm Noncommercial 1.0.0). Capri, Cyberpunk y Cyberpunk: Edgerunners pertenecen a CD PROJEKT RED, Studio Trigger y Netflix.</string>
     <string name="hooks_copied">Comando copiado. Pégalo en Termux y pulsa Enter.</string>
+    <string name="main_overlay">Mostrarse sobre otras apps</string>
+    <string name="main_notify">Mostrar su notificación</string>
+    <string name="main_running">Está en tu pantalla. Mantén pulsado sobre ella para abrir su menú.</string>
+    <string name="main_status_on">EN LÍNEA</string>
+    <string name="main_status_off">DESCONECTADA</string>
+    <string name="main_idle">Da los dos permisos y luego iníciala.</string>
+    <string name="main_granted">CONCEDIDO</string>
+    <string name="main_grant">CONCEDER</string>
+    <string name="main_log">Registro</string>
+    <string name="main_log_empty">Nada todavía. Si no aparece, aquí sale lo que falló.</string>
+    <string name="main_copy">Copiar</string>
+    <string name="main_copied">Registro copiado</string>
 </resources>

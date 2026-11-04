@@ -3,7 +3,7 @@
 //
 //   node tools/preview/run.mjs [out dir]
 //
-// Served from https://capri.local like the app serves it (HostBridge.kt), so paths match.
+// Served from https://appassets.androidplatform.net like the app serves it (HostBridge.kt), so paths match.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,7 +24,7 @@ const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable
 const context = await browser.newContext({
   viewport: { width: 412, height: 915 }, deviceScaleFactor: 1, isMobile: false, hasTouch: true, locale: 'es-ES',
 });
-await context.route('https://capri.local/**', (route) => {
+await context.route('https://appassets.androidplatform.net/**', (route) => {
   const rel = decodeURIComponent(new URL(route.request().url()).pathname);
   const file = path.join(ASSETS, rel);
   if (!file.startsWith(ASSETS) || !fs.existsSync(file)) return route.fulfill({ status: 404, body: 'not found' });
@@ -39,7 +39,7 @@ page.on('console', (msg) => {
   if (['error', 'warning'].includes(msg.type())) errors.push(`${msg.type()}: ${msg.text()}`);
 });
 // a phone's wallpaper behind her, as the overlay sits over your apps
-await page.goto('https://capri.local/capri/src/renderer/index.html');
+await page.goto('https://appassets.androidplatform.net/capri/src/renderer/index.html');
 await page.evaluate(() => { document.documentElement.style.background = 'linear-gradient(160deg, #2b3a55, #13131c)'; });
 
 const shot = async (name, wait = 0) => {

@@ -13,6 +13,7 @@ import java.util.concurrent.Executors
  */
 class HostBridge(private val service: CapriService) {
     val store = Store(service)
+    val log = Diag
     private val actions = Actions(service, store)
     private val fetch = NativeFetch { channel, json -> service.overlay?.emit(channel, json) }
     private val worker = Executors.newSingleThreadExecutor()
@@ -25,7 +26,10 @@ class HostBridge(private val service: CapriService) {
                 val result = handle(method, args)
                 service.overlay?.reply(id, true, if (result == null || result == Unit) "null" else toJson(result))
             } catch (e: Exception) {
-                if (e !is Actions.Unsupported) Log.w("capri", "$method failed: ${e.message}")
+                if (e !is Actions.Unsupported) {
+                    Log.w("capri", "$method failed: ${e.message}")
+                    log.add("W", "$method: ${e.message}")
+                }
                 service.overlay?.reply(id, false, JSONObject().put("error", e.message ?: e.javaClass.simpleName).toString())
             }
         }
@@ -51,6 +55,7 @@ class HostBridge(private val service: CapriService) {
 
         // her window
         "overlay:ready" -> service.overlay?.ready()
+        "log" -> log.add(obj(args).optString("level", "E"), obj(args).optString("text"))
         "overlay:focus" -> service.overlay?.setFocusable(obj(args).optBoolean("on"))
         "touch:regions" -> service.overlay?.setRegions(obj(args).optJSONArray("rects") ?: JSONArray(), obj(args).optDouble("dpr", 1.0))
         "notify:update" -> service.refreshNotification()

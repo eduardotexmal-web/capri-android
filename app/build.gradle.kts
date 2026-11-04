@@ -12,9 +12,11 @@ android {
         minSdk = 26
         targetSdk = 35
         // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
-        versionCode = 501
-        versionName = "0.5.1-android.1"
+        versionCode = 502
+        versionName = "0.5.1-android.2"
     }
+
+    buildFeatures { buildConfig = true }
 
     // CI signs with a key from secrets when there is one (updates then install over each other);
     // otherwise with the debug key, which is fine to sideload

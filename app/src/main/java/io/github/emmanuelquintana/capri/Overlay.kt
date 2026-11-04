@@ -73,11 +73,24 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
             }
 
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = request.url.host != HOST
+
+            override fun onPageFinished(view: WebView, url: String) {
+                bridge.log.add("I", "page loaded")
+            }
+
+            override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+                // her page crashed or was killed for memory: a fresh one, not the whole app going down
+                bridge.log.add("E", "renderer gone (crash: ${detail.didCrash()})")
+                main.post { destroy(); main.postDelayed({ show() }, 500) }
+                return true
+            }
         }
         web.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(m: ConsoleMessage): Boolean {
-                Log.println(if (m.messageLevel() == ConsoleMessage.MessageLevel.ERROR) Log.ERROR else Log.DEBUG,
-                    "capri-js", "${m.message()} (${m.sourceId().substringAfterLast('/')}:${m.lineNumber()})")
+                val line = "${m.message()} (${m.sourceId().substringAfterLast('/')}:${m.lineNumber()})"
+                val error = m.messageLevel() == ConsoleMessage.MessageLevel.ERROR
+                Log.println(if (error) Log.ERROR else Log.DEBUG, "capri-js", line)
+                if (error || m.messageLevel() == ConsoleMessage.MessageLevel.WARNING) bridge.log.add(if (error) "E" else "W", line)
                 return true
             }
         }
@@ -102,12 +115,14 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) alpha = MAX_PASSTHROUGH_ALPHA
         }
         params = p
-        web.visibility = View.INVISIBLE // until her page has drawn once (overlay:ready)
+        // shown from the start: a hidden WebView gets no animation frames, and her page waits on them
         wm.addView(web, p)
         web.loadUrl("https://$HOST/capri/src/renderer/index.html")
     }
 
-    fun ready() = main.post { webView?.visibility = View.VISIBLE }
+    fun ready() {
+        bridge.log.add("I", "her page is up")
+    }
 
     /** Typing to her: the overlay takes the keyboard while her chat is open, and gives it back. */
     fun setFocusable(on: Boolean) = main.post {
@@ -277,7 +292,8 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     }
 
     companion object {
-        const val HOST = "capri.local"
+        // the host Android reserves for an app's own files in a WebView (never a real site)
+        const val HOST = "appassets.androidplatform.net"
         private const val MAX_PADS = 6
         private const val MAX_PASSTHROUGH_ALPHA = 0.8f
     }
