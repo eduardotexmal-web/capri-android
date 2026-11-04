@@ -1,0 +1,60 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
+android {
+    namespace = "io.github.emmanuelquintana.capri"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "io.github.emmanuelquintana.capri"
+        minSdk = 26
+        targetSdk = 35
+        // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
+        versionCode = 501
+        versionName = "0.5.1-android.1"
+    }
+
+    signingConfigs {
+        // CI signs with a key from secrets when there is one; otherwise the debug key (fine to sideload)
+        create("release") {
+            val store = System.getenv("CAPRI_KEYSTORE")
+            if (store != null && file(store).exists()) {
+                storeFile = file(store)
+                storePassword = System.getenv("CAPRI_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CAPRI_KEY_ALIAS")
+                keyPassword = System.getenv("CAPRI_KEY_PASSWORD")
+            } else {
+                initWith(getByName("debug"))
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    lint {
+        // the report is kept as a CI artifact; a warning doesn't stop the APK
+        abortOnError = false
+    }
+
+    androidResources {
+        // her pictures are already compressed (png, webp): stored as is, read straight from the APK
+        noCompress += listOf("png", "webp", "woff2")
+    }
+}

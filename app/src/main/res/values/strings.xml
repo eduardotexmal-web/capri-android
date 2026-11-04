@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Capri</string>
+    <string name="channel_name">Capri on your screen</string>
+    <string name="channel_desc">Keeps Capri running and holds her menu.</string>
+    <string name="notify_title">Capri is online</string>
+    <string name="notify_text">Listening for Claude Code on 127.0.0.1:%1$d</string>
+    <string name="notify_text_hidden">Put away in her biochip</string>
+    <string name="action_menu">Menu</string>
+    <string name="action_hide">Put away</string>
+    <string name="action_show">Bring back</string>
+    <string name="action_quit">Quit</string>
+    <string name="main_intro">Capri lives on top of your apps and tells you what Claude Code, Codex or Antigravity is doing (in Termux on this phone, or on your PC through Wi-Fi).</string>
+    <string name="main_overlay">1. Let her show over other apps</string>
+    <string name="main_notify">2. Let her show her notification</string>
+    <string name="main_start">Start Capri</string>
+    <string name="main_stop">Stop Capri</string>
+    <string name="main_ok">Done</string>
+    <string name="main_running">She is on your screen. Long-press her for her menu.</string>
+    <string name="main_license">Unofficial Android port of capri-desktop by mochiiwuff. Free, never for sale (PolyForm Noncommercial 1.0.0). Capri, Cyberpunk and Cyberpunk: Edgerunners belong to CD PROJEKT RED, Studio Trigger and Netflix.</string>
+    <string name="hooks_copied">Command copied. Paste it in Termux and press Enter.</string>
+    <string name="tile_label" translatable="false">Capri</string>
+</resources>
