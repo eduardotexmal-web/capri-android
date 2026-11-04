@@ -120,6 +120,13 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         web.loadUrl("https://$HOST/capri/src/renderer/index.html")
     }
 
+    /** The screen turned: her window laid out again at the new size (it fills the screen either way). */
+    fun turned() = main.post {
+        val web = webView ?: return@post
+        val p = params ?: return@post
+        try { wm.updateViewLayout(web, p) } catch (_: Exception) {}
+    }
+
     fun ready() {
         bridge.log.add("I", "her page is up")
     }
