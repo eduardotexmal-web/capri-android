@@ -16,17 +16,16 @@ android {
         versionName = "0.5.1-android.1"
     }
 
+    // CI signs with a key from secrets when there is one (updates then install over each other);
+    // otherwise with the debug key, which is fine to sideload
+    val releaseKey = System.getenv("CAPRI_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
     signingConfigs {
-        // CI signs with a key from secrets when there is one; otherwise the debug key (fine to sideload)
-        create("release") {
-            val store = System.getenv("CAPRI_KEYSTORE")
-            if (store != null && file(store).exists()) {
-                storeFile = file(store)
+        if (releaseKey != null) {
+            create("release") {
+                storeFile = releaseKey
                 storePassword = System.getenv("CAPRI_KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("CAPRI_KEY_ALIAS")
                 keyPassword = System.getenv("CAPRI_KEY_PASSWORD")
-            } else {
-                initWith(getByName("debug"))
             }
         }
     }
@@ -36,7 +35,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName(if (releaseKey != null) "release" else "debug")
         }
     }
 
