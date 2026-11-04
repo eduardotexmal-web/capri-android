@@ -41,6 +41,7 @@ class MainActivity : Activity() {
     private lateinit var notifyStep: Step
     private lateinit var startBtn: TextView
     private lateinit var logText: TextView
+    private lateinit var aiText: TextView
 
     private val density get() = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
@@ -122,6 +123,26 @@ class MainActivity : Activity() {
         }
         col.addView(startBtn, block(top = 22))
 
+        // her AI: who answers her, and her own setup panel (no terminal)
+        val ai = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = Hud.Plate(Hud.INK_2, Hud.CYAN, cut = dp(10f), stroke = dp(1f), offset = 0f)
+            setPadding(dpi(14), dpi(12), dpi(14), dpi(14))
+        }
+        ai.addView(text("// " + getString(R.string.main_ai).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f })
+        aiText = text("", 16f, Hud.PAPER, headFont)
+        ai.addView(aiText, block(top = 4))
+        ai.addView(text(getString(R.string.main_ai_how), 13f, Hud.PAPER_2, bodyFont).apply { setLineSpacing(0f, 1.15f) }, block(top = 4))
+        ai.addView(text(getString(R.string.main_ai_pick).uppercase() + " ›", 13f, Hud.INK, monoFont).apply {
+            letterSpacing = 0.1f
+            gravity = Gravity.CENTER
+            setPadding(dpi(12), dpi(10), dpi(12), dpi(10))
+            background = Hud.Plate(Hud.CYAN, Hud.YELLOW, cut = dp(8f), stroke = 0f, offset = 0f)
+            isClickable = true
+            setOnClickListener { pickAi() }
+        }, block(top = 12))
+        col.addView(ai, block(top = 18))
+
         // the log: what went wrong lately
         val logHead = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         logHead.addView(text("// " + getString(R.string.main_log).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f },
@@ -184,7 +205,21 @@ class MainActivity : Activity() {
         startBtn.setTextColor(if (running) Hud.YELLOW else Hud.INK)
         startBtn.background = if (running) Hud.Plate(Hud.INK, Hud.YELLOW, Hud.RED, cut = dp(16f), stroke = dp(2f), offset = dp(5f))
         else Hud.Plate(Hud.YELLOW, Hud.YELLOW, Hud.CYAN, cut = dp(16f), stroke = 0f, offset = dp(5f))
+        aiText.text = when (val p = Store(this).configString("provider") ?: "pollinations") {
+            "pollinations" -> getString(R.string.main_ai_free)
+            "ollama" -> getString(R.string.main_ai_pc)
+            "custom" -> getString(R.string.main_ai_custom)
+            else -> AI_NAMES[p] ?: p
+        }
         showLog()
+    }
+
+    /** Her setup panel, over whatever is on screen: she starts first if she isn't on yet. */
+    private fun pickAi() {
+        if (!Settings.canDrawOverlays(this)) return
+        if (CapriService.running) CapriService.send(this, CapriService.ACTION_SETUP)
+        else CapriService.start(this, CapriService.ACTION_SETUP)
+        moveTaskToBack(true)
     }
 
     private fun showLog() {
@@ -239,4 +274,11 @@ class MainActivity : Activity() {
     }
 
     private fun block(top: Int) = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dpi(top) }
+
+    companion object {
+        private val AI_NAMES = mapOf(
+            "groq" to "Groq", "gemini" to "Google Gemini", "openrouter" to "OpenRouter",
+            "openai" to "OpenAI", "mistral" to "Mistral", "deepseek" to "DeepSeek", "claude" to "Claude Code",
+        )
+    }
 }

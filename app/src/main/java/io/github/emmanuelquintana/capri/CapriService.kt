@@ -73,8 +73,19 @@ class CapriService : Service() {
             ACTION_MENU -> command("menu")
             ACTION_TOGGLE -> command("toggle")
             ACTION_QUIT -> quit()
+            ACTION_SETUP -> if (pageReady) command("setupChat") else queued = "setupChat"
         }
         return START_STICKY
+    }
+
+    // a command for her page from the app's screen, held until her page is up
+    @Volatile private var pageReady = false
+    @Volatile private var queued: String? = null
+
+    fun onPageReady() {
+        pageReady = true
+        // after her intro, so her panel doesn't land on top of her first hello
+        queued?.let { queued = null; android.os.Handler(mainLooper).postDelayed({ command(it) }, 6000) }
     }
 
     private fun command(name: String) = overlay?.emit("capri:command", JSONObject().put("name", name).toString())
@@ -156,9 +167,10 @@ class CapriService : Service() {
         const val ACTION_MENU = "capri.MENU"
         const val ACTION_TOGGLE = "capri.TOGGLE"
         const val ACTION_QUIT = "capri.QUIT"
+        const val ACTION_SETUP = "capri.SETUP"
 
-        fun start(context: Context) {
-            context.startForegroundService(Intent(context, CapriService::class.java))
+        fun start(context: Context, action: String? = null) {
+            context.startForegroundService(Intent(context, CapriService::class.java).setAction(action))
         }
 
         fun send(context: Context, action: String) {

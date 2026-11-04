@@ -29,4 +29,10 @@
     <string name="main_log_empty">Nothing yet. If she does not show up, what went wrong appears here.</string>
     <string name="main_copy">Copy</string>
     <string name="main_copied">Log copied</string>
+    <string name="main_ai">Her AI</string>
+    <string name="main_ai_pick">Choose her AI</string>
+    <string name="main_ai_free">Free online, no account</string>
+    <string name="main_ai_pc">Ollama on your PC</string>
+    <string name="main_ai_custom">Your own server</string>
+    <string name="main_ai_how">Opens her panel over your screen: free with no account, a key (Groq and Gemini are free), or your PC\'s Ollama over Wi-Fi. No terminal.</string>
 </resources>

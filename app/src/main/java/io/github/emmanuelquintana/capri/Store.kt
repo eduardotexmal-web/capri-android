@@ -35,6 +35,13 @@ class Store(private val context: Context) {
         tmp.renameTo(File(dir, name))
     }
 
+    /** A text setting straight from config.json (the app's screen: who answers her). */
+    fun configString(key: String): String? = try {
+        org.json.JSONObject(read(CONFIG) ?: "{}").optString(key).ifEmpty { null }
+    } catch (_: Exception) {
+        null
+    }
+
     /** A setting straight from config.json, for the Kotlin side (boot, notification). */
     fun configFlag(key: String, default: Boolean): Boolean = try {
         val json = org.json.JSONObject(read(CONFIG) ?: "{}")

@@ -54,7 +54,7 @@ class HostBridge(private val service: CapriService) {
         "device:info" -> actions.deviceInfo()
 
         // her window
-        "overlay:ready" -> service.overlay?.ready()
+        "overlay:ready" -> { service.overlay?.ready(); service.onPageReady() }
         "log" -> log.add(obj(args).optString("level", "E"), obj(args).optString("text"))
         "overlay:focus" -> service.overlay?.setFocusable(obj(args).optBoolean("on"))
         "touch:regions" -> service.overlay?.setRegions(obj(args).optJSONArray("rects") ?: JSONArray(), obj(args).optDouble("dpr", 1.0))

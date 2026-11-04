@@ -27,4 +27,10 @@
     <string name="main_log_empty">Nada todavía. Si no aparece, aquí sale lo que falló.</string>
     <string name="main_copy">Copiar</string>
     <string name="main_copied">Registro copiado</string>
+    <string name="main_ai">Su IA</string>
+    <string name="main_ai_pick">Elegir su IA</string>
+    <string name="main_ai_free">Gratis en línea, sin cuenta</string>
+    <string name="main_ai_pc">Ollama de tu PC</string>
+    <string name="main_ai_custom">Tu propio servidor</string>
+    <string name="main_ai_how">Abre su panel sobre tu pantalla: gratis sin cuenta, con una clave (Groq y Gemini son gratis) o el Ollama de tu PC por Wi-Fi. Sin terminal.</string>
 </resources>

@@ -17,6 +17,7 @@ import './upstream/demo-sequence.js';
 import './upstream/launch.js';
 import { Menu } from './menu.js';
 import { Touch } from './touch.js';
+import './setup.js'; // her setup without a terminal (before app.js builds it)
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -609,7 +610,17 @@ window.host = {
   }),
   ollamaState: after(async () => {
     const models = await ollama.models().catch(() => null);
-    return { running: Boolean(models), installed: Boolean(models) || device.termux, models, winget: false };
+    return { running: Boolean(models), installed: Boolean(models), models, winget: false };
+  }),
+  // your PC's Ollama, by its IP (setup.js on Android): kept only if it answers there
+  setOllamaHost: after(async (address) => {
+    let host = String(address || '').trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (host && !/:\d+$/.test(host)) host += ':11434';
+    const before = cfg.ollamaHost;
+    updateConfig({ ollamaHost: host });
+    const models = await ollama.models().catch(() => null);
+    if (!models) updateConfig({ ollamaHost: before });
+    return { running: Boolean(models), host };
   }),
   // Ollama on a phone runs in Termux: the command to get it goes on your clipboard
   installOllama: ask('ollama:install', (err) => ({ ok: false, error: err.message })),
