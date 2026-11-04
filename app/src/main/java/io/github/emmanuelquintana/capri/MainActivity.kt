@@ -43,6 +43,10 @@ class MainActivity : Activity() {
     private lateinit var startBtn: TextView
     private lateinit var logText: TextView
     private lateinit var aiText: TextView
+    private lateinit var updateText: TextView
+    private lateinit var updateBtn: TextView
+    private var release: Updater.Release? = null
+    private var downloading = false
 
     private val density get() = resources.displayMetrics.density
     private fun dp(v: Float) = v * density
@@ -148,6 +152,27 @@ class MainActivity : Activity() {
         }, block(top = 12))
         col.addView(ai, block(top = 18))
 
+        // updates, from the repo's releases
+        updateText = text("", 13f, Hud.PAPER_2, monoFont).apply { letterSpacing = 0.04f }
+        updateBtn = text("", 13f, Hud.INK, monoFont).apply {
+            letterSpacing = 0.1f
+            gravity = Gravity.CENTER
+            setPadding(dpi(12), dpi(10), dpi(12), dpi(10))
+            background = Hud.Plate(Hud.YELLOW, Hud.CYAN, cut = dp(8f), stroke = 0f, offset = 0f)
+            isClickable = true
+            visibility = View.GONE
+            setOnClickListener { update() }
+        }
+        val upd = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = Hud.Plate(Hud.INK_2, Hud.LINE_STRONG, cut = dp(10f), stroke = dp(1f), offset = 0f)
+            setPadding(dpi(14), dpi(12), dpi(14), dpi(14))
+            addView(text("// " + getString(R.string.update_head).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f })
+            addView(updateText, block(top = 6))
+            addView(updateBtn, block(top = 10))
+        }
+        col.addView(upd, block(top = 18))
+
         // the log: what went wrong lately
         val logHead = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         logHead.addView(text("// " + getString(R.string.main_log).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f },
@@ -183,6 +208,7 @@ class MainActivity : Activity() {
         super.onResume()
         Diag.onChange = { runOnUiThread { showLog() } }
         refresh()
+        checkUpdate()
     }
 
     override fun onPause() {
@@ -218,6 +244,62 @@ class MainActivity : Activity() {
             else -> AI_NAMES[p] ?: p
         }
         showLog()
+    }
+
+    private fun checkUpdate() {
+        if (downloading) return
+        if (release == null) updateText.text = getString(R.string.update_checking)
+        Thread {
+            val r = Updater.latest()
+            runOnUiThread { showUpdate(r) }
+        }.start()
+    }
+
+    private fun showUpdate(r: Updater.Release?) {
+        if (downloading) return
+        release = r?.takeIf { Updater.isNewer(it.tag) }
+        val mine = BuildConfig.VERSION_NAME
+        updateText.text = when {
+            r == null -> getString(R.string.update_offline, mine)
+            release != null -> getString(R.string.update_new, r.tag.removePrefix("v"), mine)
+            else -> getString(R.string.update_latest, mine)
+        }
+        updateText.setTextColor(if (release != null) Hud.YELLOW else Hud.PAPER_2)
+        updateBtn.visibility = if (release != null) View.VISIBLE else View.GONE
+        updateBtn.text = getString(R.string.update_go).uppercase() + " ›"
+    }
+
+    /** Download it and hand it to Android's installer (after letting Capri install apps, once). */
+    private fun update() {
+        val r = release ?: return
+        if (downloading) return
+        if (!packageManager.canRequestPackageInstalls()) {
+            Toast.makeText(this, R.string.update_allow, Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            return
+        }
+        downloading = true
+        updateBtn.isEnabled = false
+        Thread {
+            try {
+                var shown = -1
+                val apk = Updater.download(this, r) { k ->
+                    val pct = (k * 100).toInt()
+                    if (pct != shown) {
+                        shown = pct
+                        runOnUiThread { updateBtn.text = getString(R.string.update_downloading, pct) }
+                    }
+                }
+                Updater.install(this, apk)
+                runOnUiThread { updateBtn.text = getString(R.string.update_installing) }
+            } catch (e: Exception) {
+                Diag.add("E", "update: ${e.message}")
+                runOnUiThread { Toast.makeText(this, R.string.update_failed, Toast.LENGTH_LONG).show() }
+            } finally {
+                downloading = false
+                runOnUiThread { updateBtn.isEnabled = true }
+            }
+        }.start()
     }
 
     /** Her setup panel, over whatever is on screen: she starts first if she isn't on yet. */

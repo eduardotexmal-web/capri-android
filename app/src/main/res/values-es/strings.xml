@@ -34,4 +34,18 @@
     <string name="main_ai_custom">Tu propio servidor</string>
     <string name="main_ai_how">Abre su panel sobre tu pantalla: gratis sin cuenta, con una clave (Groq y Gemini son gratis) o el Ollama de tu PC por Wi-Fi. Sin terminal.</string>
     <string name="main_notes">Ver tus notificaciones y tu música (opcional): se sube encima</string>
+    <string name="update_head">Actualizaciones</string>
+    <string name="update_checking">Buscando una versión nueva…</string>
+    <string name="update_latest">Al día · v%1$s</string>
+    <string name="update_offline">No pude comprobarlo (¿sin conexión?) · v%1$s</string>
+    <string name="update_new">Nueva: v%1$s (tienes v%2$s)</string>
+    <string name="update_go">Actualizar</string>
+    <string name="update_downloading">Descargando… %1$d %%</string>
+    <string name="update_installing">Confírmalo en la pantalla que muestra Android</string>
+    <string name="update_allow">Deja que Capri instale apps, vuelve y toca Actualizar.</string>
+    <string name="update_failed">La actualización no funcionó. Abajo, en el registro, sale por qué.</string>
+    <string name="update_conflict">Esta versión tiene otra firma: desinstala Capri una vez y vuelve a instalarla. Desde ahí, se actualiza encima.</string>
+    <string name="update_channel">Actualizaciones</string>
+    <string name="update_title">Salió Capri %1$s</string>
+    <string name="update_text">Toca para actualizar, sin desinstalar.</string>
 </resources>

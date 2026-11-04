@@ -36,4 +36,18 @@
     <string name="main_ai_custom">Your own server</string>
     <string name="main_ai_how">Opens her panel over your screen: free with no account, a key (Groq and Gemini are free), or your PC\'s Ollama over Wi-Fi. No terminal.</string>
     <string name="main_notes">See your notifications and music (optional): she jumps on them</string>
+    <string name="update_head">Updates</string>
+    <string name="update_checking">Looking for a new version…</string>
+    <string name="update_latest">Up to date · v%1$s</string>
+    <string name="update_offline">Couldn\'t check (offline?) · v%1$s</string>
+    <string name="update_new">New: v%1$s (you have v%2$s)</string>
+    <string name="update_go">Update</string>
+    <string name="update_downloading">Downloading… %1$d %%</string>
+    <string name="update_installing">Confirm it on the screen Android shows</string>
+    <string name="update_allow">Allow Capri to install apps, then come back and tap Update.</string>
+    <string name="update_failed">The update didn\'t work. The log below says why.</string>
+    <string name="update_conflict">This version was signed differently: uninstall Capri once and install it again. After that, updates install over.</string>
+    <string name="update_channel">Updates</string>
+    <string name="update_title">Capri %1$s is out</string>
+    <string name="update_text">Tap to update, no need to uninstall.</string>
 </resources>

@@ -45,6 +45,7 @@ class CapriService : Service() {
         bridge = HostBridge(this)
         visible = bridge.store.configFlag("visible", true)
         createChannel()
+        Updater.checkInBackground(this)
         startForegroundCompat()
         Diag.add("I", "service started (Android ${Build.VERSION.RELEASE}, API ${Build.VERSION.SDK_INT})")
         if (!Settings.canDrawOverlays(this)) {
