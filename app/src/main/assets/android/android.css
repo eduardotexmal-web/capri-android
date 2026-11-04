@@ -140,3 +140,88 @@ body {
   margin: 6px 16px;
   background: var(--line);
 }
+
+/* ---------- her cards: now playing, a notice that came in (notes.js) ---------- */
+/* under her (she sits on their top edge, as on a window's), in her HUD's plate */
+
+.anote {
+  --frame: var(--yellow);
+  --echo: var(--cyan);
+  position: fixed;
+  z-index: 0;
+  left: 12px;
+  width: min(360px, calc(100vw - 24px));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 14px;
+  color: var(--paper);
+  background: var(--ink);
+  border: 2px solid var(--frame);
+  box-shadow: 4px 4px 0 var(--echo);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  font-family: var(--font-display);
+  touch-action: manipulation;
+}
+
+.anote[hidden] { display: none; }
+
+.anote--music { bottom: 72px; }
+.anote--music.is-paused { --frame: var(--paper-3); --echo: var(--line); }
+.anote--note { top: 34vh; --echo: var(--red); }
+.anote--note.is-new { animation: cmenu-in 160ms steps(3, end) 1; }
+
+[data-theme='classic'] .anote {
+  --frame: oklch(0.62 0.2 300);
+  --echo: oklch(0.4 0.18 300);
+}
+
+.anote__body { flex: 1; min-width: 0; }
+
+.anote__tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anote__title {
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anote__sub {
+  font-size: 13px;
+  color: var(--paper-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anote__sub:empty { display: none; }
+
+.anote__ctl { display: flex; gap: 6px; }
+
+.anote button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  font: 700 16px var(--font-display);
+  color: var(--cyan);
+  background: var(--ink-2);
+  border: 1px solid var(--cyan);
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+
+.anote button:active { color: var(--ink); background: var(--cyan); }
+.anote .anote__play { color: var(--ink); background: var(--yellow); border-color: var(--yellow); }
+.anote .anote__x { color: var(--paper-2); border-color: var(--line); min-width: 32px; height: 32px; }

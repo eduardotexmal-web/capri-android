@@ -74,6 +74,14 @@ class HostBridge(private val service: CapriService) {
         "apps:launchables" -> actions.launchables()
         "apps:launch" -> actions.launch(obj(args))
         "apps:media" -> actions.media(args as? String ?: "")
+        // your notifications and your music (CapriNotifications.kt), once you allow it
+        "notes:allowed" -> CapriNotifications.allowed(service)
+        "notes:settings" -> actions.notificationAccess()
+        "media:now" -> CapriNotifications.instance?.media() ?: JSONObject()
+        "media:control" -> CapriNotifications.instance?.control(obj(args).optString("action")) ?: actions.media(obj(args).optString("action").let { if (it == "toggle") "play" else it })
+        "media:open" -> CapriNotifications.instance?.openPlayer() ?: false
+        "note:open" -> CapriNotifications.instance?.open(obj(args).optString("key")) ?: false
+
         // Android never lets an app close another one: her "close Discord" answers with this
         "apps:list" -> JSONArray()
         "apps:find" -> null

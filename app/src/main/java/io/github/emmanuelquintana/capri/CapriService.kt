@@ -41,6 +41,7 @@ class CapriService : Service() {
     override fun onCreate() {
         super.onCreate()
         running = true
+        current = this
         bridge = HostBridge(this)
         visible = bridge.store.configFlag("visible", true)
         createChannel()
@@ -110,6 +111,7 @@ class CapriService : Service() {
 
     override fun onDestroy() {
         running = false
+        if (current === this) current = null
         Diag.add("I", "service stopped")
         try { unregisterReceiver(screen) } catch (_: Exception) {}
         hooks?.stop()
@@ -161,6 +163,9 @@ class CapriService : Service() {
     companion object {
         @Volatile
         var running = false
+            private set
+        @Volatile
+        var current: CapriService? = null
             private set
         private const val CHANNEL = "capri"
         private const val NOTIFICATION_ID = 1

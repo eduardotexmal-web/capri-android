@@ -60,7 +60,7 @@ export class Touch {
       }
       this.pet = false;
       // on her panel or her menu, the finger scrolls and taps them as any page: nothing to make up
-      if (e.target.closest?.('#panel, .cmenu')) {
+      if (e.target.closest?.('#panel, .cmenu, .anote')) {
         this.drag = null;
         return;
       }
@@ -120,6 +120,7 @@ export class Touch {
         rectOf(document.getElementById('chip')),
         rectOf(document.getElementById('mask')),
         rectOf(document.querySelector('.cmenu:not([hidden])')),
+        ...[...document.querySelectorAll('.anote:not([hidden])')].map(rectOf),
       ].filter(Boolean);
       // (a finger already on her keeps her: Android sends the whole gesture to where it began)
       const all = list;

@@ -35,4 +35,5 @@
     <string name="main_ai_pc">Ollama on your PC</string>
     <string name="main_ai_custom">Your own server</string>
     <string name="main_ai_how">Opens her panel over your screen: free with no account, a key (Groq and Gemini are free), or your PC\'s Ollama over Wi-Fi. No terminal.</string>
+    <string name="main_notes">See your notifications and music (optional): she jumps on them</string>
 </resources>

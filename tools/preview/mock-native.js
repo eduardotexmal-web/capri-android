@@ -15,6 +15,11 @@
     'keys:open': ({ value }) => String(value || '').replace(/^plain:/, ''),
     'hooks:copy': () => ({ ok: true }),
     'pc:cpu': () => null,
+    'notes:allowed': () => true,
+    'media:now': () => ({}),
+    'media:control': ({ action }) => { state.media = action; return true; },
+    'media:open': () => true,
+    'note:open': () => true,
   };
   const aborts = new Map();
   window.CapriNative = {

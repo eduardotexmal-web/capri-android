@@ -294,7 +294,7 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     companion object {
         // the host Android reserves for an app's own files in a WebView (never a real site)
         const val HOST = "appassets.androidplatform.net"
-        private const val MAX_PADS = 6
+        private const val MAX_PADS = 8
         private const val MAX_PASSTHROUGH_ALPHA = 0.8f
     }
 }

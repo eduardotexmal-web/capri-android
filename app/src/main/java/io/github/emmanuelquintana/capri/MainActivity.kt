@@ -39,6 +39,7 @@ class MainActivity : Activity() {
     private lateinit var statusText: TextView
     private lateinit var overlayStep: Step
     private lateinit var notifyStep: Step
+    private lateinit var notesStep: Step
     private lateinit var startBtn: TextView
     private lateinit var logText: TextView
     private lateinit var aiText: TextView
@@ -108,7 +109,11 @@ class MainActivity : Activity() {
             if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
         col.addView(overlayStep.view, block(top = 14))
+        notesStep = Step("03", getString(R.string.main_notes)) {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        }
         col.addView(notifyStep.view, block(top = 10))
+        col.addView(notesStep.view, block(top = 10))
 
         // start / stop: the big yellow plate
         startBtn = text("", 20f, Hud.INK, headFont).apply {
@@ -195,6 +200,7 @@ class MainActivity : Activity() {
         val running = CapriService.running
         overlayStep.set(overlayOk)
         notifyStep.set(notifyOk())
+        notesStep.set(CapriNotifications.allowed(this))
         statusDot.background = Hud.Plate(if (running) Hud.CYAN else Hud.RED, 0, cut = 0f, stroke = 0f, offset = 0f)
         statusWord.text = getString(if (running) R.string.main_status_on else R.string.main_status_off)
         statusWord.setTextColor(if (running) Hud.CYAN else Hud.RED)

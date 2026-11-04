@@ -18,6 +18,7 @@ import './upstream/launch.js';
 import { Menu } from './menu.js';
 import { Touch } from './touch.js';
 import './setup.js'; // her setup without a terminal (before app.js builds it)
+import { Notes } from './notes.js';
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -425,6 +426,7 @@ function menuTemplate() {
       label: t.closePages, type: 'checkbox', checked: cfg.closePages !== false, enabled: cfg.jealous !== false,
       click: (item) => updateConfig({ closePages: item.checked }),
     },
+    ...(notes ? [notes.menu(updateConfig)] : []),
     { label: t.pcReact, type: 'checkbox', checked: cfg.pcReact !== false, click: (item) => updateConfig({ pcReact: item.checked }) },
     { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
     {
@@ -544,7 +546,7 @@ window.host = {
   installHooks: after(() => runHooks('install', { quiet: true })),
   claudeFound: async () => true, // Claude Code may well be in Termux, or on your PC: she offers to plug in
   openClaudeHelp: () => send('open:url', { url: activeAssistant().help }),
-  windowsNow: async () => null,
+  windowsNow: async () => notes?.snapshot() || null,
   closePage: async () => 'gone',
   trayPlace: async () => ({
     // her "tray icon" is her notification, at the top of the screen
@@ -690,6 +692,10 @@ window.host = {
 };
 
 let pulling = null;
+
+// your notifications and your music, as cards she jumps on (notes.js)
+let notes = null;
+ready.then(() => { notes = new Notes({ config: () => cfg, lang: () => resolveLang(cfg.lang) }); });
 
 // the screen turned (or the keyboard took some of it): her window is another size
 window.addEventListener('resize', () => emit('overlay:resize', { width: innerWidth, height: innerHeight, gap: 0 }));

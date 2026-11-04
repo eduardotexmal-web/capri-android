@@ -126,6 +126,11 @@ class Actions(private val context: Context, private val store: Store) {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    /** The system page where Capri gets notification access. */
+    fun notificationAccess() {
+        context.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
     /** The media keys (launch.js media()): whatever plays music reacts. */
     fun media(action: String): Boolean {
         val audio = context.getSystemService(AudioManager::class.java)!!

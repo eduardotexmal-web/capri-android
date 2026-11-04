@@ -33,4 +33,5 @@
     <string name="main_ai_pc">Ollama de tu PC</string>
     <string name="main_ai_custom">Tu propio servidor</string>
     <string name="main_ai_how">Abre su panel sobre tu pantalla: gratis sin cuenta, con una clave (Groq y Gemini son gratis) o el Ollama de tu PC por Wi-Fi. Sin terminal.</string>
+    <string name="main_notes">Ver tus notificaciones y tu música (opcional): se sube encima</string>
 </resources>
