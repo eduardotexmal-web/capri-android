@@ -19,6 +19,7 @@ import { Menu } from './menu.js';
 import { Touch } from './touch.js';
 import './setup.js'; // her setup without a terminal (before app.js builds it)
 import { Notes } from './notes.js';
+import './wink.js'; // what she says, also in her notification
 
 const llm = load('llm');
 const ollama = load('ollama');

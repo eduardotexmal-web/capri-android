@@ -167,9 +167,9 @@ body {
 
 .anote[hidden] { display: none; }
 
-.anote--music { bottom: 72px; }
+.anote--music { top: 58vh; }
 .anote--music.is-paused { --frame: var(--paper-3); --echo: var(--line); }
-.anote--note { top: 34vh; --echo: var(--red); }
+.anote--note { top: 30vh; --echo: var(--red); }
 .anote--note.is-new { animation: cmenu-in 160ms steps(3, end) 1; }
 
 [data-theme='classic'] .anote {

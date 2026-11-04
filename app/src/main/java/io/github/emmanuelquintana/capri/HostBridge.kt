@@ -59,6 +59,7 @@ class HostBridge(private val service: CapriService) {
         "overlay:focus" -> service.overlay?.setFocusable(obj(args).optBoolean("on"))
         "touch:regions" -> service.overlay?.setRegions(obj(args).optJSONArray("rects") ?: JSONArray(), obj(args).optDouble("dpr", 1.0))
         "notify:update" -> service.refreshNotification()
+        "notify:wink" -> service.wink(obj(args).optString("line"), obj(args).optString("face"))
         "boot:set" -> Unit // read from her config by BootReceiver
         "app:quit" -> service.quit()
 

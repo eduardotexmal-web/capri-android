@@ -65,7 +65,11 @@ export class Notes {
     on('media:update', (m) => this.onMedia(m));
     on('note:posted', (n) => this.onNote(n));
     on('note:removed', ({ key } = {}) => key === this.note?.key && this.hideNote());
-    window.addEventListener('resize', () => this.feed());
+    window.addEventListener('resize', () => this.place());
+    window.visualViewport?.addEventListener('resize', () => this.place());
+    this.place();
+    // what size her page has on this phone, for the app's log (when a card is off screen)
+    send('log', { level: 'I', text: `view ${innerWidth}x${innerHeight} (visible ${Math.round(visualViewport?.height || 0)}), screen ${screen.width}x${screen.height}, dpr ${devicePixelRatio}` });
     call('media:now').then((m) => this.onMedia(m), () => {});
     this.check();
     setInterval(() => this.tick(), 5000);
@@ -103,6 +107,16 @@ export class Notes {
     return el;
   }
 
+  // Where the cards go, from the top of what's visible (some phones give her window more height
+  // than the screen shows): the notice up in the middle, the music lower down, both well clear of
+  // the navigation bar, with room above each for her to sit.
+  place() {
+    const h = Math.min(innerHeight, window.visualViewport?.height || innerHeight, screen.height || innerHeight);
+    this.notice.style.top = `${Math.round(h * 0.3)}px`;
+    this.music.style.top = `${Math.round(h * 0.58)}px`;
+    this.feed();
+  }
+
   fill(el, tag, title, sub) {
     el.querySelector('.anote__tag').textContent = tag;
     el.querySelector('.anote__title').textContent = title;
@@ -129,7 +143,11 @@ export class Notes {
     this.feed();
     // a new song, or the music starting: she comes to sit on it
     const fresh = playing && (wasHidden || !before?.playing || before.title !== title);
-    if (fresh) this.hop('music', () => this.say(fmt(pick(this.t.music), { title })));
+    if (fresh) {
+      const line = fmt(pick(this.t.music), { title });
+      send('notify:wink', { line: `${line}\n♪ ${title}${artist ? ` · ${artist}` : ''} (${app})`, face: 'smug' });
+      this.hop('music', () => this.say(line));
+    }
   }
 
   tick() {
@@ -153,7 +171,9 @@ export class Notes {
     this.feed();
     clearTimeout(this.noteTimer);
     this.noteTimer = setTimeout(() => this.hideNote(), NOTE_FOR);
-    this.hop('note', () => this.say(fmt(pick(this.t.note), { app: n.app })));
+    const line = fmt(pick(this.t.note), { app: n.app });
+    send('notify:wink', { line, face: 'look' });
+    this.hop('note', () => this.say(line));
   }
 
   hideNote() {
@@ -191,7 +211,9 @@ export class Notes {
       if (dev.chat?.open) return;
       const win = capri.windows.wins.find((w) => w.id === id);
       if (!win || !capri.canSit(win)) return;
-      const dx = Math.max(60, Math.min(win.w - 120, win.w * (0.25 + Math.random() * 0.4)));
+      // on the music card she keeps off its buttons (on its left part, over the song's name)
+      const right = id === 'music' ? 190 : 120;
+      const dx = Math.max(60, Math.min(win.w - right, win.w * (0.2 + Math.random() * 0.3)));
       Promise.resolve(capri.sitOn({ win, dx })).then(() => then?.());
     }, 250);
   }

@@ -12,8 +12,8 @@ android {
         minSdk = 26
         targetSdk = 35
         // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
-        versionCode = 505
-        versionName = "0.5.1-android.5"
+        versionCode = 506
+        versionName = "0.5.1-android.6"
     }
 
     buildFeatures { buildConfig = true }

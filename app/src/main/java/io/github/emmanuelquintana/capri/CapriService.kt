@@ -146,14 +146,43 @@ class CapriService : Service() {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 
+    // her last word, for her notification (a wink in your notification shade): what she said, her face
+    private var wink: String? = null
+    private var winkFace = "smug"
+    private var winkAt = 0L
+    private val faces = HashMap<String, android.graphics.Bitmap?>()
+
+    fun wink(line: String, face: String) {
+        wink = line.take(200)
+        winkFace = face
+        winkAt = System.currentTimeMillis()
+        refreshNotification()
+    }
+
+    private fun face(name: String): android.graphics.Bitmap? = faces.getOrPut(name) {
+        val file = if (name in FACES) "face-$name.png" else "capri-face.png"
+        runCatching { assets.open("capri/assets/capri/$file").use { android.graphics.BitmapFactory.decodeStream(it) } }.getOrNull()
+    }
+
     private fun buildNotification(): Notification {
+        val said = wink?.takeIf { visible }
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notify)
-            .setContentTitle(getString(R.string.notify_title))
-            .setContentText(if (visible) getString(R.string.notify_text, HookServer.PORT) else getString(R.string.notify_text_hidden))
+            .setContentTitle(if (said != null) "Capri" else getString(R.string.notify_title))
+            .setContentText(said ?: if (visible) getString(R.string.notify_text, HookServer.PORT) else getString(R.string.notify_text_hidden))
+            .also { b ->
+                if (said != null) {
+                    b.setStyle(Notification.BigTextStyle().bigText(said))
+                    b.setWhen(winkAt).setShowWhen(true)
+                } else b.setShowWhen(false)
+                face(if (said != null) winkFace else "smug")?.let { b.setLargeIcon(it) }
+            }
+            // her colours: the shade shows her plate in ink, with her yellow
+            .setColor(Hud.INK)
+            .setColorized(true)
             .setContentIntent(pending(ACTION_MENU, 1)) // a tap on it is a click on her tray icon: her menu
             .setOngoing(true)
-            .setShowWhen(false)
+            .setOnlyAlertOnce(true)
             .addAction(Notification.Action.Builder(null, getString(R.string.action_menu), pending(ACTION_MENU, 2)).build())
             .addAction(Notification.Action.Builder(null, getString(if (visible) R.string.action_hide else R.string.action_show), pending(ACTION_TOGGLE, 3)).build())
             .addAction(Notification.Action.Builder(null, getString(R.string.action_quit), pending(ACTION_QUIT, 4)).build())
@@ -174,6 +203,7 @@ class CapriService : Service() {
         const val ACTION_TOGGLE = "capri.TOGGLE"
         const val ACTION_QUIT = "capri.QUIT"
         const val ACTION_SETUP = "capri.SETUP"
+        private val FACES = setOf("aside", "calm", "laugh", "look", "many", "smug", "wide")
 
         fun start(context: Context, action: String? = null) {
             context.startForegroundService(Intent(context, CapriService::class.java).setAction(action))
