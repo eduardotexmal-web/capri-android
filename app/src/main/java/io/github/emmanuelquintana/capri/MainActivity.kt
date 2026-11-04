@@ -261,7 +261,7 @@ class MainActivity : Activity() {
         val mine = BuildConfig.VERSION_NAME
         updateText.text = when {
             r == null -> getString(R.string.update_offline, mine)
-            release != null -> getString(R.string.update_new, r.tag.removePrefix("v"), mine)
+            release != null -> getString(R.string.update_new, r.version, mine) + if (r.notes.isNotBlank()) "\n\n" + r.notes else ""
             else -> getString(R.string.update_latest, mine)
         }
         updateText.setTextColor(if (release != null) Hud.YELLOW else Hud.PAPER_2)

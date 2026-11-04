@@ -50,7 +50,7 @@ class CapriService : Service() {
         bridge = HostBridge(this)
         visible = bridge.store.configFlag("visible", true)
         createChannel()
-        Updater.checkInBackground(this)
+        checkUpdates()
         startForegroundCompat()
         Diag.add("I", "service started (Android ${Build.VERSION.RELEASE}, API ${Build.VERSION.SDK_INT})")
         if (!Settings.canDrawOverlays(this)) {
@@ -117,6 +117,7 @@ class CapriService : Service() {
 
     override fun onDestroy() {
         running = false
+        ticker.removeCallbacks(check)
         if (current === this) current = null
         Diag.add("I", "service stopped")
         try { unregisterReceiver(screen) } catch (_: Exception) {}
@@ -150,6 +151,19 @@ class CapriService : Service() {
         this, code, Intent(this, CapriService::class.java).setAction(action),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
+
+    // a newer release: her notification, and she says so on screen too (host.js)
+    private val ticker = android.os.Handler(android.os.Looper.getMainLooper())
+    private val check = Runnable { checkUpdates() }
+
+    private fun checkUpdates() {
+        Updater.checkInBackground(this) { r ->
+            val json = JSONObject().put("version", r.version).put("notes", r.notes).toString()
+            ticker.postDelayed({ overlay?.emit("capri:update", json) }, if (pageReady) 0 else 20_000)
+        }
+        ticker.removeCallbacks(check)
+        ticker.postDelayed(check, Updater.CHECK_EVERY + 60_000)
+    }
 
     // her last word, for her notification (a wink in your notification shade): what she said, her face
     private var wink: String? = null

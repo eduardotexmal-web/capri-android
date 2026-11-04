@@ -25,8 +25,16 @@ object Updater {
     private const val CHANNEL = "updates"
     private const val NOTIFICATION_ID = 2
     private const val PREFS = "updater"
+    const val CHECK_EVERY = 4 * 3600 * 1000L
 
-    data class Release(val tag: String, val apk: String, val size: Long, val page: String)
+    data class Release(val tag: String, val apk: String, val size: Long, val page: String, val notes: String) {
+        val version get() = tag.removePrefix("v")
+    }
+
+    /** What a release says it brings (its CHANGELOG.md section), without the install footer, in plain text. */
+    private fun plain(body: String): String = body.substringBefore("\n---").lines()
+        .map { it.trim().replace(Regex("\\*\\*|`|\\*"), "").replace(Regex("^- "), "• ") }
+        .joinToString("\n").replace(Regex("\n(?!•)"), " ").trim()
 
     /** The latest release, or null when offline or there's none with an APK. Network: not on the main thread. */
     fun latest(): Release? = try {
@@ -43,7 +51,7 @@ object Updater {
             for (i in 0 until (assets?.length() ?: 0)) {
                 val a = assets!!.getJSONObject(i)
                 if (a.optString("name").endsWith(".apk")) {
-                    found = Release(json.optString("tag_name"), a.optString("browser_download_url"), a.optLong("size"), json.optString("html_url"))
+                    found = Release(json.optString("tag_name"), a.optString("browser_download_url"), a.optLong("size"), json.optString("html_url"), plain(json.optString("body")))
                     break
                 }
             }
@@ -122,17 +130,18 @@ object Updater {
         }
     }
 
-    /** Once a day at most, from her service: a notification when there's a newer release. */
-    fun checkInBackground(context: Context) {
+    /** Every few hours at most, from her service: a notification (and her own word) when there's a newer release. */
+    fun checkInBackground(context: Context, onNew: (Release) -> Unit = {}) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
-        if (now - prefs.getLong("checked", 0) < 20 * 3600 * 1000L) return
+        if (now - prefs.getLong("checked", 0) < CHECK_EVERY) return
         Thread {
             val release = latest() ?: return@Thread
             prefs.edit().putLong("checked", now).apply()
             if (!isNewer(release.tag) || prefs.getString("told", null) == release.tag) return@Thread
             prefs.edit().putString("told", release.tag).apply()
             notifyNew(context, release)
+            onNew(release)
         }.start()
     }
 
@@ -143,8 +152,10 @@ object Updater {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_notify)
-            .setContentTitle(context.getString(R.string.update_title, release.tag.removePrefix("v")))
-            .setContentText(context.getString(R.string.update_text))
+            .setContentTitle(context.getString(R.string.update_title, release.version))
+            .setContentText(release.notes.lineSequence().firstOrNull()?.removePrefix("• ") ?: context.getString(R.string.update_text))
+            .setStyle(Notification.BigTextStyle().bigText(release.notes.ifBlank { context.getString(R.string.update_text) } + "\n\n" + context.getString(R.string.update_text)))
+            .setColor(Hud.YELLOW)
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()

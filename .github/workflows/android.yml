@@ -51,7 +51,7 @@ jobs:
             if [ ! -f "$ENC" ]; then
               if [ "$IS_MAIN" != "true" ]; then echo "no key yet (made on main only)"; exit 0; fi
               keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias capri -keyalg RSA -keysize 4096 -validity 25000 \
-                -storepass:env PASSPHRASE -keypass:env PASSPHRASE -dname "CN=Capri Android (unofficial port), O=emmanuelquintana"
+                -storepass:env PASSPHRASE -keypass:env PASSPHRASE -dname "CN=Capri para Android, O=emmanuelquintana"
               mkdir -p app/signing
               openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -in "$KS" -out "$ENC" -pass env:PASSPHRASE
               git config user.name "github-actions[bot]"
@@ -100,9 +100,30 @@ jobs:
           path: app/build/reports/lint-results-release.html
           if-no-files-found: ignore
 
+      # what this version brings: its section of CHANGELOG.md (required for a release)
+      - name: Novedades
+        id: notes
+        env:
+          VERSION: ${{ steps.apk.outputs.version }}
+        run: |
+          awk -v v="## $VERSION" '$0 == v {on=1; next} on && /^## / {exit} on {print}' CHANGELOG.md | sed -e '/./,$!d' > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then
+            echo "::error::CHANGELOG.md no tiene un apartado '## $VERSION': cada versión explica qué cambia"
+            [ "$GITHUB_REF" = "refs/heads/main" ] && exit 1
+          fi
+          {
+            echo
+            echo "---"
+            echo "**Instalar:** descarga \`Capri-Android-$VERSION.apk\` en tu teléfono y ábrelo. Si ya tienes Capri, actualízala desde la app (placa *Actualizaciones*), sin desinstalar."
+            echo
+            echo "Port de [capri-desktop](https://github.com/mochiiwuff/capri-desktop), de mochiiwuff. Gratis, nunca a la venta (PolyForm Noncommercial 1.0.0)."
+          } >> "$RUNNER_TEMP/notes.md"
+          echo "file=$RUNNER_TEMP/notes.md" >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/notes.md"
+
       # every build of main is published as the release of its version (a direct download link),
       # only when signed with the release key: the app updates itself from these
-      - name: Release
+      - name: Publicar la versión
         if: steps.key.outputs.signed == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         uses: softprops/action-gh-release@v2
         with:
@@ -110,7 +131,5 @@ jobs:
           name: Capri para Android ${{ steps.apk.outputs.version }}
           target_commitish: ${{ github.sha }}
           make_latest: true
-          body: |
-            Descarga `Capri-Android-${{ steps.apk.outputs.version }}.apk` en tu teléfono e instálalo (permite instalar apps de esa fuente). Después, la app se actualiza sola desde aquí.
-            Port no oficial de [capri-desktop](https://github.com/mochiiwuff/capri-desktop). Gratis, nunca a la venta (PolyForm Noncommercial 1.0.0).
+          body_path: ${{ steps.notes.outputs.file }}
           files: Capri-Android-*.apk

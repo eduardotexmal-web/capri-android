@@ -14,7 +14,7 @@
     <string name="main_start">Start Capri</string>
     <string name="main_stop">Stop Capri</string>
     <string name="main_ok">Done</string>
-    <string name="main_license">Unofficial Android port of capri-desktop by mochiiwuff. Free, never for sale (PolyForm Noncommercial 1.0.0). Capri, Cyberpunk and Cyberpunk: Edgerunners belong to CD PROJEKT RED, Studio Trigger and Netflix.</string>
+    <string name="main_license">Android port of capri-desktop, by mochiiwuff. Free, never for sale (PolyForm Noncommercial 1.0.0). Capri, Cyberpunk and Cyberpunk: Edgerunners belong to CD PROJEKT RED, Studio Trigger and Netflix.</string>
     <string name="hooks_copied">Command copied. Paste it in Termux and press Enter.</string>
     <string name="tile_label" translatable="false">Capri</string>
     <string name="main_overlay">Show over other apps</string>

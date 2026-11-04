@@ -1,0 +1,37 @@
+name: Vigilar capri-desktop
+
+# Una vez al día: si capri-desktop (el original) tiene una versión más nueva que la portada
+# (app/src/main/assets/android/upstream.json), abre un issue aquí para portarla. Uno por versión.
+
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comparar versiones
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ours=$(jq -r .version app/src/main/assets/android/upstream.json)
+          theirs=$(curl -fsSL https://raw.githubusercontent.com/mochiiwuff/capri-desktop/main/package.json | jq -r .version)
+          echo "portada: $ours · original: $theirs"
+          [ -z "$theirs" ] || [ "$theirs" = "null" ] && exit 0
+          newest=$(printf '%s\n%s\n' "$ours" "$theirs" | sort -V | tail -1)
+          [ "$newest" = "$ours" ] && { echo "al día"; exit 0; }
+          title="capri-desktop $theirs: portar la versión nueva"
+          if gh issue list --state all --search "\"$title\" in:title" --json title -q '.[].title' | grep -qxF "$title"; then
+            echo "ya hay un issue"; exit 0
+          fi
+          gh issue create --title "$title" --body "Salió **capri-desktop $theirs** (aquí está portada la $ours).
+
+          - Cambios: https://github.com/mochiiwuff/capri-desktop/compare/v$ours...v$theirs (o los commits de \`main\`: https://github.com/mochiiwuff/capri-desktop/commits/main)
+          - Para portarla: \`node tools/sync-upstream.mjs ../capri-desktop\`, revisar lo nuevo que dependa de Windows, subir \`versionName\` y añadir su apartado a CHANGELOG.md."

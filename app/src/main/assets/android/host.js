@@ -695,6 +695,21 @@ window.host = {
 
 let pulling = null;
 
+// a newer version of her is out (CapriService, from the repo's releases): she says so
+const UPDATE_LINES = {
+  es: '¡Salió mi versión {v}! Toca mi notificación o abre la app para actualizarme.',
+  en: 'My version {v} is out! Tap my notification or open the app to update me.',
+  pt: 'Saiu minha versão {v}! Toque na minha notificação ou abra o app pra me atualizar.',
+  fr: 'Ma version {v} est sortie ! Touche ma notification ou ouvre l’appli pour me mettre à jour.',
+  ru: 'Вышла моя версия {v}! Нажми на моё уведомление или открой приложение, чтобы обновить меня.',
+};
+on('capri:update', ({ version, notes: news } = {}) => {
+  const line = (UPDATE_LINES[resolveLang(cfg.lang)] || UPDATE_LINES.en).replace('{v}', version || '');
+  const firstNews = String(news || '').split('\n')[0].replace(/^• /, '');
+  window.dev?.panel?.say({ kind: 'done', face: 'laugh', line, quote: firstNews, hold: 9000 });
+  window.dev?.capri?.perform('hop');
+});
+
 // your notifications and your music, as cards she jumps on (notes.js)
 let notes = null;
 ready.then(() => {
