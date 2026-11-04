@@ -32,21 +32,54 @@ jobs:
       - name: Check the Android page scripts parse
         run: for f in app/src/main/assets/android/*.js app/src/main/assets/android/upstream/*.js; do node --check --input-type=module < "$f" || exit 1; done
 
-      # a signing key from the repository's secrets, if there is one (same key = updates install over each other)
+      # One signing key for every release, so each update installs over the last one.
+      # Either a whole key in secrets (CAPRI_KEYSTORE_BASE64 + passwords), or just a passphrase
+      # (CAPRI_SIGNING_PASSPHRASE): the first build on main makes the key, encrypts it with that
+      # passphrase into app/signing/capri.p12.enc and commits it; every build after decrypts it.
       - name: Signing key
+        id: key
         env:
           KEYSTORE_BASE64: ${{ secrets.CAPRI_KEYSTORE_BASE64 }}
-        if: env.KEYSTORE_BASE64 != ''
+          PASSPHRASE: ${{ secrets.CAPRI_SIGNING_PASSPHRASE }}
+          IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/capri.jks"
-          echo "CAPRI_KEYSTORE=$RUNNER_TEMP/capri.jks" >> "$GITHUB_ENV"
+          KS="$RUNNER_TEMP/capri.p12"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$KS"
+          elif [ -n "$PASSPHRASE" ]; then
+            ENC=app/signing/capri.p12.enc
+            if [ ! -f "$ENC" ]; then
+              if [ "$IS_MAIN" != "true" ]; then echo "no key yet (made on main only)"; exit 0; fi
+              keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias capri -keyalg RSA -keysize 4096 -validity 25000 \
+                -storepass:env PASSPHRASE -keypass:env PASSPHRASE -dname "CN=Capri Android (unofficial port), O=emmanuelquintana"
+              mkdir -p app/signing
+              openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -in "$KS" -out "$ENC" -pass env:PASSPHRASE
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add "$ENC"
+              git commit -m "Signing: the release key, encrypted with the repo's passphrase secret"
+              git push origin HEAD:main
+            else
+              openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$ENC" -out "$KS" -pass env:PASSPHRASE
+            fi
+            echo "CAPRI_KEYSTORE_PASSWORD=$PASSPHRASE" >> "$GITHUB_ENV"
+            echo "CAPRI_KEY_PASSWORD=$PASSPHRASE" >> "$GITHUB_ENV"
+            echo "CAPRI_KEY_ALIAS=capri" >> "$GITHUB_ENV"
+          else
+            echo "no signing key in secrets: debug key, and no release"
+            exit 0
+          fi
+          echo "CAPRI_KEYSTORE=$KS" >> "$GITHUB_ENV"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
 
       - name: Build
         env:
-          CAPRI_KEYSTORE_PASSWORD: ${{ secrets.CAPRI_KEYSTORE_PASSWORD }}
-          CAPRI_KEY_ALIAS: ${{ secrets.CAPRI_KEY_ALIAS }}
-          CAPRI_KEY_PASSWORD: ${{ secrets.CAPRI_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon assembleRelease lintRelease
+          KEY_PASSWORD_SECRET: ${{ secrets.CAPRI_KEYSTORE_PASSWORD }}
+          KEY_ALIAS_SECRET: ${{ secrets.CAPRI_KEY_ALIAS }}
+          KEY_PASS_SECRET: ${{ secrets.CAPRI_KEY_PASSWORD }}
+        run: |
+          [ -n "$KEY_PASSWORD_SECRET" ] && export CAPRI_KEYSTORE_PASSWORD="$KEY_PASSWORD_SECRET" CAPRI_KEY_ALIAS="$KEY_ALIAS_SECRET" CAPRI_KEY_PASSWORD="$KEY_PASS_SECRET"
+          ./gradlew --no-daemon assembleRelease lintRelease
 
       - name: Name the APK
         id: apk
@@ -67,9 +100,10 @@ jobs:
           path: app/build/reports/lint-results-release.html
           if-no-files-found: ignore
 
-      # every build of main is published as the release of its version (a direct download link)
+      # every build of main is published as the release of its version (a direct download link),
+      # only when signed with the release key: the app updates itself from these
       - name: Release
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        if: steps.key.outputs.signed == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.apk.outputs.version }}
@@ -77,6 +111,6 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: true
           body: |
-            Descarga `Capri-Android-${{ steps.apk.outputs.version }}.apk` en tu teléfono e instálalo (permite instalar apps de esa fuente).
+            Descarga `Capri-Android-${{ steps.apk.outputs.version }}.apk` en tu teléfono e instálalo (permite instalar apps de esa fuente). Después, la app se actualiza sola desde aquí.
             Port no oficial de [capri-desktop](https://github.com/mochiiwuff/capri-desktop). Gratis, nunca a la venta (PolyForm Noncommercial 1.0.0).
           files: Capri-Android-*.apk
