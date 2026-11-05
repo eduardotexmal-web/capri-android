@@ -122,3 +122,26 @@ adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | gre
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80
 adb logcat -d -s capri | grep -E "keyboard|size|regions" | tail -30
+# her memory: idle on the home screen for a while, then what Android says she uses (PSS, MB)
+adb shell input keyevent KEYCODE_HOME
+sleep 45
+echo "===MEMINFO==="
+for i in 1 2 3; do
+  app=$(adb shell pidof $PKG | tr -d '\r')
+  web=$(adb shell top -b -n 1 | grep sandboxed_process | awk '{print $1}' | head -1)
+  a=$(adb shell dumpsys meminfo $app | grep "TOTAL PSS" | awk '{print $3}')
+  # Android lists RSS first, then PSS: the second match is her web engine's PSS
+  w=$(adb shell dumpsys meminfo | grep "K: com.google.android.webview:sandboxed" | sed -n 2p | awk '{print $1}' | tr -d 'K,:')
+  w=${w:-0}; a=${a:-0}
+  echo "pss app=$a web=$w total=$(( (a + w) / 1024 )) MB"
+  sleep 10
+done
+t1=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w1=$(adb shell cat /proc/$web/stat | awk '{print $14+$15}')
+sleep 30
+t2=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w2=$(adb shell cat /proc/$web/stat | awk '{print $14+$15}')
+echo "cpu ticks in 30 s idle: app=$((t2 - t1)) web=$((w2 - w1)) (100 per second = one core)"
+adb shell dumpsys gfxinfo $PKG reset >/dev/null
+sleep 20
+echo "frames drawn in 20 s idle:"; adb shell dumpsys gfxinfo $PKG | grep -E "Total frames" | head -2
+adb shell top -b -n 1 -H -p $app | head -20
+echo "===END MEMINFO==="

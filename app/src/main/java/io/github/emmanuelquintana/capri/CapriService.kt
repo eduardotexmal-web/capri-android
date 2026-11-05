@@ -38,6 +38,13 @@ class CapriService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    // Android running short: her page drops what it can reload (her intro's drawings, her effects'
+    // canvas), so Android has no reason to close her
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_RUNNING_LOW) overlay?.trim()
+    }
+
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         overlay?.turned()

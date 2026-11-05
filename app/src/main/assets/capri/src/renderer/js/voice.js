@@ -66,6 +66,7 @@ export class Voice {
     const ctx = this.ensure();
     if (ctx.state === 'suspended') ctx.resume();
     const custom = this.custom.get(cue);
+    this.rest(custom ? custom.duration : 0);
     if (custom) {
       const src = ctx.createBufferSource();
       src.buffer = custom;
@@ -95,6 +96,15 @@ export class Voice {
       purr: () => this.purr(),
     }[cue];
     fn?.();
+  }
+
+  // A few seconds after her last sound, the audio output is closed (suspended) until the next one:
+  // an open one keeps the phone's audio awake for nothing (battery, CPU).
+  rest(longest = 0) {
+    clearTimeout(this.restTimer);
+    this.restTimer = setTimeout(() => {
+      if (this.ctx?.state === 'running') this.ctx.suspend().catch(() => {});
+    }, Math.max(5000, longest * 1000 + 1500));
   }
 
   makeNoise() {

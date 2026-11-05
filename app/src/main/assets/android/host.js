@@ -605,7 +605,18 @@ window.host = {
     const provider = cfg.provider === 'ollama' && ollama.isCloud(model) ? 'Ollama' : llm.PROVIDERS[cfg.provider]?.label || cfg.provider;
     return { local: llm.isLocal(cfg.provider, cfg, model), provider, model };
   }),
-  cpu: ask('pc:cpu', null),
+  // asked every 3 s (pc.js); the phone's heat changes slowly: asked of Android every 15 s at most
+  cpu: (() => {
+    const real = ask('pc:cpu', null);
+    let last = null;
+    let at = -Infinity;
+    return async () => {
+      if (performance.now() - at < 15000) return last;
+      at = performance.now();
+      last = await real();
+      return last;
+    };
+  })(),
   pcDo: ask('pc:do', null),
   openOllama: () => send('open:url', { url: OLLAMA_SITE }),
   setupInfo: after(async () => {
@@ -749,6 +760,11 @@ on('ime:change', ({ height = 0 } = {}) => {
     capri.teleport({ x: capri.pos.x, y: innerHeight - keyboard }, { stance: 'stand' });
   }
 });
+
+// Android short of memory, or the screen off (Overlay.kt trim): what she can fetch again goes
+window.__capriTrim = () => {
+  window.dev?.fx?.releaseIntro?.();
+};
 
 // she's up: Kotlin can show her (the WebView stays hidden until the page has drawn once)
 ready.then(() => setTimeout(() => send('overlay:ready'), 0));

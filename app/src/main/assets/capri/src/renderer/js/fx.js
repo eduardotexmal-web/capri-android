@@ -259,13 +259,15 @@ export function drawEye(ctx, x, y, R, open, look = null) {
 }
 
 export class FxLayer {
-  constructor(canvas, { cutins = {}, intro = null } = {}) {
+  constructor(canvas, { cutins = {}, intro = null, loadIntro = null } = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.cutins = cutins;
-    this.grab = intro?.grab || null; // her close-up for her intro (GRAB_FRAMES), at rest
-    this.grabFrames = intro || {};
-    if (this.grab) this.prepareGrab();
+    // Android: her intro's drawings (some 90 MB once drawn, with their copies) are fetched only
+    // when it plays and let go as soon as it's over (loadIntro); `intro` = already loaded
+    this.loadIntro = loadIntro;
+    this.parkIdle = Boolean(loadIntro); // Android: its canvas let go between effects
+    this.setIntro(intro);
     this.items = [];
     this.running = false;
     this.last = 0;
@@ -273,10 +275,17 @@ export class FxLayer {
 
   resize(width, height) {
     const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = Math.round(width * dpr);
-    this.canvas.height = Math.round(height * dpr);
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
+    this.size = { w: width, h: height };
+    // Android, nothing on it: only its size is kept; the canvas comes back with the next effect
+    this.parked = Boolean(this.parkIdle && !this.items?.length);
+    if (this.parked) {
+      this.canvas.width = this.canvas.height = 0;
+      return;
+    }
+    this.canvas.width = Math.round(width * dpr);
+    this.canvas.height = Math.round(height * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.size = { w: width, h: height };
   }
@@ -299,6 +308,8 @@ export class FxLayer {
   add(item) {
     item.born = performance.now();
     this.items.push(item);
+    // its screen-sized canvas, let go while nothing was on it (Android), is back
+    if (this.parked && this.size) this.resize(this.size.w, this.size.h);
     if (!this.running) {
       this.running = true;
       requestAnimationFrame((t) => this.frame(t));
@@ -637,7 +648,34 @@ export class FxLayer {
   // Cues to onCue: 'open', 'hand' (three times), 'grab', 'hi', 'wave', 'slip'. Resolves as it
   // lands, for her body to unfold.
   // `still` (reduced motion): it comes and goes where it is, in four steps each way.
-  intro({ to, label = 'hi', caption = '', still = false, onCue = () => {} }) {
+  setIntro(intro) {
+    this.grab = intro?.grab || null; // her close-up for her intro (GRAB_FRAMES), at rest
+    this.grabFrames = intro || {};
+    if (this.grab) this.prepareGrab();
+  }
+
+  // her intro's drawings, fetched if they aren't here (Android lets them go between intros)
+  async ensureIntro() {
+    if (this.grab || !this.loadIntro) return;
+    this.introLoading ??= this.loadIntro().then((intro) => this.setIntro(intro), () => {}).finally(() => { this.introLoading = null; });
+    await this.introLoading;
+  }
+
+  // her intro is over: its drawings and their copies go (fetched again for the next one)
+  releaseIntro() {
+    if (!this.loadIntro || !this.grab || this.items.some((it) => it.type === 'intro')) return;
+    for (const cel of Object.values(this.grabFrames)) cel?.close?.();
+    for (const c of [this.grabCopies?.paper, this.grabCopies?.ink, this.grabCopies?.violet, ...(this.grabCopies?.channels || [])]) {
+      if (c) c.width = c.height = 0;
+    }
+    this.grab = null;
+    this.grabFrames = {};
+    this.grabCopies = null;
+  }
+
+  intro(args) {
+    if (!this.grab && this.loadIntro) return this.ensureIntro().then(() => this.grab && this.intro(args));
+    const { to, label = 'hi', caption = '', still = false, onCue = () => {} } = args;
     if (!this.grab || !this.size) return Promise.resolve();
     const { w, h } = this.size;
     const s = Math.max(w / GRAB.w, h / GRAB.h); // filling the screen, her hands on its edges
@@ -882,11 +920,14 @@ export class FxLayer {
 
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    let introOver = false;
     this.items = this.items.filter((it) => {
       const alive = now - it.born < it.life;
       if (!alive) it.done?.();
+      if (!alive && it.type === 'intro') introOver = true;
       return alive;
     });
+    if (introOver) this.releaseIntro();
     for (const it of this.items) this.draw(it, (now - it.born) / it.life, dt, now);
 
     if (this.items.length) {
@@ -895,6 +936,11 @@ export class FxLayer {
       ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.running = false;
       this.last = 0;
+      // nothing on it: its screen-sized canvas (some 10 MB on a phone) is let go until the next effect
+      if (this.parkIdle) {
+        this.parked = true;
+        this.canvas.width = this.canvas.height = 0;
+      }
     }
   }
 
