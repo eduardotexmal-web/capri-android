@@ -86,4 +86,6 @@ echo "her at: $her"
 shot 17-tap-her 4
 adb shell input text "hola"
 shot 18-typing 3
+adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
+adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js AndroidRuntime | tail -60

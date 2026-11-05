@@ -166,6 +166,7 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     private fun setIme(h: Int) {
         val focusable = params?.let { it.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE == 0 } ?: false
         val now = if (focusable) h else 0
+        Log.d("capri", "keyboard: insets $imeInsets frame $imeFrame focusable $focusable -> $now")
         if (now == ime) return
         ime = now
         pads.reapply()

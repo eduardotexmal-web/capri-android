@@ -737,6 +737,7 @@ const resized = () => {
   const shrunk = Math.max(0, (tallest[key] || innerHeight) - innerHeight);
   const gap = Math.min(Math.max(0, keyboard - shrunk), innerHeight * 0.7);
   emit('overlay:resize', { width: innerWidth, height: innerHeight, gap });
+  send('log', { level: 'I', text: `size ${innerWidth}x${innerHeight} (screen ${screen.width}x${screen.height}) keyboard ${keyboard} gap ${Math.round(gap)}` });
 };
 window.addEventListener('resize', resized);
 on('ime:change', ({ height = 0 } = {}) => {
