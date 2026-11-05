@@ -101,7 +101,8 @@ xml = open('/tmp/ui.xml', encoding='utf-8').read()
 for m in re.finditer(r'<node [^>]*?class="android.widget.EditText"[^>]*?package="[^"]*capri[^"]*"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml):
     x1, y1, x2, y2 = map(int, m.groups()); print((x1 + x2) // 2, (y1 + y2) // 2); break
 PY2
-if [ -s /tmp/xy ]; then adb shell input tap $(cat /tmp/xy); echo "tapped her box at $(cat /tmp/xy)"; else echo "no box of hers"; fi
+[ -s /tmp/xy ] || echo "386 564" > /tmp/xy # where her box is on this screen (17-chat), if accessibility doesn't say
+adb shell input tap $(cat /tmp/xy); echo "tapped her box at $(cat /tmp/xy)"
 sleep 3
 for k in H O L A; do adb shell input keyevent KEYCODE_$k; sleep 1; done
 shot 18-typing 2
@@ -109,6 +110,8 @@ adb shell input keyevent KEYCODE_L
 shot 19-typed-l 3
 adb shell input text "choom"
 shot 20-typed-text 3
+adb shell input tap 1000 1000 # away from her: her chat closes, the keyboard goes
+shot 21-tap-away 3
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80

@@ -97,15 +97,14 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         // Back while typing to her: Escape, which closes her chat as on the desktop
         web.setOnKeyListener { _, code, event ->
             if (code == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                web.evaluateJavascript(
-                    "document.activeElement && document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}))",
-                    null,
-                )
+                web.evaluateJavascript(ESCAPE, null)
                 true
             } else {
                 false
             }
         }
+
+        web.setOnTouchListener { _, ev -> outside(ev) }
 
         val p = baseParams(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT).apply {
             flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -139,6 +138,8 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     private var ime = 0
     private var lastDpr = 1.0
 
+    private var typing = false
+    private var lastRegions = JSONArray()
     private var imeInsets = 0
     private var imeFrame = 0
 
@@ -177,16 +178,36 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         emit("ime:change", JSONObject().put("height", css.toDouble()).toString())
     }
 
-    /** Typing to her: the overlay takes the keyboard while her chat is open, and gives it back. */
+    /**
+     * Typing to her: the overlay takes the keyboard while her chat is open, and gives it back.
+     * Android hands the keys to the window that was last touched, and a touch on her pads (their own
+     * windows) never touches hers: so while she has the keyboard her window is touched directly (the
+     * pads step aside), and a tap away from her and her chat closes it, as Escape would.
+     */
     fun setFocusable(on: Boolean) = main.post {
         val web = webView ?: return@post
         val p = params ?: return@post
         Log.d("capri", "focus $on")
-        p.flags = if (on) p.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
-        else p.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        val touch = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        val focus = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        p.flags = if (on) p.flags and touch.inv() and focus.inv() else p.flags or touch or focus
+        typing = on
         wm.updateViewLayout(web, p)
+        pads.reapply()
         if (on) web.requestFocus()
         setIme(maxOf(imeInsets, imeFrame))
+    }
+
+    /** While she has the keyboard: a finger down outside all she can be touched by closes her chat. */
+    private fun outside(ev: MotionEvent): Boolean {
+        if (!typing || ev.actionMasked != MotionEvent.ACTION_DOWN) return false
+        val d = lastDpr
+        for (i in 0 until lastRegions.length()) {
+            val r = lastRegions.optJSONArray(i) ?: continue
+            if (ev.x >= r.optDouble(0) * d && ev.x <= r.optDouble(2) * d && ev.y >= r.optDouble(1) * d && ev.y <= r.optDouble(3) * d) return false
+        }
+        webView?.evaluateJavascript(LEAVE, null)
+        return true
     }
 
     /** Where her page can be touched, in CSS px (touch.js): [[left, top, right, bottom], ...]. */
@@ -292,10 +313,12 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         fun update(list: JSONArray, dpr: Double) {
             last = list
             lastDpr = dpr
+            lastRegions = list
             // the keyboard's top, in screen px: nothing of hers is touchable below it
             val floor = if (ime > 0) maxOf(context.resources.displayMetrics.heightPixels, webView?.height ?: 0) - ime else Int.MAX_VALUE
             val want = ArrayList<IntArray>()
-            for (i in 0 until minOf(list.length(), MAX_PADS)) {
+            // while she has the keyboard her own window takes the touches (setFocusable): no pads
+            for (i in 0 until if (typing) 0 else minOf(list.length(), MAX_PADS)) {
                 val r = list.optJSONArray(i) ?: continue
                 val l = (r.optDouble(0) * dpr).toInt()
                 val t = (r.optDouble(1) * dpr).toInt()
@@ -358,6 +381,12 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     }
 
     companion object {
+        // a tap away from her while she has the keyboard: her chat (or setup question) closes, and
+        // if somehow none is open, the keyboard is given back anyway (never a screen you can't touch)
+        private const val LEAVE =
+            "(function(){var p=window.dev&&window.dev.panel;if(p&&p.current&&p.current.chat&&!p.el.hidden){p.hide()}else if(window.host){window.host.focusOverlay(false)}})()"
+        private const val ESCAPE =
+            "document.activeElement && document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true}))"
         // the host Android reserves for an app's own files in a WebView (never a real site)
         const val HOST = "appassets.androidplatform.net"
         private const val MAX_PADS = 8
