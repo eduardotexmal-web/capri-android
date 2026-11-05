@@ -224,4 +224,23 @@ body {
 
 .anote button:active { color: var(--ink); background: var(--cyan); }
 .anote .anote__play { color: var(--ink); background: var(--yellow); border-color: var(--yellow); }
+
+/* the music card moves with a finger (its grip, or anywhere off its buttons) and folds to a chip */
+.anote--music { touch-action: none; padding-left: 8px; }
+.anote__grip {
+  flex: none;
+  width: 8px;
+  align-self: stretch;
+  background: radial-gradient(circle, var(--paper-3) 1.2px, transparent 1.6px) 0 0 / 4px 6px;
+  opacity: 0.8;
+}
+.anote--music.is-moving { box-shadow: 8px 8px 0 var(--echo); opacity: 0.92; }
+.anote .anote__fold { color: var(--paper-2); border-color: var(--line); min-width: 32px; }
+.anote .anote__open { display: none; }
+.anote--music.is-folded { width: auto; gap: 6px; padding: 6px 8px; }
+.anote--music.is-folded .anote__body,
+.anote--music.is-folded [data-a='previous'],
+.anote--music.is-folded [data-a='next'],
+.anote--music.is-folded .anote__fold { display: none; }
+.anote--music.is-folded .anote__open { display: block; color: var(--yellow); border-color: var(--yellow); }
 .anote .anote__x { color: var(--paper-2); border-color: var(--line); min-width: 32px; height: 32px; }

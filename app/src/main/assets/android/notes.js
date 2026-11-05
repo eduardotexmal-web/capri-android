@@ -10,6 +10,7 @@
 import { call, send, on, emit } from './native.js';
 
 const NOTE_FOR = 7000;        // how long a notice stays on screen
+const MUSIC_SPOT = 'capri.musicCard'; // where you left her music card, and if it's folded
 const PAUSED_FOR = 90 * 1000; // music paused this long: its card goes
 const SAY_EVERY = 4 * 60 * 1000;
 
@@ -89,14 +90,18 @@ export class Notes {
     const el = document.createElement('div');
     el.className = `anote anote--${kind}`;
     el.hidden = true;
-    el.innerHTML = `<div class="anote__body"><div class="anote__tag"></div><div class="anote__title"></div><div class="anote__sub"></div></div>`
+    el.innerHTML = (kind === 'music' ? '<div class="anote__grip" aria-hidden="true"></div>' : '')
+      + `<div class="anote__body"><div class="anote__tag"></div><div class="anote__title"></div><div class="anote__sub"></div></div>`
       + (kind === 'music'
-        ? '<div class="anote__ctl"><button data-a="previous" aria-label="previous">⏮</button><button data-a="toggle" class="anote__play" aria-label="play">⏯</button><button data-a="next" aria-label="next">⏭</button></div>'
+        ? '<div class="anote__ctl"><button data-a="unfold" class="anote__open" aria-label="open">♪</button><button data-a="previous" aria-label="previous">⏮</button><button data-a="toggle" class="anote__play" aria-label="play">⏯</button><button data-a="next" aria-label="next">⏭</button><button data-a="fold" class="anote__fold" aria-label="fold">–</button></div>'
         : '<button class="anote__x" data-a="dismiss" aria-label="dismiss">×</button>');
+    if (kind === 'music') this.movable(el);
     el.addEventListener('click', (e) => {
+      if (el.dataset.dragged) return; // the end of a drag, not a tap
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (kind === 'music') {
-        if (a) call('media:control', { action: a }).catch(() => {});
+        if (a === 'fold' || a === 'unfold') this.fold(a === 'fold');
+        else if (a) call('media:control', { action: a }).catch(() => {});
         else call('media:open').catch(() => {});
       } else {
         if (a !== 'dismiss' && this.note) call('note:open', { key: this.note.key }).catch(() => {});
@@ -111,10 +116,91 @@ export class Notes {
   // than the screen shows): the notice up in the middle, the music lower down, both well clear of
   // the navigation bar, with room above each for her to sit.
   place() {
-    const h = Math.min(innerHeight, window.visualViewport?.height || innerHeight, screen.height || innerHeight);
+    const h = this.visible();
     this.notice.style.top = `${Math.round(h * 0.3)}px`;
-    this.music.style.top = `${Math.round(h * 0.58)}px`;
+    const spot = this.saved();
+    this.music.classList.toggle('is-folded', Boolean(spot.folded));
+    if (spot.x != null && spot.y != null) this.moveMusic(spot.x * innerWidth, spot.y * h);
+    else {
+      this.music.style.left = '';
+      this.music.style.top = `${Math.round(h * 0.58)}px`;
+    }
     this.feed();
+  }
+
+  visible() {
+    return Math.min(innerHeight, window.visualViewport?.height || innerHeight, screen.height || innerHeight);
+  }
+
+  // ---------- the music card: moved with a finger, folded to a small chip ----------
+  // where you left it and whether it's folded, kept on this phone (a fraction of the screen, so a
+  // turn of the phone keeps it in the same part of it)
+
+  saved() {
+    try { return JSON.parse(localStorage.getItem(MUSIC_SPOT) || '{}') || {}; } catch { return {}; }
+  }
+
+  save(patch) {
+    try { localStorage.setItem(MUSIC_SPOT, JSON.stringify({ ...this.saved(), ...patch })); } catch { /* private storage off: it just won't be remembered */ }
+  }
+
+  // inside what's visible, whatever its size
+  moveMusic(x, y) {
+    const el = this.music;
+    const w = el.offsetWidth || 300;
+    const hgt = el.offsetHeight || 64;
+    const left = Math.max(4, Math.min(innerWidth - w - 8, x));
+    const top = Math.max(28, Math.min(this.visible() - hgt - 12, y));
+    el.style.left = `${Math.round(left)}px`;
+    el.style.top = `${Math.round(top)}px`;
+    return { left, top };
+  }
+
+  fold(on) {
+    this.music.classList.toggle('is-folded', on);
+    this.save({ folded: on });
+    // folded at the right edge, it stays inside the screen
+    const r = this.music.getBoundingClientRect();
+    this.moveMusic(r.left, r.top);
+    this.feed();
+  }
+
+  // a finger on the card (not on its buttons) that moves more than a little: the card follows it
+  movable(el) {
+    let start = null;
+    let frame = 0;
+    el.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      const r = el.getBoundingClientRect();
+      start = { x: e.clientX, y: e.clientY, left: r.left, top: r.top, moving: false };
+      delete el.dataset.dragged;
+      try { el.setPointerCapture(e.pointerId); } catch { /* fine without it */ }
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!start) return;
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!start.moving && Math.hypot(dx, dy) < 10) return;
+      start.moving = true;
+      el.classList.add('is-moving');
+      this.moveMusic(start.left + dx, start.top + dy);
+      // she rides along if she's sitting on it
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; emit('windows:update', this.snapshot()); });
+    });
+    const end = () => {
+      if (!start) return;
+      if (start.moving) {
+        el.dataset.dragged = '1';
+        setTimeout(() => delete el.dataset.dragged, 300); // only the click this drag ends is skipped
+        el.classList.remove('is-moving');
+        const r = el.getBoundingClientRect();
+        this.save({ x: r.left / innerWidth, y: r.top / this.visible() });
+        this.feed();
+      }
+      start = null;
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
   }
 
   fill(el, tag, title, sub) {
@@ -140,6 +226,7 @@ export class Notes {
     this.music.classList.toggle('is-paused', !playing);
     const wasHidden = this.music.hidden;
     this.music.hidden = false;
+    if (wasHidden) this.place(); // laid out now: kept inside the screen at its real size
     this.feed();
     // a new song, or the music starting: she comes to sit on it
     const fresh = playing && (wasHidden || !before?.playing || before.title !== title);
@@ -209,6 +296,7 @@ export class Notes {
       if (capri.perch?.id === id && capri.stance === 'sit') return then?.();
       if (dev.panel?.current && !dev.panel.current.hold) return; // something she's saying to you stays
       if (dev.chat?.open) return;
+      if (id === 'music' && this.music.classList.contains('is-folded')) return; // a chip: no room for her
       const win = capri.windows.wins.find((w) => w.id === id);
       if (!win || !capri.canSit(win)) return;
       // on the music card she keeps off its buttons (on its left part, over the song's name)

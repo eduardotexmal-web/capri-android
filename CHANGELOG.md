@@ -3,6 +3,12 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.1.0
+
+- **Tarjeta de música a tu gusto:** arrástrala con el dedo a donde quieras (desde sus puntitos o cualquier parte
+  que no sea un botón) y se queda ahí, incluso si reinicias. Con el botón **–** se pliega a una píldora pequeña
+  con ♪ y play/pausa; toca ♪ para abrirla otra vez. Si Capri está sentada encima, se va con ella.
+
 ## 1.0.0
 
 - **Numeración propia:** Capri Android estrena sus propias versiones, empezando por la 1.0.0. Ya no sigue la
