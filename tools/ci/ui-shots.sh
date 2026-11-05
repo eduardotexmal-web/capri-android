@@ -128,7 +128,7 @@ sleep 45
 echo "===MEMINFO==="
 for i in 1 2 3; do
   app=$(adb shell pidof $PKG | tr -d '\r')
-  web=$(adb shell ps -A | grep sandboxed_process | awk '{print $2}' | tail -1)
+  web=$(adb shell top -b -n 1 | grep sandboxed_process | awk '{print $1}' | head -1)
   a=$(adb shell dumpsys meminfo $app | grep "TOTAL PSS" | awk '{print $3}')
   w=$(adb shell dumpsys meminfo $web | grep "TOTAL PSS" | awk '{print $3}')
   echo "pss app=$a web=$w total=$(( (a + w) / 1024 )) MB"
