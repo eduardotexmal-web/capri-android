@@ -85,9 +85,29 @@ adb shell input keyevent KEYCODE_HOME
 shot 16-capri-home 6
 # her chat (as "Talk to her" in her menu: a debug build lets adb ask her service), then typing
 adb shell am start-foreground-service -n $PKG/.CapriService -a capri.CHAT
-shot 17-chat 5
+shot 17-chat 12
+# what her panel says (her WebView's text, as accessibility sees it)
+dump; python3 - <<'PY2'
+import re
+xml = open('/tmp/ui.xml', encoding='utf-8').read()
+for m in re.finditer(r'<node [^>]*?text="([^"]*)"[^>]*?class="([^"]*)"[^>]*?package="([^"]*)"[^>]*?bounds="([^"]*)"', xml):
+    if 'capri' in m.group(3) and (m.group(1) or 'EditText' in m.group(2)):
+        print('ui:', m.group(2), repr(m.group(1)), m.group(4))
+PY2
+# her text box, tapped the way you'd tap it
+python3 - <<'PY2' > /tmp/xy
+import re
+xml = open('/tmp/ui.xml', encoding='utf-8').read()
+for m in re.finditer(r'<node [^>]*?class="android.widget.EditText"[^>]*?package="[^"]*capri[^"]*"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml):
+    x1, y1, x2, y2 = map(int, m.groups()); print((x1 + x2) // 2, (y1 + y2) // 2); break
+PY2
+if [ -s /tmp/xy ]; then adb shell input tap $(cat /tmp/xy); echo "tapped her box at $(cat /tmp/xy)"; else echo "no box of hers"; fi
+sleep 3
 adb shell input text "hola"
-shot 18-typing 3
+shot 18-typing 4
+adb shell input keyevent KEYCODE_L
+shot 19-typed-l 3
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density
-adb logcat -d -s capri capri-js AndroidRuntime | tail -60
+adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80
+adb logcat -d -s capri | grep -E "keyboard|size|regions" | tail -30
