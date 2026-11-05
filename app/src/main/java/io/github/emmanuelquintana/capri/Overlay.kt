@@ -165,7 +165,10 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
 
     private fun setIme(h: Int) {
         val focusable = params?.let { it.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE == 0 } ?: false
-        val now = if (focusable) h else 0
+        // the keyboard is surely up while she takes it; if Android doesn't say how tall, about 42 %
+        // of the screen (her window is drawn above the keyboard, so guessing short would leave her on the keys)
+        val tall = maxOf(context.resources.displayMetrics.heightPixels, webView?.height ?: 0)
+        val now = if (!focusable) 0 else if (h > 0) h else (tall * 0.42).toInt()
         Log.d("capri", "keyboard: insets $imeInsets frame $imeFrame focusable $focusable -> $now")
         if (now == ime) return
         ime = now
@@ -181,7 +184,8 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         p.flags = if (on) p.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
         else p.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         wm.updateViewLayout(web, p)
-        if (on) web.requestFocus() else setIme(0)
+        if (on) web.requestFocus()
+        setIme(maxOf(imeInsets, imeFrame))
     }
 
     /** Where her page can be touched, in CSS px (touch.js): [[left, top, right, bottom], ...]. */

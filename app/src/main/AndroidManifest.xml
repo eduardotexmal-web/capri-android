@@ -53,7 +53,7 @@
 
         <service
             android:name=".CapriService"
-            android:exported="false"
+            android:exported="${serviceExported}"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

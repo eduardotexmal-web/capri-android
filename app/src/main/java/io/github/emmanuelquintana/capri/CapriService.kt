@@ -80,6 +80,7 @@ class CapriService : Service() {
             ACTION_MENU -> command("menu")
             ACTION_TOGGLE -> command("toggle")
             ACTION_QUIT -> quit()
+            ACTION_CHAT -> command("chat")
             ACTION_SETUP -> if (pageReady) command("setupChat") else queued = "setupChat"
         }
         return START_STICKY
@@ -223,6 +224,7 @@ class CapriService : Service() {
         const val ACTION_TOGGLE = "capri.TOGGLE"
         const val ACTION_QUIT = "capri.QUIT"
         const val ACTION_SETUP = "capri.SETUP"
+        const val ACTION_CHAT = "capri.CHAT"
         private val FACES = setOf("aside", "calm", "laugh", "look", "many", "smug", "wide")
 
         fun start(context: Context, action: String? = null) {

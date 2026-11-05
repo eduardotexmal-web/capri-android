@@ -14,6 +14,8 @@ android {
         // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
         versionCode = 509
         versionName = "0.5.1-android.9"
+        // her service is only reachable from outside (adb, CI's screenshots) in debug builds
+        manifestPlaceholders["serviceExported"] = "false"
     }
 
     buildFeatures { buildConfig = true }
@@ -33,6 +35,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["serviceExported"] = "true"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

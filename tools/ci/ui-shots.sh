@@ -83,18 +83,9 @@ tap "iniciar capri"
 shot 15-capri-on 14
 adb shell input keyevent KEYCODE_HOME
 shot 16-capri-home 6
-# the keyboard over her: open her chat (a tap on her), type, see where she is
-her=$(adb logcat -d -s capri | grep ' regions ' | tail -1 | python3 -c "
-import sys, json, re
-l = sys.stdin.read()
-m = re.search(r'regions ([0-9.]+) (\[.*\])', l)
-if m:
-    dpr = float(m.group(1)); r = json.loads(m.group(2))[0]
-    print(int((r[0] + r[2]) / 2 * dpr), int((r[1] * 0.4 + r[3] * 0.6) * dpr))
-")
-echo "her at: $her"
-[ -n "$her" ] && adb shell input tap $her
-shot 17-tap-her 4
+# her chat (as "Talk to her" in her menu: a debug build lets adb ask her service), then typing
+adb shell am start-foreground-service -n $PKG/.CapriService -a capri.CHAT
+shot 17-chat 5
 adb shell input text "hola"
 shot 18-typing 3
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
