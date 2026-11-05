@@ -130,7 +130,7 @@ for i in 1 2 3; do
   app=$(adb shell pidof $PKG | tr -d '\r')
   web=$(adb shell top -b -n 1 | grep sandboxed_process | awk '{print $1}' | head -1)
   a=$(adb shell dumpsys meminfo $app | grep "TOTAL PSS" | awk '{print $3}')
-  w=$(adb shell dumpsys meminfo $web | grep "TOTAL PSS" | awk '{print $3}')
+  w=$(adb shell dumpsys meminfo | grep -m1 "K: com.google.android.webview:sandboxed" | awk '{print $1}' | tr -d 'K,')
   echo "pss app=$a web=$w total=$(( (a + w) / 1024 )) MB"
   sleep 10
 done
