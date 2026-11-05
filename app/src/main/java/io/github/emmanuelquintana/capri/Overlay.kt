@@ -117,7 +117,6 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         // shown from the start: a hidden WebView gets no animation frames, and her page waits on them
         wm.addView(web, p)
         watchKeyboard(web)
-        web.viewTreeObserver.addOnWindowFocusChangeListener { Log.d("capri", "window focus $it") }
         web.loadUrl("https://$HOST/capri/src/renderer/index.html")
     }
 
@@ -189,7 +188,6 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     fun setFocusable(on: Boolean) = main.post {
         val web = webView ?: return@post
         val p = params ?: return@post
-        Log.d("capri", "focus $on")
         val touch = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         val focus = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         // ALT_FOCUSABLE_IM flips its meaning on a focusable window: off while she takes the keyboard
@@ -204,7 +202,6 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
 
     /** While she has the keyboard: a finger down outside all she can be touched by closes her chat. */
     private fun outside(ev: MotionEvent): Boolean {
-        if (ev.actionMasked == MotionEvent.ACTION_DOWN) Log.d("capri", "touch ${ev.x.toInt()},${ev.y.toInt()} typing $typing")
         if (!typing || ev.actionMasked != MotionEvent.ACTION_DOWN) return false
         val d = lastDpr
         for (i in 0 until lastRegions.length()) {
