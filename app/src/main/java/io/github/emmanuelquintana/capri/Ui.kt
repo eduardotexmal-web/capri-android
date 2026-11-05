@@ -47,7 +47,7 @@ class Ui(private val a: Activity) {
     }
 
     /** "// SECTION" in cyan mono, the way her panels label things. */
-    fun label(t: String, color: Int = Hud.CYAN) = text("// " + t.uppercase(), 12f, color, mono).apply { letterSpacing = 0.12f }
+    fun label(t: String, color: Int = Hud.GREEN) = text("// " + t.uppercase(), 12f, color, mono).apply { letterSpacing = 0.12f }
 
     fun col(pad: Int = 0) = LinearLayout(a).apply {
         orientation = LinearLayout.VERTICAL
@@ -67,18 +67,18 @@ class Ui(private val a: Activity) {
         setPadding(dpi(14), dpi(12), dpi(14 + if (echo != 0) 4 else 0), dpi(14 + if (echo != 0) 4 else 0))
     }
 
-    /** Her buttons: yellow (the main one), cyan, or outlined. */
+    /** Her buttons: yellow (the main one, her red behind it), her green, or outlined. */
     fun button(t: String, kind: Kind = Kind.MAIN, onTap: () -> Unit) = text(t.uppercase(), if (kind == Kind.MAIN) 17f else 13f, Hud.INK, if (kind == Kind.MAIN) head else mono).apply {
         gravity = Gravity.CENTER
         letterSpacing = 0.08f
         isClickable = true
         when (kind) {
             Kind.MAIN -> {
-                background = Hud.Plate(Hud.YELLOW, Hud.CYAN, Hud.CYAN, cut = dp(14f), stroke = 0f, offset = dp(5f))
+                background = Hud.Plate(Hud.YELLOW, Hud.MANE, Hud.MANE, cut = dp(14f), stroke = 0f, offset = dp(5f))
                 setPadding(0, dpi(14), dpi(5), dpi(19))
             }
-            Kind.CYAN -> {
-                background = Hud.Plate(Hud.CYAN, Hud.YELLOW, cut = dp(8f), stroke = 0f, offset = 0f)
+            Kind.GREEN -> {
+                background = Hud.Plate(Hud.GREEN, Hud.YELLOW, cut = dp(8f), stroke = 0f, offset = 0f)
                 setPadding(dpi(12), dpi(10), dpi(12), dpi(10))
             }
             Kind.LINE -> {
@@ -90,7 +90,23 @@ class Ui(private val a: Activity) {
         setOnClickListener { onTap() }
     }
 
-    enum class Kind { MAIN, CYAN, LINE }
+    enum class Kind { MAIN, GREEN, LINE }
+
+    /** The status and navigation bars' heights (and the keyboard's), as they change: Android 15 draws apps under them. */
+    fun underSystemBars(root: View, apply: (top: Int, bottom: Int) -> Unit) {
+        root.setOnApplyWindowInsetsListener { v, insets ->
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                val bars = insets.getInsets(android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout())
+                val ime = insets.getInsets(android.view.WindowInsets.Type.ime())
+                apply(bars.top, maxOf(bars.bottom, ime.bottom)) // the keyboard too, when it's up
+            } else {
+                @Suppress("DEPRECATION")
+                apply(insets.systemWindowInsetTop, insets.systemWindowInsetBottom)
+            }
+            insets
+        }
+        root.requestApplyInsets()
+    }
 
     /** A line to type into, in her style: a yellow underline, mono, a tag. */
     fun field(hint: String, secret: Boolean = false) = EditText(a).apply {

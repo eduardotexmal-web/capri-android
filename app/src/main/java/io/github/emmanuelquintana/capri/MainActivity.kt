@@ -53,6 +53,7 @@ class MainActivity : Activity() {
     private lateinit var nameField: android.widget.EditText
     private lateinit var aiText: TextView
     private lateinit var logText: TextView
+    private lateinit var logBox: LinearLayout
 
     private class Tab(val icon: Ui.Icon, val label: TextView, val button: LinearLayout, val page: View)
 
@@ -73,7 +74,7 @@ class MainActivity : Activity() {
 
         val pages = listOf(newsPage(), permsPage(), settingsPage())
         val bar = ui.row().apply {
-            background = Ui.Pill(Hud.INK, Hud.YELLOW, ui.dp(1.5f))
+            background = Ui.Pill(Hud.INK, Hud.MANE, ui.dp(1.5f))
             setPadding(ui.dpi(6), ui.dpi(6), ui.dpi(6), ui.dpi(6))
             elevation = ui.dp(6f)
         }
@@ -95,9 +96,17 @@ class MainActivity : Activity() {
             content.addView(pages[i], FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
             tabs.add(Tab(icon, text, btn, pages[i]))
         }
-        root.addView(bar, FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+        val barParams = FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
             bottomMargin = ui.dpi(16)
-        })
+        }
+        root.addView(bar, barParams)
+        // Android 15 draws the app under the status and navigation bars: her pages start below the
+        // first and the pill bar sits above the second
+        ui.underSystemBars(root) { top, bottom ->
+            content.setPadding(0, top, 0, 0)
+            barParams.bottomMargin = ui.dpi(16) + bottom
+            bar.layoutParams = barParams
+        }
         setContentView(root)
         show(savedInstanceState?.getInt("tab") ?: 0, animate = false)
     }
@@ -154,7 +163,7 @@ class MainActivity : Activity() {
         // header: her face in a cut frame, the project line in cyan, her name in yellow
         val header = ui.row()
         val face = FrameLayout(this@MainActivity).apply {
-            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.CYAN, cut = ui.dp(12f), stroke = ui.dp(2f), offset = ui.dp(4f))
+            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.MANE, cut = ui.dp(12f), stroke = ui.dp(2f), offset = ui.dp(4f))
             setPadding(ui.dpi(4), ui.dpi(4), ui.dpi(8), ui.dpi(8))
             addView(ImageView(this@MainActivity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
@@ -164,9 +173,21 @@ class MainActivity : Activity() {
         header.addView(face)
         header.addView(ui.col().apply {
             setPadding(ui.dpi(16), 0, 0, 0)
-            addView(ui.text("/// PROJECT CAPRICORN", 11f, Hud.CYAN, ui.mono).apply { letterSpacing = 0.12f })
+            addView(ui.text("/// PROJECT CAPRICORN", 11f, Hud.MANE, ui.mono).apply { letterSpacing = 0.12f })
             addView(ui.text("CAPRI", 44f, Hud.YELLOW, ui.head).apply { letterSpacing = 0.06f; includeFontPadding = false })
-            addView(ui.text("ANDROID // v${BuildConfig.VERSION_NAME}", 10f, Hud.PAPER_3, ui.mono).apply { letterSpacing = 0.1f })
+            addView(ui.text("ANDROID // v${BuildConfig.VERSION_NAME}", 10f, Hud.PAPER_3, ui.mono).apply {
+                letterSpacing = 0.1f
+                // seven taps on the version: the developer's log shows up in Settings (or goes again)
+                var taps = 0
+                setOnClickListener {
+                    if (++taps < 7) return@setOnClickListener
+                    taps = 0
+                    val on = !devMode()
+                    getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("dev", on).apply()
+                    Toast.makeText(this@MainActivity, if (on) R.string.dev_on else R.string.dev_off, Toast.LENGTH_SHORT).show()
+                    refresh()
+                }
+            })
         }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         addView(header)
 
@@ -194,7 +215,7 @@ class MainActivity : Activity() {
 
         // updates
         updateText = ui.text("", 13f, Hud.PAPER_2, ui.mono).apply { letterSpacing = 0.02f; setLineSpacing(0f, 1.15f) }
-        updateBtn = ui.button(getString(R.string.update_go), Ui.Kind.CYAN) { update() }.apply { visibility = View.GONE }
+        updateBtn = ui.button(getString(R.string.update_go), Ui.Kind.GREEN) { update() }.apply { visibility = View.GONE }
         addView(ui.card().apply {
             addView(ui.label(getString(R.string.update_head)))
             addView(updateText, ui.block(6))
@@ -204,7 +225,7 @@ class MainActivity : Activity() {
         // what each version brought (CHANGELOG.md)
         addView(ui.label(getString(R.string.news_head)), ui.block(26))
         for ((i, v) in changelog().take(6).withIndex()) {
-            val card = ui.card(if (i == 0) Hud.YELLOW else Hud.LINE_STRONG, if (i == 0) Hud.CYAN else 0)
+            val card = ui.card(if (i == 0) Hud.YELLOW else Hud.LINE_STRONG, if (i == 0) Hud.MANE else 0)
             card.addView(ui.text("v" + v.first, 12f, if (i == 0) Hud.YELLOW else Hud.PAPER_3, ui.mono).apply { letterSpacing = 0.08f })
             for (item in v.second) card.addView(bullet(item, i == 0), ui.block(8))
             addView(card, ui.block(10))
@@ -219,7 +240,7 @@ class MainActivity : Activity() {
         val m = Regex("^\\*\\*(.+?)\\*\\*\\s*(.*)$", RegexOption.DOT_MATCHES_ALL).find(clean)
         val plain = { t: String -> t.replace("*", "") } // *italics* and any ** left: just the words
         val s = SpannableStringBuilder("✦ ")
-        s.setSpan(ForegroundColorSpan(if (fresh) Hud.CYAN else Hud.PAPER_3), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        s.setSpan(ForegroundColorSpan(if (fresh) Hud.MANE else Hud.PAPER_3), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         if (m != null) {
             val start = s.length
             s.append(plain(m.groupValues[1]))
@@ -261,7 +282,7 @@ class MainActivity : Activity() {
             permRows.add(refresh)
         }
         // banking apps see her overlay and her notification access as risks: what to do about it
-        addView(ui.card(Hud.CYAN).apply {
+        addView(ui.card(Hud.GREEN).apply {
             addView(ui.label(getString(R.string.perms_bank_head)))
             addView(ui.text(getString(R.string.perms_bank), 14f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.2f) }, ui.block(6))
         }, ui.block(18))
@@ -279,16 +300,16 @@ class MainActivity : Activity() {
                 setOnEditorActionListener { _, _, _ -> saveName(); true }
             }
             addView(nameField, ui.block(6))
-            addView(ui.button(getString(R.string.settings_save), Ui.Kind.CYAN) { saveName() }, ui.block(12))
+            addView(ui.button(getString(R.string.settings_save), Ui.Kind.GREEN) { saveName() }, ui.block(12))
         })
 
         // her AI
-        addView(ui.card(Hud.CYAN).apply {
+        addView(ui.card(Hud.GREEN).apply {
             addView(ui.label(getString(R.string.settings_ai)))
             aiText = ui.text("", 17f, Hud.PAPER, ui.head)
             addView(aiText, ui.block(6))
             addView(ui.text(getString(R.string.main_ai_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
-            addView(ui.button(getString(R.string.main_ai_pick) + " ›", Ui.Kind.CYAN) {
+            addView(ui.button(getString(R.string.main_ai_pick) + " ›", Ui.Kind.GREEN) {
                 startActivity(Intent(this@MainActivity, OnboardingActivity::class.java).putExtra(OnboardingActivity.EXTRA_ONLY, OnboardingActivity.PAGE_AI))
             }, ui.block(12))
             addView(ui.button(getString(R.string.settings_ai_panel) + " ›", Ui.Kind.LINE) { pickAi() }, ui.block(8))
@@ -300,19 +321,24 @@ class MainActivity : Activity() {
             finish()
         }, ui.block(16))
 
-        // the log: what went wrong lately
+        // the log: what went wrong lately (the developer's, not for everyone: debug builds, or seven
+        // taps on the version)
+        logBox = ui.col()
+        addView(logBox)
         val logHead = ui.row()
         logHead.addView(ui.label(getString(R.string.main_log)), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
         logHead.addView(ui.button(getString(R.string.main_copy), Ui.Kind.LINE) { copyLog() })
-        addView(logHead, ui.block(26))
+        logBox.addView(logHead, ui.block(26))
         logText = ui.text("", 11f, Hud.PAPER_2, ui.mono).apply {
             setLineSpacing(0f, 1.15f)
             setTextIsSelectable(true)
             background = ui.plate()
             setPadding(ui.dpi(12), ui.dpi(10), ui.dpi(12), ui.dpi(12))
         }
-        addView(logText, ui.block(8))
+        logBox.addView(logText, ui.block(8))
     }
+
+    private fun devMode() = BuildConfig.DEBUG || getSharedPreferences("app", MODE_PRIVATE).getBoolean("dev", false)
 
     private fun saveName() {
         val n = nameField.text.toString().trim()
@@ -327,15 +353,15 @@ class MainActivity : Activity() {
     private fun refresh() {
         if (!::ui.isInitialized) return
         val running = CapriService.running
-        statusDot.background = Hud.Plate(if (running) Hud.CYAN else Hud.RED, 0, cut = 0f, stroke = 0f, offset = 0f)
+        statusDot.background = Hud.Plate(if (running) Hud.GREEN else Hud.RED, 0, cut = 0f, stroke = 0f, offset = 0f)
         statusWord.text = getString(if (running) R.string.main_status_on else R.string.main_status_off)
-        statusWord.setTextColor(if (running) Hud.CYAN else Hud.RED)
+        statusWord.setTextColor(if (running) Hud.GREEN else Hud.RED)
         statusText.text = getString(if (running) R.string.main_running else R.string.main_idle)
         startBtn.text = getString(if (running) R.string.main_stop else R.string.main_start).uppercase()
         startBtn.alpha = if (Settings.canDrawOverlays(this)) 1f else 0.5f
         startBtn.setTextColor(if (running) Hud.YELLOW else Hud.INK)
         startBtn.background = if (running) Hud.Plate(Hud.INK, Hud.YELLOW, Hud.RED, cut = ui.dp(14f), stroke = ui.dp(2f), offset = ui.dp(5f))
-        else Hud.Plate(Hud.YELLOW, Hud.CYAN, Hud.CYAN, cut = ui.dp(14f), stroke = 0f, offset = ui.dp(5f))
+        else Hud.Plate(Hud.YELLOW, Hud.MANE, Hud.MANE, cut = ui.dp(14f), stroke = 0f, offset = ui.dp(5f))
         permRows.forEach { it() }
         aiText.text = getString(R.string.settings_ai_now, when (val p = CapriSettings.provider(this)) {
             "pollinations" -> getString(R.string.main_ai_free)
@@ -395,6 +421,7 @@ class MainActivity : Activity() {
 
     private fun showLog() {
         if (!::logText.isInitialized) return
+        logBox.visibility = if (devMode()) View.VISIBLE else View.GONE
         val lines = Diag.all()
         logText.text = if (lines.isEmpty()) getString(R.string.main_log_empty) else lines.takeLast(30).joinToString("\n")
         logText.setTextColor(if (lines.any { it.contains(" E ") }) Hud.PAPER else Hud.PAPER_2)

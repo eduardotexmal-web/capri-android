@@ -106,4 +106,6 @@
     <string name="update_browser">It downloads in your browser. When it\'s done, open it and tap Update: it installs over this one, nothing lost.</string>
     <string name="perms_bank_head">Banking apps</string>
     <string name="perms_bank">Some banking apps block you if another app shows on top or can see notifications, even if it reads nothing from them. I never read anything from your bank or send your data anywhere. If your bank complains: turn off “See your notifications” and put me away (“Put away”, in my notification) before opening it.</string>
+    <string name="dev_on">Developer mode: the log shows in Settings.</string>
+    <string name="dev_off">Developer mode off.</string>
 </resources>

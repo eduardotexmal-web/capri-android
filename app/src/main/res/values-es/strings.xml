@@ -104,4 +104,6 @@
     <string name="update_browser">Se descarga en tu navegador. Cuando acabe, ábrela y toca Actualizar: se instala encima, sin perder nada.</string>
     <string name="perms_bank_head">Apps de banco</string>
     <string name="perms_bank">Algunas apps de banco (como Nu) bloquean el acceso si otra app se muestra encima o puede ver notificaciones, aunque no lea nada de ellas. Yo nunca leo nada de tu banco ni mando tus datos a ningún lado. Si tu banco se queja: quita «Ver tus notificaciones» y guárdame (botón «Guardarla» de mi notificación) antes de abrirlo.</string>
+    <string name="dev_on">Modo desarrollador: el registro aparece en Ajustes.</string>
+    <string name="dev_off">Modo desarrollador apagado.</string>
 </resources>

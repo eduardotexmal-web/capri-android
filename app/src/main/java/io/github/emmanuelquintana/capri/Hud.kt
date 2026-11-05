@@ -23,6 +23,9 @@ object Hud {
     val YELLOW = Color.rgb(246, 236, 0)    // --yellow
     val CYAN = Color.rgb(0, 223, 234)      // --cyan
     val RED = Color.rgb(255, 32, 82)       // --red
+    // her own colours (fx.js MANE, the --green of her mask): the app wears them next to the yellow
+    val MANE = Color.rgb(250, 4, 72)       // her mane
+    val GREEN = Color.rgb(54, 255, 122)    // her mask and eyes
     val LINE = Color.argb(26, 242, 241, 232) // --line
     val LINE_STRONG = Color.argb(64, 242, 241, 232)
 

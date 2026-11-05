@@ -83,6 +83,7 @@ class OnboardingActivity : Activity() {
         frame.addView(nav)
 
         root.addView(frame)
+        ui.underSystemBars(root) { t, b -> frame.setPadding(0, t, 0, b) }
         setContentView(root)
         only = intent.getIntExtra(EXTRA_ONLY, -1)
         if (only >= 0) top.visibility = View.GONE
@@ -152,7 +153,7 @@ class OnboardingActivity : Activity() {
     private fun says(face: String, line: String, quote: String? = null) {
         val row = ui.row().apply { gravity = Gravity.TOP }
         val frame = FrameLayout(this).apply {
-            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.CYAN, cut = ui.dp(10f), stroke = ui.dp(2f), offset = ui.dp(4f))
+            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.MANE, cut = ui.dp(10f), stroke = ui.dp(2f), offset = ui.dp(4f))
             setPadding(ui.dpi(3), ui.dpi(3), ui.dpi(7), ui.dpi(7))
             addView(ImageView(this@OnboardingActivity).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
@@ -161,7 +162,7 @@ class OnboardingActivity : Activity() {
         }
         row.addView(frame)
         val words = ui.col().apply { setPadding(ui.dpi(14), 0, 0, 0) }
-        words.addView(ui.text("/// CAPRI", 11f, Hud.CYAN, ui.mono).apply { letterSpacing = 0.12f })
+        words.addView(ui.text("/// CAPRI", 11f, Hud.MANE, ui.mono).apply { letterSpacing = 0.12f })
         val said = ui.text("", 21f, Hud.PAPER, ui.head).apply { setLineSpacing(0f, 1.1f) }
         words.addView(said, ui.block(4))
         row.addView(words, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
@@ -181,7 +182,7 @@ class OnboardingActivity : Activity() {
 
     /** The cyan rule down the left of her quotes. */
     private class LeftRule : android.graphics.drawable.Drawable() {
-        private val p = android.graphics.Paint().apply { color = Hud.CYAN }
+        private val p = android.graphics.Paint().apply { color = Hud.GREEN }
         override fun draw(c: android.graphics.Canvas) {
             c.drawRect(bounds.left.toFloat(), bounds.top.toFloat(), bounds.left + 4f, bounds.bottom.toFloat(), p)
         }
@@ -195,11 +196,11 @@ class OnboardingActivity : Activity() {
 
     private fun boot() {
         page.gravity = Gravity.CENTER_VERTICAL
-        val head = ui.text("", 12f, Hud.CYAN, ui.mono).apply { letterSpacing = 0.14f }
+        val head = ui.text("", 12f, Hud.GREEN, ui.mono).apply { letterSpacing = 0.14f }
         page.addView(head)
         val big = ui.text("CAPRI", 64f, Hud.YELLOW, ui.head).apply { letterSpacing = 0.06f; includeFontPadding = false; alpha = 0f }
         page.addView(big, ui.block(6))
-        val bar = Ui.Bar(Hud.CYAN, Hud.LINE)
+        val bar = Ui.Bar(Hud.GREEN, Hud.LINE)
         page.addView(View(this).apply { background = bar }, LinearLayout.LayoutParams(MATCH_PARENT, ui.dpi(6)).apply { topMargin = ui.dpi(18) })
         val link = ui.text(getString(R.string.ob_linking), 12f, Hud.PAPER_3, ui.mono)
         page.addView(link, ui.block(8))
@@ -209,7 +210,7 @@ class OnboardingActivity : Activity() {
             ui.glitchIn(big)
             ui.fill(bar, 1300) {
                 link.text = "OK · v${BuildConfig.VERSION_NAME}"
-                link.setTextColor(Hud.CYAN)
+                link.setTextColor(Hud.GREEN)
                 val keep = page
                 page = hello
                 says("smug", getString(R.string.ob_hello))
@@ -254,7 +255,7 @@ class OnboardingActivity : Activity() {
         says("smug", getString(R.string.ob_ai_line, callMe), getString(R.string.ob_ai_how))
         val options = ui.col()
         page.addView(options, ui.block(18))
-        aiStatus = ui.text("", 14f, Hud.CYAN, ui.mono)
+        aiStatus = ui.text("", 14f, Hud.GREEN, ui.mono)
         fun draw() {
             options.removeAllViews()
             options.addView(aiOption("pollinations", R.string.ai_free_title, R.string.ai_free_how, ::draw))
@@ -276,7 +277,7 @@ class OnboardingActivity : Activity() {
 
     private fun aiOption(id: String, title: Int, how: Int, redraw: () -> Unit): View {
         val chosen = if (id == "keyed") isKeyed(aiChoice) else aiChoice == id
-        val card = ui.card(if (chosen) Hud.YELLOW else Hud.LINE_STRONG, if (chosen) Hud.CYAN else 0)
+        val card = ui.card(if (chosen) Hud.YELLOW else Hud.LINE_STRONG, if (chosen) Hud.MANE else 0)
         val head = ui.row()
         head.addView(ui.text(if (chosen) "◆" else "◇", 16f, if (chosen) Hud.YELLOW else Hud.PAPER_3, ui.mono).apply { setPadding(0, 0, ui.dpi(10), 0) })
         head.addView(ui.text(getString(title), 17f, if (chosen) Hud.PAPER else Hud.PAPER_2, ui.head))
@@ -293,7 +294,7 @@ class OnboardingActivity : Activity() {
             val chips = ui.row()
             for (p in CapriSettings.KEYED) {
                 val on = p.id == aiKeyed.id
-                chips.addView(ui.button(p.name, if (on) Ui.Kind.CYAN else Ui.Kind.LINE) {
+                chips.addView(ui.button(p.name, if (on) Ui.Kind.GREEN else Ui.Kind.LINE) {
                     aiKeyed = p
                     aiChoice = p.id
                     redraw()
@@ -326,7 +327,7 @@ class OnboardingActivity : Activity() {
         val key = keyField?.text?.toString().orEmpty()
         val ip = ipField?.text?.toString().orEmpty()
         checking = true
-        aiStatus?.setTextColor(Hud.CYAN)
+        aiStatus?.setTextColor(Hud.GREEN)
         aiStatus?.text = getString(R.string.ai_checking)
         Thread {
             val why = CapriSettings.setAi(this, provider, key, ip)
@@ -422,13 +423,13 @@ object Permissions {
         }
         top.addView(tag)
         top.addView(View(a), LinearLayout.LayoutParams(0, 1, 1f))
-        val mark = ui.text("", 12f, Hud.CYAN, ui.mono).apply { letterSpacing = 0.1f }
+        val mark = ui.text("", 12f, Hud.GREEN, ui.mono).apply { letterSpacing = 0.1f }
         top.addView(mark)
         card.addView(top)
         val title = ui.text(a.getString(p.title), 17f, Hud.PAPER, ui.head)
         card.addView(title, ui.block(8))
         card.addView(ui.text(a.getString(p.why), 14f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.18f) }, ui.block(4))
-        val grant = ui.button(a.getString(R.string.main_grant) + " ›", Ui.Kind.CYAN) { p.ask() }
+        val grant = ui.button(a.getString(R.string.main_grant) + " ›", Ui.Kind.GREEN) { p.ask() }
         card.addView(grant, ui.block(12))
         val refresh = {
             val ok = p.granted()
