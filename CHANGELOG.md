@@ -3,6 +3,18 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.2.0
+
+- **Más ligera:** Capri ocupa unos 50 MB menos de RAM. Las imágenes de su intro ya no se quedan en memoria
+  para siempre: se cargan cuando la intro se reproduce y se sueltan al terminar. La capa de efectos también suelta
+  su lienzo de pantalla completa cuando no hay ningún efecto.
+- **Menos batería en reposo:** entre fotograma y fotograma su animación duerme en vez de despertar con cada
+  refresco de pantalla. El audio se cierra a los pocos segundos de su último sonido, y revisa el calor del
+  teléfono y dónde se la puede tocar con menos frecuencia.
+- **Cuando a Android le falta memoria**, o al apagar la pantalla, suelta todo lo que puede volver a cargar, así
+  es menos probable que el sistema la cierre.
+- Todo se ve y funciona igual que antes.
+
 ## 1.1.1
 
 - **Más segura:** Capri ya no pide el permiso de *instalar apps*. Al tocar *Actualizar*, la versión nueva se
