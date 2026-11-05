@@ -12,8 +12,10 @@ android {
         minSdk = 26
         targetSdk = 35
         // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
-        versionCode = 508
-        versionName = "0.5.1-android.8"
+        versionCode = 509
+        versionName = "0.5.1-android.9"
+        // her service is only reachable from outside (adb, CI's screenshots) in debug builds
+        manifestPlaceholders["serviceExported"] = "false"
     }
 
     buildFeatures { buildConfig = true }
@@ -33,6 +35,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["serviceExported"] = "true"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -58,4 +63,22 @@ android {
         // her pictures are already compressed (png, webp): stored as is, read straight from the APK
         noCompress += listOf("png", "webp", "woff2")
     }
+}
+
+// CHANGELOG.md (the repo's root) inside the APK too: the app's What's new tab reads it
+abstract class CopyChangelog : DefaultTask() {
+    @get:InputFile abstract val source: RegularFileProperty
+    @get:OutputDirectory abstract val out: DirectoryProperty
+
+    @TaskAction
+    fun run() {
+        source.get().asFile.copyTo(out.get().file("CHANGELOG.md").asFile, overwrite = true)
+    }
+}
+
+val copyChangelog = tasks.register<CopyChangelog>("copyChangelog") {
+    source.set(rootProject.layout.projectDirectory.file("CHANGELOG.md"))
+}
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(copyChangelog, CopyChangelog::out) }
 }

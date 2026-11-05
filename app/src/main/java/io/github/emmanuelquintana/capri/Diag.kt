@@ -16,6 +16,7 @@ object Diag {
     @Synchronized
     fun add(level: String, text: String) {
         lines.addLast("${time.format(Date())} $level ${text.take(400)}")
+        android.util.Log.println(if (level == "E") android.util.Log.ERROR else if (level == "W") android.util.Log.WARN else android.util.Log.INFO, "capri", text.take(400))
         while (lines.size > 60) lines.removeFirst()
         onChange?.invoke()
     }

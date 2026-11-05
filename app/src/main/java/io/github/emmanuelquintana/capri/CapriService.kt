@@ -80,13 +80,15 @@ class CapriService : Service() {
             ACTION_MENU -> command("menu")
             ACTION_TOGGLE -> command("toggle")
             ACTION_QUIT -> quit()
+            ACTION_CHAT -> command("chat")
             ACTION_SETUP -> if (pageReady) command("setupChat") else queued = "setupChat"
         }
         return START_STICKY
     }
 
     // a command for her page from the app's screen, held until her page is up
-    @Volatile private var pageReady = false
+    @Volatile var pageReady = false
+        private set
     @Volatile private var queued: String? = null
 
     fun onPageReady() {
@@ -222,6 +224,7 @@ class CapriService : Service() {
         const val ACTION_TOGGLE = "capri.TOGGLE"
         const val ACTION_QUIT = "capri.QUIT"
         const val ACTION_SETUP = "capri.SETUP"
+        const val ACTION_CHAT = "capri.CHAT"
         private val FACES = setOf("aside", "calm", "laugh", "look", "many", "smug", "wide")
 
         fun start(context: Context, action: String? = null) {
