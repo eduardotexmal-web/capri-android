@@ -71,6 +71,9 @@ node tools/sync-upstream.mjs ../capri-desktop
 node tools/preview/run.mjs
 ```
 
+Capri Android tiene su propia numeración, `MAYOR.MENOR.PARCHE` (empezó en 1.0.0): *PARCHE* para arreglos,
+*MENOR* para funciones nuevas y *MAYOR* para cambios grandes. `versionCode` es MAYOR×10000 + MENOR×100 + PARCHE.
+
 Cada push a `main` compila el APK en GitHub Actions y lo publica como la versión de `versionName`
 (`app/build.gradle.kts`). Para publicar una versión: sube `versionName` y `versionCode`, y añade su
 apartado al principio de [CHANGELOG.md](CHANGELOG.md); ese texto es lo que se ve en la versión y en el aviso

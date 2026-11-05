@@ -3,6 +3,13 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.0.0
+
+- **Numeración propia:** Capri Android estrena sus propias versiones, empezando por la 1.0.0. Ya no sigue la
+  numeración de capri-desktop. A partir de ahora: el último número sube con los arreglos, el del medio con las
+  funciones nuevas y el primero con los cambios grandes.
+- Trae todo lo de la versión anterior: bienvenida animada, barra de píldora y el arreglo del teclado.
+
 ## 0.5.1-android.9
 
 - **Bienvenida animada:** la primera vez que abres la app, Capri arranca con su intro, te pregunta cómo

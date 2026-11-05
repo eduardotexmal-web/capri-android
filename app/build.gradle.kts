@@ -11,9 +11,10 @@ android {
         applicationId = "io.github.emmanuelquintana.capri"
         minSdk = 26
         targetSdk = 35
-        // follows capri-desktop's version (assets/android/upstream.json), plus the port's own build
-        versionCode = 509
-        versionName = "0.5.1-android.9"
+        // Capri Android's own numbering (MAJOR.MINOR.PATCH), not capri-desktop's;
+        // versionCode = MAJOR*10000 + MINOR*100 + PATCH, always above the old 5xx builds
+        versionCode = 10000
+        versionName = "1.0.0"
         // her service is only reachable from outside (adb, CI's screenshots) in debug builds
         manifestPlaceholders["serviceExported"] = "false"
     }
