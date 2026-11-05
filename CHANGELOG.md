@@ -10,8 +10,9 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
 - **Barra de píldora abajo:** tres pestañas. *Novedades* (estado, Iniciar, actualizaciones y lo nuevo de cada
   versión), *Permisos* (cada uno con su porqué) y *Ajustes* (cómo te llama, su IA y el registro).
 - **Cambia cómo te llama** cuando quieras desde *Ajustes*, aunque esté en pantalla.
-- **Arreglo:** al escribirle a Capri, el teclado se trababa (por ejemplo, la L no respondía) porque ella
-  seguía encima de las teclas. Ahora sube por encima del teclado y nada suyo tapa las teclas.
+- **Arreglo del teclado:** Capri se ponía encima del teclado y se quedaba con tus toques, así que no podías
+  escribir. Ahora, en cualquier app, se aparta por encima del teclado y las teclas son tuyas. En su chat, las
+  letras llegan bien a su caja y, si tocas fuera, el chat se cierra.
 
 ## 0.5.1-android.8
 
