@@ -10,7 +10,18 @@ adb shell settings put global window_animation_scale 1
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS 2>/dev/null
 adb shell cmd locale set-app-locales $PKG --locales es-ES # as Emma sees it
 
-dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb pull /sdcard/ui.xml /tmp/ui.xml >/dev/null 2>&1; }
+# the view tree on screen (uiautomator is flaky on a busy emulator: a few tries)
+dump() {
+  rm -f /tmp/ui.xml
+  for i in 1 2 3 4 5; do
+    adb shell rm -f /sdcard/ui.xml >/dev/null 2>&1
+    adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+    adb pull /sdcard/ui.xml /tmp/ui.xml >/dev/null 2>&1
+    grep -q '<hierarchy' /tmp/ui.xml 2>/dev/null && return 0
+    sleep 2
+  done
+  echo "dump failed"
+}
 # tap the first view whose text contains $1 (case-insensitive)
 tap() {
   dump
