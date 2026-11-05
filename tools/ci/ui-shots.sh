@@ -122,3 +122,14 @@ adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | gre
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80
 adb logcat -d -s capri | grep -E "keyboard|size|regions" | tail -30
+# her memory: idle on the home screen for a while, then what Android says she uses
+adb shell input keyevent KEYCODE_HOME
+sleep 40
+echo "===MEMINFO==="
+adb shell dumpsys meminfo $PKG | head -60
+for p in $(adb shell pidof com.google.android.webview com.android.chrome 2>/dev/null); do :; done
+adb shell dumpsys meminfo | grep -iE "webview|sandboxed|capri" | head -20
+adb shell top -b -n 1 -o PID,RES,%CPU,ARGS | grep -iE "capri|sandboxed|webview" | head
+echo "===CPU==="
+adb shell dumpsys cpuinfo | grep -iE "capri|sandboxed|webview" | head
+echo "===END MEMINFO==="
