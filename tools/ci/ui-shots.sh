@@ -128,7 +128,7 @@ sleep 45
 echo "===MEMINFO==="
 for i in 1 2 3; do
   app=$(adb shell pidof $PKG | tr -d '\r')
-  web=$(adb shell ps -A -o PID,NAME | grep sandboxed_process | awk '{print $1}' | tail -1)
+  web=$(adb shell ps -A | grep sandboxed_process | awk '{print $2}' | tail -1)
   a=$(adb shell dumpsys meminfo $app | grep "TOTAL PSS" | awk '{print $3}')
   w=$(adb shell dumpsys meminfo $web | grep "TOTAL PSS" | awk '{print $3}')
   echo "pss app=$a web=$w total=$(( (a + w) / 1024 )) MB"
@@ -138,5 +138,8 @@ t1=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w1=$(adb shell cat 
 sleep 30
 t2=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w2=$(adb shell cat /proc/$web/stat | awk '{print $14+$15}')
 echo "cpu ticks in 30 s idle: app=$((t2 - t1)) web=$((w2 - w1)) (100 per second = one core)"
-adb shell dumpsys gfxinfo $PKG | grep -E "Total frames|Janky" | head -4
+adb shell dumpsys gfxinfo $PKG reset >/dev/null
+sleep 20
+echo "frames drawn in 20 s idle:"; adb shell dumpsys gfxinfo $PKG | grep -E "Total frames" | head -2
+adb shell top -b -n 1 -H -p $app | head -20
 echo "===END MEMINFO==="
