@@ -112,6 +112,12 @@ adb shell input text "choom"
 shot 20-typed-text 3
 adb shell input tap 1000 1000 # away from her: her chat closes, the keyboard goes
 shot 21-tap-away 3
+# typing in another app (the launcher's search) with her on screen: its keyboard over her
+adb shell input tap 300 2280
+sleep 3
+adb shell input text "hola"
+shot 22-other-app 3
+adb shell dumpsys window windows | grep -E "Window #" | head -16
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80

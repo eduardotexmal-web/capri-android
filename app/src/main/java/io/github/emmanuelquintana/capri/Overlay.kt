@@ -169,7 +169,8 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         // the keyboard is surely up while she takes it; if Android doesn't say how tall, about 42 %
         // of the screen (her window is drawn above the keyboard, so guessing short would leave her on the keys)
         val tall = maxOf(context.resources.displayMetrics.heightPixels, webView?.height ?: 0)
-        val now = if (!focusable) 0 else if (h > 0) h else (tall * 0.42).toInt()
+        // another app's keyboard (when Android tells her): she stays above it too
+        val now = if (!focusable) h else if (h > 0) h else (tall * 0.42).toInt()
         Log.d("capri", "keyboard: insets $imeInsets frame $imeFrame focusable $focusable -> $now")
         if (now == ime) return
         ime = now
@@ -190,7 +191,9 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         Log.d("capri", "focus $on")
         val touch = WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         val focus = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-        p.flags = if (on) p.flags and touch.inv() and focus.inv() else p.flags or touch or focus
+        // ALT_FOCUSABLE_IM flips its meaning on a focusable window: off while she takes the keyboard
+        val alt = WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+        p.flags = if (on) p.flags and touch.inv() and focus.inv() and alt.inv() else p.flags or touch or focus or alt
         typing = on
         wm.updateViewLayout(web, p)
         pads.reapply()
@@ -254,7 +257,10 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+            WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or
+            // with NOT_FOCUSABLE: her windows go under the keyboard of whatever app you type in,
+            // so your taps land on its keys, not on her (Android puts them over it otherwise)
+            WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
         PixelFormat.TRANSLUCENT,
     ).apply {
         gravity = Gravity.TOP or Gravity.START
