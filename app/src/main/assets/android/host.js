@@ -17,6 +17,7 @@ import './upstream/demo-sequence.js';
 import './upstream/launch.js';
 import { Menu } from './menu.js';
 import { Touch } from './touch.js';
+import './phone-lines.js'; // her desktop words said the phone's way (before her page reads them)
 import './setup.js'; // her setup without a terminal (before app.js builds it)
 import { Notes } from './notes.js';
 import './wink.js'; // what she says, also in her notification
@@ -341,8 +342,24 @@ function toggleVisible(force) {
 
 // ---------- her menu (the tray menu of main.js, drawn in the page) ----------
 
+// Her menu's desktop words, the phone's way (the desktop-only entries are left out of it:
+// looking at your PC's screen, being jealous of other AIs' browser pages)
+const PHONE_LABELS = {
+  es: {
+    possess: 'Poseer sus tarjetas', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
+    motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
+    soundsDir: 'Dónde poner sonidos propios',
+  },
+  en: {
+    possess: 'Possess her cards', startup: 'Start with the phone', pcReact: 'React to my phone',
+    motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
+    soundsDir: 'Where to put my own sounds',
+  },
+};
+
 function menuTemplate() {
-  const t = Object.fromEntries(Object.entries(TRAY[resolveLang(cfg.lang)]).map(([key, value]) =>
+  const tray = { ...TRAY[resolveLang(cfg.lang)], ...(PHONE_LABELS[resolveLang(cfg.lang)] || {}) };
+  const t = Object.fromEntries(Object.entries(tray).map(([key, value]) =>
     [key, typeof value === 'string' && activeAssistant().id !== 'claude' ? value.replaceAll('Claude Code', activeAssistant().name) : value]));
   const watched = activeAssistant();
   const hookState = hooksStatus();
@@ -366,7 +383,6 @@ function menuTemplate() {
     { label: t.help, click: () => sendCommand('welcome') },
     ...(cfg.claude ? [{ label: t.report, click: () => sendCommand('report') }] : []),
     { label: t.talk, click: () => sendCommand('chat') },
-    { label: t.lookNow, click: () => sendCommand('look') },
     {
       label: t.reminders,
       submenu: reminders.length
@@ -423,14 +439,8 @@ function menuTemplate() {
     },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
     { label: t.possess, type: 'checkbox', checked: cfg.possess, click: (item) => updateConfig({ possess: item.checked }) },
-    { label: t.jealous, type: 'checkbox', checked: cfg.jealous !== false, click: (item) => updateConfig({ jealous: item.checked }) },
-    {
-      label: t.closePages, type: 'checkbox', checked: cfg.closePages !== false, enabled: cfg.jealous !== false,
-      click: (item) => updateConfig({ closePages: item.checked }),
-    },
     ...(notes ? [notes.menu(updateConfig)] : []),
     { label: t.pcReact, type: 'checkbox', checked: cfg.pcReact !== false, click: (item) => updateConfig({ pcReact: item.checked }) },
-    { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
     {
       label: t.rest,
       submenu: [['corner', t.restCorner], ['taskbar', t.restTaskbar]].map(([rest, label]) => ({
