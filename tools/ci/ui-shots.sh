@@ -122,3 +122,21 @@ adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | gre
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80
 adb logcat -d -s capri | grep -E "keyboard|size|regions" | tail -30
+# her memory: idle on the home screen for a while, then what Android says she uses (PSS, MB)
+adb shell input keyevent KEYCODE_HOME
+sleep 45
+echo "===MEMINFO==="
+for i in 1 2 3; do
+  app=$(adb shell pidof $PKG | tr -d '\r')
+  web=$(adb shell ps -A -o PID,NAME | grep sandboxed_process | awk '{print $1}' | tail -1)
+  a=$(adb shell dumpsys meminfo $app | grep "TOTAL PSS" | awk '{print $3}')
+  w=$(adb shell dumpsys meminfo $web | grep "TOTAL PSS" | awk '{print $3}')
+  echo "pss app=$a web=$w total=$(( (a + w) / 1024 )) MB"
+  sleep 10
+done
+t1=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w1=$(adb shell cat /proc/$web/stat | awk '{print $14+$15}')
+sleep 30
+t2=$(adb shell cat /proc/$app/stat | awk '{print $14+$15}'); w2=$(adb shell cat /proc/$web/stat | awk '{print $14+$15}')
+echo "cpu ticks in 30 s idle: app=$((t2 - t1)) web=$((w2 - w1)) (100 per second = one core)"
+adb shell dumpsys gfxinfo $PKG | grep -E "Total frames|Janky" | head -4
+echo "===END MEMINFO==="
