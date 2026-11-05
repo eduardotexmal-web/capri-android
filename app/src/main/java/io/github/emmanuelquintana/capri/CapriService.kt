@@ -86,7 +86,8 @@ class CapriService : Service() {
     }
 
     // a command for her page from the app's screen, held until her page is up
-    @Volatile private var pageReady = false
+    @Volatile var pageReady = false
+        private set
     @Volatile private var queued: String? = null
 
     fun onPageReady() {

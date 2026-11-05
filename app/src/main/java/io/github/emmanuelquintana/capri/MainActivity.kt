@@ -1,22 +1,23 @@
 package io.github.emmanuelquintana.capri
 
-import android.Manifest
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.text.TextUtils
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.TextPaint
+import android.text.style.MetricAffectingSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -25,187 +26,107 @@ import android.widget.TextView
 import android.widget.Toast
 
 /**
- * The door in, dressed as her HUD: who she is, the two permissions she needs (being on top of your
- * apps, her notification), Start, and a log of what went wrong lately. Everything else is in her
- * own menu, on her.
+ * The app's screen, dressed as her HUD, with a pill bar at the bottom: What's new (her status,
+ * Start, updates and what each version brought), Permissions (what each is for) and Settings
+ * (what she calls you, her AI, the log). The first time, her welcome comes first.
  */
 class MainActivity : Activity() {
-    private lateinit var headFont: Typeface
-    private lateinit var bodyFont: Typeface
-    private lateinit var monoFont: Typeface
+    private lateinit var ui: Ui
+    private lateinit var content: FrameLayout
+    private val tabs = mutableListOf<Tab>()
+    private var current = 0
 
+    // What's new
     private lateinit var statusDot: View
     private lateinit var statusWord: TextView
     private lateinit var statusText: TextView
-    private lateinit var overlayStep: Step
-    private lateinit var notifyStep: Step
-    private lateinit var notesStep: Step
     private lateinit var startBtn: TextView
-    private lateinit var logText: TextView
-    private lateinit var aiText: TextView
     private lateinit var updateText: TextView
     private lateinit var updateBtn: TextView
     private var release: Updater.Release? = null
     private var downloading = false
 
-    private val density get() = resources.displayMetrics.density
-    private fun dp(v: Float) = v * density
-    private fun dpi(v: Int) = (v * density).toInt()
+    // Permissions
+    private val permRows = mutableListOf<() -> Unit>()
+
+    // Settings
+    private lateinit var nameField: android.widget.EditText
+    private lateinit var aiText: TextView
+    private lateinit var logText: TextView
+
+    private class Tab(val icon: Ui.Icon, val label: TextView, val button: LinearLayout, val page: View)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (OnboardingActivity.needed(this)) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
         window.statusBarColor = Hud.INK
         window.navigationBarColor = Hud.INK
-        headFont = resources.getFont(R.font.chakrapetch_bold)
-        bodyFont = resources.getFont(R.font.chakrapetch_semibold)
-        monoFont = resources.getFont(R.font.jetbrains_mono)
+        ui = Ui(this)
 
-        val col = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dpi(20), dpi(28), dpi(20), dpi(24))
-        }
+        val root = FrameLayout(this).apply { background = Hud.Backdrop(ui.dp(3f)) }
+        content = FrameLayout(this)
+        root.addView(content, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        // header: her face in a cut frame, the project line in cyan, her name in yellow
-        val header = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        val face = FrameLayout(this).apply {
-            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.CYAN, cut = dp(12f), stroke = dp(2f), offset = dp(4f))
-            setPadding(dpi(4), dpi(4), dpi(8), dpi(8))
-            addView(ImageView(this@MainActivity).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                runCatching { assets.open("capri/assets/capri/capri-face.png").use { setImageBitmap(BitmapFactory.decodeStream(it)) } }
-            }, FrameLayout.LayoutParams(dpi(72), dpi(72)))
+        val pages = listOf(newsPage(), permsPage(), settingsPage())
+        val bar = ui.row().apply {
+            background = Ui.Pill(Hud.INK, Hud.YELLOW, ui.dp(1.5f))
+            setPadding(ui.dpi(6), ui.dpi(6), ui.dpi(6), ui.dpi(6))
+            elevation = ui.dp(6f)
         }
-        header.addView(face)
-        header.addView(LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dpi(16), 0, 0, 0)
-            addView(text("/// PROJECT CAPRICORN", 11f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f })
-            addView(text("CAPRI", 44f, Hud.YELLOW, headFont).apply { letterSpacing = 0.06f; includeFontPadding = false })
-            addView(text("ANDROID // v${BuildConfig.VERSION_NAME}", 10f, Hud.PAPER_3, monoFont).apply { letterSpacing = 0.1f })
-        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        col.addView(header)
-
-        col.addView(text(getString(R.string.main_intro), 15f, Hud.PAPER_2, bodyFont).apply {
-            setLineSpacing(0f, 1.2f)
-        }, block(top = 20))
-
-        // status plate
-        val status = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = Hud.Plate(Hud.INK_2, Hud.LINE_STRONG, cut = dp(10f), stroke = dp(1f), offset = 0f)
-            setPadding(dpi(14), dpi(12), dpi(14), dpi(14))
-        }
-        val statusRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        statusDot = View(this)
-        statusRow.addView(statusDot, LinearLayout.LayoutParams(dpi(10), dpi(10)).apply { rightMargin = dpi(10) })
-        statusWord = text("", 13f, Hud.PAPER, monoFont).apply { letterSpacing = 0.14f }
-        statusRow.addView(statusWord)
-        status.addView(statusRow)
-        statusText = text("", 14f, Hud.PAPER_2, bodyFont)
-        status.addView(statusText, block(top = 6))
-        col.addView(status, block(top = 20))
-
-        // the permissions, as numbered steps
-        overlayStep = Step("01", getString(R.string.main_overlay)) {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-        }
-        notifyStep = Step("02", getString(R.string.main_notify)) {
-            if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-        }
-        col.addView(overlayStep.view, block(top = 14))
-        notesStep = Step("03", getString(R.string.main_notes)) {
-            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-        }
-        col.addView(notifyStep.view, block(top = 10))
-        col.addView(notesStep.view, block(top = 10))
-
-        // start / stop: the big yellow plate
-        startBtn = text("", 20f, Hud.INK, headFont).apply {
-            gravity = Gravity.CENTER
-            letterSpacing = 0.08f
-            isClickable = true
-            setPadding(0, dpi(16), dpi(6), dpi(20))
-            setOnClickListener {
-                if (CapriService.running) CapriService.send(this@MainActivity, CapriService.ACTION_QUIT) else CapriService.start(this@MainActivity)
-                postDelayed({ refresh() }, 700)
+        val labels = listOf(R.string.tab_news to "spark", R.string.tab_perms to "shield", R.string.tab_settings to "sliders")
+        for ((i, pair) in labels.withIndex()) {
+            val (label, kind) = pair
+            val icon = Ui.Icon(kind, Hud.PAPER_2)
+            val btn = ui.row().apply {
+                gravity = Gravity.CENTER
+                setPadding(ui.dpi(14), ui.dpi(10), ui.dpi(14), ui.dpi(10))
+                isClickable = true
+                setOnClickListener { show(i) }
             }
+            btn.addView(View(this).apply { background = icon }, LinearLayout.LayoutParams(ui.dpi(20), ui.dpi(20)))
+            val text = ui.text(getString(label), 13f, Hud.PAPER_2, ui.head).apply { setPadding(ui.dpi(8), 0, 0, 0) }
+            btn.addView(text)
+            bar.addView(btn, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT))
+            content.addView(pages[i], FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            tabs.add(Tab(icon, text, btn, pages[i]))
         }
-        col.addView(startBtn, block(top = 22))
-
-        // her AI: who answers her, and her own setup panel (no terminal)
-        val ai = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = Hud.Plate(Hud.INK_2, Hud.CYAN, cut = dp(10f), stroke = dp(1f), offset = 0f)
-            setPadding(dpi(14), dpi(12), dpi(14), dpi(14))
-        }
-        ai.addView(text("// " + getString(R.string.main_ai).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f })
-        aiText = text("", 16f, Hud.PAPER, headFont)
-        ai.addView(aiText, block(top = 4))
-        ai.addView(text(getString(R.string.main_ai_how), 13f, Hud.PAPER_2, bodyFont).apply { setLineSpacing(0f, 1.15f) }, block(top = 4))
-        ai.addView(text(getString(R.string.main_ai_pick).uppercase() + " ›", 13f, Hud.INK, monoFont).apply {
-            letterSpacing = 0.1f
-            gravity = Gravity.CENTER
-            setPadding(dpi(12), dpi(10), dpi(12), dpi(10))
-            background = Hud.Plate(Hud.CYAN, Hud.YELLOW, cut = dp(8f), stroke = 0f, offset = 0f)
-            isClickable = true
-            setOnClickListener { pickAi() }
-        }, block(top = 12))
-        col.addView(ai, block(top = 18))
-
-        // updates, from the repo's releases
-        updateText = text("", 13f, Hud.PAPER_2, monoFont).apply { letterSpacing = 0.04f }
-        updateBtn = text("", 13f, Hud.INK, monoFont).apply {
-            letterSpacing = 0.1f
-            gravity = Gravity.CENTER
-            setPadding(dpi(12), dpi(10), dpi(12), dpi(10))
-            background = Hud.Plate(Hud.YELLOW, Hud.CYAN, cut = dp(8f), stroke = 0f, offset = 0f)
-            isClickable = true
-            visibility = View.GONE
-            setOnClickListener { update() }
-        }
-        val upd = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = Hud.Plate(Hud.INK_2, Hud.LINE_STRONG, cut = dp(10f), stroke = dp(1f), offset = 0f)
-            setPadding(dpi(14), dpi(12), dpi(14), dpi(14))
-            addView(text("// " + getString(R.string.update_head).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f })
-            addView(updateText, block(top = 6))
-            addView(updateBtn, block(top = 10))
-        }
-        col.addView(upd, block(top = 18))
-
-        // the log: what went wrong lately
-        val logHead = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        logHead.addView(text("// " + getString(R.string.main_log).uppercase(), 12f, Hud.CYAN, monoFont).apply { letterSpacing = 0.12f },
-            LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-        logHead.addView(text(getString(R.string.main_copy).uppercase(), 11f, Hud.YELLOW, monoFont).apply {
-            letterSpacing = 0.12f
-            setPadding(dpi(12), dpi(6), dpi(12), dpi(6))
-            background = Hud.Plate(Hud.INK, Hud.YELLOW, cut = dp(6f), stroke = dp(1f), offset = 0f)
-            isClickable = true
-            setOnClickListener { copyLog() }
+        root.addView(bar, FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+            bottomMargin = ui.dpi(16)
         })
-        col.addView(logHead, block(top = 26))
-        logText = text("", 11f, Hud.PAPER_2, monoFont).apply {
-            setLineSpacing(0f, 1.15f)
-            setTextIsSelectable(true)
-            background = Hud.Plate(Hud.INK_2, Hud.LINE_STRONG, cut = dp(10f), stroke = dp(1f), offset = 0f)
-            setPadding(dpi(12), dpi(10), dpi(12), dpi(12))
+        setContentView(root)
+        show(savedInstanceState?.getInt("tab") ?: 0, animate = false)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("tab", current)
+    }
+
+    /** One tab on: its icon and label in ink on a yellow capsule, the others quiet. */
+    private fun show(i: Int, animate: Boolean = true) {
+        current = i
+        hideKeyboard()
+        for ((j, t) in tabs.withIndex()) {
+            val on = i == j
+            t.button.background = if (on) Ui.Pill(Hud.YELLOW, 0, 0f) else null
+            t.icon.color = if (on) Hud.INK else Hud.PAPER_2
+            t.icon.invalidateSelf()
+            t.label.setTextColor(if (on) Hud.INK else Hud.PAPER_2)
+            // only the chosen one shows its name: the pill stays short on a narrow phone
+            t.label.visibility = if (on) View.VISIBLE else View.GONE
+            t.page.visibility = if (on) View.VISIBLE else View.GONE
         }
-        col.addView(logText, block(top = 8))
-
-        col.addView(text(getString(R.string.main_license), 11f, Hud.PAPER_3, bodyFont).apply {
-            setLineSpacing(0f, 1.2f)
-        }, block(top = 24))
-
-        setContentView(ScrollView(this).apply {
-            background = Hud.Backdrop(dp(3f))
-            isFillViewport = true
-            addView(col)
-        })
+        if (animate) ui.glitchIn(tabs[i].page)
+        refresh()
     }
 
     override fun onResume() {
         super.onResume()
+        if (!::ui.isInitialized) return
         Diag.onChange = { runOnUiThread { showLog() } }
         refresh()
         checkUpdate()
@@ -218,31 +139,204 @@ class MainActivity : Activity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) = refresh()
 
-    private fun notifyOk() = Build.VERSION.SDK_INT < 33 ||
-        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    private fun page(build: LinearLayout.() -> Unit): View {
+        val col = ui.col().apply {
+            setPadding(ui.dpi(20), ui.dpi(24), ui.dpi(20), ui.dpi(110)) // room for the pill bar
+            build()
+        }
+        return ScrollView(this).apply { isFillViewport = true; addView(col) }
+    }
+
+    // ---------- What's new ----------
+
+    private fun newsPage() = page {
+        // header: her face in a cut frame, the project line in cyan, her name in yellow
+        val header = ui.row()
+        val face = FrameLayout(this@MainActivity).apply {
+            background = Hud.Plate(Hud.INK_2, Hud.YELLOW, Hud.CYAN, cut = ui.dp(12f), stroke = ui.dp(2f), offset = ui.dp(4f))
+            setPadding(ui.dpi(4), ui.dpi(4), ui.dpi(8), ui.dpi(8))
+            addView(ImageView(this@MainActivity).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                ui.face("grin")?.let { setImageBitmap(it) }
+            }, FrameLayout.LayoutParams(ui.dpi(72), ui.dpi(72)))
+        }
+        header.addView(face)
+        header.addView(ui.col().apply {
+            setPadding(ui.dpi(16), 0, 0, 0)
+            addView(ui.text("/// PROJECT CAPRICORN", 11f, Hud.CYAN, ui.mono).apply { letterSpacing = 0.12f })
+            addView(ui.text("CAPRI", 44f, Hud.YELLOW, ui.head).apply { letterSpacing = 0.06f; includeFontPadding = false })
+            addView(ui.text("ANDROID // v${BuildConfig.VERSION_NAME}", 10f, Hud.PAPER_3, ui.mono).apply { letterSpacing = 0.1f })
+        }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        addView(header)
+
+        // status and Start
+        val status = ui.card()
+        val statusRow = ui.row()
+        statusDot = View(this@MainActivity)
+        statusRow.addView(statusDot, LinearLayout.LayoutParams(ui.dpi(10), ui.dpi(10)).apply { rightMargin = ui.dpi(10) })
+        statusWord = ui.text("", 13f, Hud.PAPER, ui.mono).apply { letterSpacing = 0.14f }
+        statusRow.addView(statusWord)
+        status.addView(statusRow)
+        statusText = ui.text("", 14f, Hud.PAPER_2, ui.body)
+        status.addView(statusText, ui.block(6))
+        addView(status, ui.block(20))
+        startBtn = ui.button("", Ui.Kind.MAIN) {
+            if (!Settings.canDrawOverlays(this@MainActivity)) {
+                Toast.makeText(this@MainActivity, R.string.ob_need_overlay, Toast.LENGTH_LONG).show()
+                show(1)
+                return@button
+            }
+            if (CapriService.running) CapriService.send(this@MainActivity, CapriService.ACTION_QUIT) else CapriService.start(this@MainActivity)
+            startBtn.postDelayed({ refresh() }, 700)
+        }
+        addView(startBtn, ui.block(14))
+
+        // updates
+        updateText = ui.text("", 13f, Hud.PAPER_2, ui.mono).apply { letterSpacing = 0.02f; setLineSpacing(0f, 1.15f) }
+        updateBtn = ui.button(getString(R.string.update_go), Ui.Kind.CYAN) { update() }.apply { visibility = View.GONE }
+        addView(ui.card().apply {
+            addView(ui.label(getString(R.string.update_head)))
+            addView(updateText, ui.block(6))
+            addView(updateBtn, ui.block(10))
+        }, ui.block(22))
+
+        // what each version brought (CHANGELOG.md)
+        addView(ui.label(getString(R.string.news_head)), ui.block(26))
+        for ((i, v) in changelog().take(6).withIndex()) {
+            val card = ui.card(if (i == 0) Hud.YELLOW else Hud.LINE_STRONG, if (i == 0) Hud.CYAN else 0)
+            card.addView(ui.text("v" + v.first, 12f, if (i == 0) Hud.YELLOW else Hud.PAPER_3, ui.mono).apply { letterSpacing = 0.08f })
+            for (item in v.second) card.addView(bullet(item, i == 0), ui.block(8))
+            addView(card, ui.block(10))
+        }
+
+        addView(ui.text(getString(R.string.main_license), 11f, Hud.PAPER_3, ui.body).apply { setLineSpacing(0f, 1.2f) }, ui.block(24))
+    }
+
+    /** "- **Title:** the rest" → a spark, the title in her display face, the rest as body text. */
+    private fun bullet(item: String, fresh: Boolean): TextView {
+        val clean = item.replace("`", "").replace(Regex("\\*([^*]+)\\*"), "$1")
+        val m = Regex("^\\*\\*(.+?)\\*\\*\\s*(.*)$", RegexOption.DOT_MATCHES_ALL).find(clean)
+        val s = SpannableStringBuilder("✦ ")
+        s.setSpan(ForegroundColorSpan(if (fresh) Hud.CYAN else Hud.PAPER_3), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (m != null) {
+            val start = s.length
+            s.append(m.groupValues[1].replace("**", ""))
+            s.setSpan(FaceSpan(ui.head), start, s.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            s.setSpan(ForegroundColorSpan(Hud.PAPER), start, s.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            s.append(" ").append(m.groupValues[2].replace("**", ""))
+        } else s.append(clean.replace("**", ""))
+        return ui.text(s, 14f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.18f) }
+    }
+
+    /** CHANGELOG.md, from the APK: [(version, [items])], newest first. */
+    private fun changelog(): List<Pair<String, List<String>>> = runCatching {
+        val out = mutableListOf<Pair<String, MutableList<String>>>()
+        assets.open("CHANGELOG.md").bufferedReader().useLines { lines ->
+            for (raw in lines) {
+                val line = raw.trimEnd()
+                when {
+                    line.startsWith("## ") -> out.add(line.removePrefix("## ").trim() to mutableListOf())
+                    out.isEmpty() -> Unit
+                    line.startsWith("- ") -> out.last().second.add(line.removePrefix("- "))
+                    line.isNotBlank() && out.last().second.isNotEmpty() -> {
+                        val items = out.last().second
+                        items[items.size - 1] = items.last() + " " + line.trim()
+                    }
+                }
+            }
+        }
+        out.map { it.first to it.second.toList() }
+    }.getOrDefault(emptyList())
+
+    // ---------- Permissions ----------
+
+    private fun permsPage() = page {
+        addView(ui.label(getString(R.string.tab_perms)))
+        addView(ui.text(getString(R.string.perms_intro), 15f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.2f) }, ui.block(8))
+        for ((i, p) in Permissions.all(this@MainActivity).withIndex()) {
+            val (view, refresh) = Permissions.row(this@MainActivity, ui, p)
+            addView(view, ui.block(if (i == 0) 18 else 12))
+            permRows.add(refresh)
+        }
+    }
+
+    // ---------- Settings ----------
+
+    private fun settingsPage() = page {
+        // what she calls you
+        addView(ui.card(Hud.YELLOW).apply {
+            addView(ui.label(getString(R.string.settings_name)))
+            nameField = ui.field(getString(R.string.ob_name_hint)).apply {
+                setText(CapriSettings.name(this@MainActivity))
+                filters = arrayOf(android.text.InputFilter.LengthFilter(24))
+                setOnEditorActionListener { _, _, _ -> saveName(); true }
+            }
+            addView(nameField, ui.block(6))
+            addView(ui.button(getString(R.string.settings_save), Ui.Kind.CYAN) { saveName() }, ui.block(12))
+        })
+
+        // her AI
+        addView(ui.card(Hud.CYAN).apply {
+            addView(ui.label(getString(R.string.settings_ai)))
+            aiText = ui.text("", 17f, Hud.PAPER, ui.head)
+            addView(aiText, ui.block(6))
+            addView(ui.text(getString(R.string.main_ai_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            addView(ui.button(getString(R.string.main_ai_pick) + " ›", Ui.Kind.CYAN) {
+                startActivity(Intent(this@MainActivity, OnboardingActivity::class.java).putExtra(OnboardingActivity.EXTRA_ONLY, OnboardingActivity.PAGE_AI))
+            }, ui.block(12))
+            addView(ui.button(getString(R.string.settings_ai_panel) + " ›", Ui.Kind.LINE) { pickAi() }, ui.block(8))
+        }, ui.block(16))
+
+        addView(ui.button(getString(R.string.settings_intro_again), Ui.Kind.LINE) {
+            getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("welcomed", false).apply()
+            startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+            finish()
+        }, ui.block(16))
+
+        // the log: what went wrong lately
+        val logHead = ui.row()
+        logHead.addView(ui.label(getString(R.string.main_log)), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        logHead.addView(ui.button(getString(R.string.main_copy), Ui.Kind.LINE) { copyLog() })
+        addView(logHead, ui.block(26))
+        logText = ui.text("", 11f, Hud.PAPER_2, ui.mono).apply {
+            setLineSpacing(0f, 1.15f)
+            setTextIsSelectable(true)
+            background = ui.plate()
+            setPadding(ui.dpi(12), ui.dpi(10), ui.dpi(12), ui.dpi(12))
+        }
+        addView(logText, ui.block(8))
+    }
+
+    private fun saveName() {
+        val n = nameField.text.toString().trim()
+        hideKeyboard()
+        if (n.isEmpty()) return
+        CapriSettings.setName(this, n)
+        Toast.makeText(this, getString(R.string.settings_name_saved, n), Toast.LENGTH_SHORT).show()
+    }
+
+    // ---------- state ----------
 
     private fun refresh() {
-        val overlayOk = Settings.canDrawOverlays(this)
+        if (!::ui.isInitialized) return
         val running = CapriService.running
-        overlayStep.set(overlayOk)
-        notifyStep.set(notifyOk())
-        notesStep.set(CapriNotifications.allowed(this))
         statusDot.background = Hud.Plate(if (running) Hud.CYAN else Hud.RED, 0, cut = 0f, stroke = 0f, offset = 0f)
         statusWord.text = getString(if (running) R.string.main_status_on else R.string.main_status_off)
         statusWord.setTextColor(if (running) Hud.CYAN else Hud.RED)
         statusText.text = getString(if (running) R.string.main_running else R.string.main_idle)
         startBtn.text = getString(if (running) R.string.main_stop else R.string.main_start).uppercase()
-        startBtn.isEnabled = overlayOk
-        startBtn.alpha = if (overlayOk) 1f else 0.35f
+        startBtn.alpha = if (Settings.canDrawOverlays(this)) 1f else 0.5f
         startBtn.setTextColor(if (running) Hud.YELLOW else Hud.INK)
-        startBtn.background = if (running) Hud.Plate(Hud.INK, Hud.YELLOW, Hud.RED, cut = dp(16f), stroke = dp(2f), offset = dp(5f))
-        else Hud.Plate(Hud.YELLOW, Hud.YELLOW, Hud.CYAN, cut = dp(16f), stroke = 0f, offset = dp(5f))
-        aiText.text = when (val p = Store(this).configString("provider") ?: "pollinations") {
+        startBtn.background = if (running) Hud.Plate(Hud.INK, Hud.YELLOW, Hud.RED, cut = ui.dp(14f), stroke = ui.dp(2f), offset = ui.dp(5f))
+        else Hud.Plate(Hud.YELLOW, Hud.CYAN, Hud.CYAN, cut = ui.dp(14f), stroke = 0f, offset = ui.dp(5f))
+        permRows.forEach { it() }
+        aiText.text = getString(R.string.settings_ai_now, when (val p = CapriSettings.provider(this)) {
             "pollinations" -> getString(R.string.main_ai_free)
-            "ollama" -> getString(R.string.main_ai_pc)
+            "ollama" -> getString(R.string.main_ai_pc) + " · " + CapriSettings.ollamaHost(this)
             "custom" -> getString(R.string.main_ai_custom)
-            else -> AI_NAMES[p] ?: p
-        }
+            else -> CapriSettings.KEYED.firstOrNull { it.id == p }?.name ?: p
+        })
+        if (!nameField.hasFocus()) nameField.setText(CapriSettings.name(this))
         showLog()
     }
 
@@ -304,13 +398,17 @@ class MainActivity : Activity() {
 
     /** Her setup panel, over whatever is on screen: she starts first if she isn't on yet. */
     private fun pickAi() {
-        if (!Settings.canDrawOverlays(this)) return
+        if (!Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, R.string.ob_need_overlay, Toast.LENGTH_LONG).show()
+            return
+        }
         if (CapriService.running) CapriService.send(this, CapriService.ACTION_SETUP)
         else CapriService.start(this, CapriService.ACTION_SETUP)
         moveTaskToBack(true)
     }
 
     private fun showLog() {
+        if (!::logText.isInitialized) return
         val lines = Diag.all()
         logText.text = if (lines.isEmpty()) getString(R.string.main_log_empty) else lines.takeLast(30).joinToString("\n")
         logText.setTextColor(if (lines.any { it.contains(" E ") }) Hud.PAPER else Hud.PAPER_2)
@@ -322,51 +420,14 @@ class MainActivity : Activity() {
         Toast.makeText(this, R.string.main_copied, Toast.LENGTH_SHORT).show()
     }
 
-    /** A permission row: number, what it lets her do, and a mark (granted) or a GRANT plate. */
-    private inner class Step(num: String, title: String, private val onTap: () -> Unit) {
-        val view = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dpi(14), dpi(12), dpi(12), dpi(12))
-        }
-        private val numView = text(num, 13f, Hud.CYAN, monoFont)
-        private val titleView = text(title, 15f, Hud.PAPER, bodyFont).apply { maxLines = 2; ellipsize = TextUtils.TruncateAt.END }
-        private val mark = text("", 11f, Hud.INK, monoFont).apply {
-            letterSpacing = 0.1f
-            setPadding(dpi(10), dpi(6), dpi(12), dpi(6))
-        }
-
-        init {
-            view.addView(numView, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { rightMargin = dpi(12) })
-            view.addView(titleView, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-            view.addView(mark, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { leftMargin = dpi(10) })
-        }
-
-        fun set(ok: Boolean) {
-            view.background = Hud.Plate(Hud.INK_2, if (ok) Hud.LINE_STRONG else Hud.YELLOW, cut = dp(10f), stroke = dp(1f), offset = 0f)
-            view.isClickable = !ok
-            view.setOnClickListener(if (ok) null else View.OnClickListener { onTap() })
-            numView.setTextColor(if (ok) Hud.PAPER_3 else Hud.CYAN)
-            titleView.setTextColor(if (ok) Hud.PAPER_3 else Hud.PAPER)
-            mark.text = if (ok) "✓ " + getString(R.string.main_granted) else getString(R.string.main_grant) + " ›"
-            mark.setTextColor(if (ok) Hud.CYAN else Hud.INK)
-            mark.background = if (ok) null else Hud.Plate(Hud.YELLOW, Hud.YELLOW, cut = dp(6f), stroke = 0f, offset = 0f)
-        }
+    private fun hideKeyboard() {
+        val imm = getSystemService(InputMethodManager::class.java) ?: return
+        currentFocus?.let { imm.hideSoftInputFromWindow(it.windowToken, 0); it.clearFocus() }
     }
 
-    private fun text(t: String, size: Float, color: Int, face: Typeface) = TextView(this).apply {
-        text = t
-        textSize = size
-        setTextColor(color)
-        typeface = face
-    }
-
-    private fun block(top: Int) = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dpi(top) }
-
-    companion object {
-        private val AI_NAMES = mapOf(
-            "groq" to "Groq", "gemini" to "Google Gemini", "openrouter" to "OpenRouter",
-            "openai" to "OpenAI", "mistral" to "Mistral", "deepseek" to "DeepSeek", "claude" to "Claude Code",
-        )
+    /** Her display face for part of a line (TypefaceSpan(Typeface) needs Android 9). */
+    private class FaceSpan(private val face: android.graphics.Typeface) : MetricAffectingSpan() {
+        override fun updateDrawState(tp: TextPaint) { tp.typeface = face }
+        override fun updateMeasureState(tp: TextPaint) { tp.typeface = face }
     }
 }

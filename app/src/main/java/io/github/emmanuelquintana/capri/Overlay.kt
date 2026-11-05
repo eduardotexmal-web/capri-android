@@ -117,6 +117,7 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         params = p
         // shown from the start: a hidden WebView gets no animation frames, and her page waits on them
         wm.addView(web, p)
+        watchKeyboard(web)
         web.loadUrl("https://$HOST/capri/src/renderer/index.html")
     }
 
@@ -131,6 +132,47 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         bridge.log.add("I", "her page is up")
     }
 
+    // ---------- the keyboard ----------
+
+    // How tall the keyboard is now (px), 0 when it's down. Her page moves up above it, and no touch
+    // pad stays over it: a pad over her body would otherwise eat the keys under her (the L, say).
+    private var ime = 0
+    private var lastDpr = 1.0
+
+    private var imeInsets = 0
+    private var imeFrame = 0
+
+    private fun watchKeyboard(web: WebView) {
+        // the keyboard as the window's insets (Android 11+)...
+        web.setOnApplyWindowInsetsListener { v, insets ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                imeInsets = insets.getInsets(android.view.WindowInsets.Type.ime()).bottom
+                setIme(maxOf(imeInsets, imeFrame))
+            }
+            v.onApplyWindowInsets(insets)
+        }
+        // ...and as what's left of the screen above it (older phones, and some that don't send an
+        // overlay its insets): whichever says the keyboard is taller wins
+        web.viewTreeObserver.addOnGlobalLayoutListener {
+            val r = android.graphics.Rect()
+            web.getWindowVisibleDisplayFrame(r)
+            val screen = maxOf(context.resources.displayMetrics.heightPixels, web.height)
+            val gone = screen - r.bottom
+            imeFrame = if (gone > screen / 6) gone else 0
+            setIme(maxOf(imeInsets, imeFrame))
+        }
+    }
+
+    private fun setIme(h: Int) {
+        val focusable = params?.let { it.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE == 0 } ?: false
+        val now = if (focusable) h else 0
+        if (now == ime) return
+        ime = now
+        pads.reapply()
+        val css = now / context.resources.displayMetrics.density
+        emit("ime:change", JSONObject().put("height", css.toDouble()).toString())
+    }
+
     /** Typing to her: the overlay takes the keyboard while her chat is open, and gives it back. */
     fun setFocusable(on: Boolean) = main.post {
         val web = webView ?: return@post
@@ -138,7 +180,7 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         p.flags = if (on) p.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
         else p.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         wm.updateViewLayout(web, p)
-        if (on) web.requestFocus()
+        if (on) web.requestFocus() else setIme(0)
     }
 
     /** Where her page can be touched, in CSS px (touch.js): [[left, top, right, bottom], ...]. */
@@ -234,14 +276,22 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
         private val views = ArrayList<View>()
         private val rects = ArrayList<IntArray>()
 
+        private var last: JSONArray = JSONArray()
+
+        fun reapply() = update(last, lastDpr)
+
         fun update(list: JSONArray, dpr: Double) {
+            last = list
+            lastDpr = dpr
+            // the keyboard's top, in screen px: nothing of hers is touchable below it
+            val floor = if (ime > 0) maxOf(context.resources.displayMetrics.heightPixels, webView?.height ?: 0) - ime else Int.MAX_VALUE
             val want = ArrayList<IntArray>()
             for (i in 0 until minOf(list.length(), MAX_PADS)) {
                 val r = list.optJSONArray(i) ?: continue
                 val l = (r.optDouble(0) * dpr).toInt()
                 val t = (r.optDouble(1) * dpr).toInt()
                 val rr = (r.optDouble(2) * dpr).toInt()
-                val b = (r.optDouble(3) * dpr).toInt()
+                val b = minOf((r.optDouble(3) * dpr).toInt(), floor)
                 if (rr - l < 4 || b - t < 4) continue
                 want.add(intArrayOf(l, t, rr - l, b - t))
             }

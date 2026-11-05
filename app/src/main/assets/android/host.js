@@ -695,6 +695,15 @@ window.host = {
 
 let pulling = null;
 
+// what the app's screen set (CapriSettings.kt) while she's on: what she calls you, her AI
+on('settings:apply', async (p = {}) => {
+  if ('userName' in p) updateConfig({ userName: String(p.userName || '').trim().slice(0, 24) });
+  if (p.provider) {
+    const res = await window.host.useProvider({ provider: p.provider, key: p.key || undefined, url: p.url || undefined });
+    if (!res.ok) send('log', { level: 'W', text: `AI ${p.provider}: ${res.error}` });
+  }
+});
+
 // a newer version of her is out (CapriService, from the repo's releases): she says so
 const UPDATE_LINES = {
   es: '¡Salió mi versión {v}! Toca mi notificación o abre la app para actualizarme.',
@@ -718,7 +727,27 @@ ready.then(() => {
 });
 
 // the screen turned (or the keyboard took some of it): her window is another size
-window.addEventListener('resize', () => emit('overlay:resize', { width: innerWidth, height: innerHeight, gap: 0 }));
+// the keyboard up (Overlay.kt): her floor goes up above it, so she and her chat stay in sight
+// and nothing of hers sits over the keys
+let keyboard = 0;
+const tallest = {}; // her window's full height, per orientation (if the keyboard shrinks the window, that part is already gone)
+const resized = () => {
+  const key = innerWidth > innerHeight ? 'land' : 'port';
+  if (!keyboard) tallest[key] = innerHeight;
+  const shrunk = Math.max(0, (tallest[key] || innerHeight) - innerHeight);
+  const gap = Math.min(Math.max(0, keyboard - shrunk), innerHeight * 0.7);
+  emit('overlay:resize', { width: innerWidth, height: innerHeight, gap });
+};
+window.addEventListener('resize', resized);
+on('ime:change', ({ height = 0 } = {}) => {
+  keyboard = Math.max(0, Number(height) || 0);
+  resized();
+  const capri = window.dev?.capri;
+  // sitting on something now under the keys: she gets up onto what's left of the screen
+  if (keyboard && capri && capri.stance !== 'stand' && capri.pos.y > innerHeight - keyboard) {
+    capri.teleport({ x: capri.pos.x, y: innerHeight - keyboard }, { stance: 'stand' });
+  }
+});
 
 // she's up: Kotlin can show her (the WebView stays hidden until the page has drawn once)
 ready.then(() => setTimeout(() => send('overlay:ready'), 0));

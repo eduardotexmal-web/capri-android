@@ -3,6 +3,16 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 0.5.1-android.9
+
+- **Bienvenida animada:** la primera vez que abres la app, Capri arranca con su intro, te pregunta cómo
+  quieres que te llame, te ayuda a conectar su IA y te explica para qué sirve cada permiso.
+- **Barra de píldora abajo:** tres pestañas. *Novedades* (estado, Iniciar, actualizaciones y lo nuevo de cada
+  versión), *Permisos* (cada uno con su porqué) y *Ajustes* (cómo te llama, su IA y el registro).
+- **Cambia cómo te llama** cuando quieras desde *Ajustes*, aunque esté en pantalla.
+- **Arreglo:** al escribirle a Capri, el teclado se trababa (por ejemplo, la L no respondía) porque ella
+  seguía encima de las teclas. Ahora sube por encima del teclado y nada suyo tapa las teclas.
+
 ## 0.5.1-android.8
 
 - **Cambios claros en cada versión:** el aviso de actualización y la app muestran qué trae la versión nueva.
