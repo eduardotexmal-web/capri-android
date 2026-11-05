@@ -750,6 +750,15 @@ on('ime:change', ({ height = 0 } = {}) => {
   }
 });
 
+// DIAG-TYPING (temporary): what reaches her text box
+for (const ev of ['focusin', 'focusout', 'keydown', 'input', 'compositionstart', 'compositionend']) {
+  document.addEventListener(ev, (e) => {
+    const t = e.target;
+    if (!t || t.tagName !== 'INPUT') return;
+    send('log', { level: 'D', text: `typing ${ev} key=${e.key ?? ''} data=${e.data ?? ''} value=${JSON.stringify(t.value)} active=${document.activeElement === t}` });
+  }, true);
+}
+
 // she's up: Kotlin can show her (the WebView stays hidden until the page has drawn once)
 ready.then(() => setTimeout(() => send('overlay:ready'), 0));
 

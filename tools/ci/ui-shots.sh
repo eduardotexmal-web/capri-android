@@ -103,10 +103,12 @@ for m in re.finditer(r'<node [^>]*?class="android.widget.EditText"[^>]*?package=
 PY2
 if [ -s /tmp/xy ]; then adb shell input tap $(cat /tmp/xy); echo "tapped her box at $(cat /tmp/xy)"; else echo "no box of hers"; fi
 sleep 3
-adb shell input text "hola"
-shot 18-typing 4
+for k in H O L A; do adb shell input keyevent KEYCODE_$k; sleep 1; done
+shot 18-typing 2
 adb shell input keyevent KEYCODE_L
 shot 19-typed-l 3
+adb shell input text "choom"
+shot 20-typed-text 3
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density
 adb logcat -d -s capri capri-js chromium | grep -v "regions" | tail -80

@@ -181,6 +181,7 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     fun setFocusable(on: Boolean) = main.post {
         val web = webView ?: return@post
         val p = params ?: return@post
+        Log.d("capri", "focus $on")
         p.flags = if (on) p.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
         else p.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         wm.updateViewLayout(web, p)
