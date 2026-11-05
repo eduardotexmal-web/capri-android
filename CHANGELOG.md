@@ -3,6 +3,24 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.3.0
+
+- **Háblale:** di «Capri» y lo que quieras, como a un asistente. «Capri, ¿qué hora es?», «Capri, abre Spotify»,
+  «Capri, siguiente canción», «Capri, sube el volumen», «Capri, prende la linterna», «Capri, pon un temporizador de
+  10 minutos», «Capri, escóndete» y «Capri, ven». Lo demás se lo pregunta a su IA y te contesta en voz alta.
+  Viene apagado: lo activas en *Ajustes → Háblale*. Solo escucha con la pantalla encendida, usa el reconocedor de
+  voz de tu propio teléfono, no graba audio y solo se queda con lo que dices después de su nombre.
+- **Permiso de micrófono opcional:** solo se pide al activar *Háblale*. En *Permisos* te explicamos para qué es y
+  que algunas apps de banco o antivirus desconfían del micrófono; si la tuya se queja, lo desactivas.
+- **Hecha para el teléfono:** sus textos ya no hablan de PC, escritorio ni ratón, y su menú ya no tiene opciones que
+  solo servían en Windows (mirar tu pantalla, ponerse celosa de otras IA en el navegador). Claude Code con Termux y
+  Ollama en tu PC por Wi-Fi siguen igual.
+- **Nueva cara para la app:** los colores de Capri, el rojo de su melena y el verde de su máscara, junto con el
+  amarillo cyberpunk de siempre.
+- **Ya no choca con la barra de notificaciones:** las pantallas empiezan debajo de la barra de estado y la barra de
+  pestañas queda encima de los botones de Android.
+- **Ajustes más limpios:** el registro técnico ya no aparece; es solo para desarrollo.
+
 ## 1.2.0
 
 - **Más ligera:** Capri ocupa unos 50 MB menos de RAM. Las imágenes de su intro ya no se quedan en memoria
