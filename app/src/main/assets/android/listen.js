@@ -73,9 +73,9 @@ async function handle(text, { toggleVisible, visible }) {
   const locale = lang === 'es' ? 'es-MX' : 'en-US';
 
   // her answer: in her panel, and out loud
-  const answer = (line, face = 'smug', quote = text) => {
+  const answer = (line, face = 'smug', quote = text, aloud = true) => {
     if (!chat.open) panel.say({ kind: 'info', face, line, quote: quote || '', hold: 5000 + line.length * 45 });
-    send('voice:say', { text: spoken(line), lang: locale });
+    if (aloud) send('voice:say', { text: spoken(line), lang: locale });
   };
 
   if (HIDE_ASK.test(text)) {
@@ -93,8 +93,10 @@ async function handle(text, { toggleVisible, visible }) {
 
   // just her name: she listens for what comes next (Ears.kt keeps the mic open a few seconds)
   if (!text) {
+    // shown, not said: her voice would cover what you say next (her ears stay open for it)
     capri.perform?.('hop');
-    return answer(pick(t.yes), 'look', '');
+    window.dev.voice?.play?.('tick');
+    return answer(pick(t.yes), 'look', '', false);
   }
   if (SHOW_ASK.test(text)) return answer(t.back, 'laugh');
   if (DEAF_ASK.test(text)) {

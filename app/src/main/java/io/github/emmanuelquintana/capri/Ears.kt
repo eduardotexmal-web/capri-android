@@ -94,6 +94,9 @@ class Ears(private val service: CapriService) {
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
             .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
+            // a short pause after "Capri" doesn't end what you're saying
+            .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
+            .putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200L)
             .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
             .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, service.packageName)
         listening = true
@@ -185,7 +188,7 @@ class Ears(private val service: CapriService) {
         status = "heard"
         val rest = if (named != null) named.substring(NAME.find(named)!!.range.last + 1).trim(' ', ',', '.', '!', '?') else text
         // just her name: what you say in the next few seconds is for her too
-        awakeUntil = if (rest.isEmpty() && named != null) now + 8000 else 0L
+        awakeUntil = if (rest.isEmpty() && named != null) now + 10_000 else 0L
         service.overlay?.emit("capri:heard", JSONObject().put("text", text).toString())
     }
 

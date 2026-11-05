@@ -3,6 +3,21 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.4.0
+
+- **Tarjetas con animación:** los avisos de tus notificaciones entran deslizándose con un glitch y se van igual, ya
+  no aparecen y desaparecen de golpe. Una barrita roja abajo te dice cuánto le queda en pantalla.
+- **La barra de música ya no está siempre:** aparece cuando empieza una canción, cambia, o la pausas o reanudas, y
+  a los 15 segundos se va sola. Si la tocas, se queda un rato más. En pausa se va a los 12 segundos.
+- **Nueva pestaña «Comandos»:** todo lo que le puedes pedir a Capri, en voz alta o escrito en su chat, con ejemplos.
+- **Actualiza desde la app otra vez:** *Actualizar* descarga e instala la versión nueva ahí mismo, sin pasar por el
+  navegador (Android te pide confirmar). La primera vez te pide dejar que Capri instale apps.
+- **Aviso del sistema cuando hay versión nueva:** la app revisa cada 3 horas, aunque Capri esté apagada, y te manda
+  una notificación. Al tocarla, abre la app y empieza la actualización.
+- **Novedades plegadas:** cada versión se muestra cerrada, con cuántos cambios trae; tócala para leerla.
+- **Háblale más fluido:** cuando solo dices «Capri», te contesta en su panel sin hablar, para no taparte lo que
+  dices después, y espera un poco más a que termines la frase.
+
 ## 1.3.1
 
 - **Arreglo de «Háblale»:** Capri no reaccionaba al decirle «Capri…». Ahora usa el reconocedor de voz de Google
