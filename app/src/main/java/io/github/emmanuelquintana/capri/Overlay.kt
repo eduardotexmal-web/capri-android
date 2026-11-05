@@ -184,7 +184,10 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     }
 
     /** Where her page can be touched, in CSS px (touch.js): [[left, top, right, bottom], ...]. */
-    fun setRegions(rects: JSONArray, dpr: Double) = main.post { pads.update(rects, dpr) }
+    fun setRegions(rects: JSONArray, dpr: Double) = main.post {
+        Log.d("capri", "regions $dpr $rects") // logcat only: where she can be touched (CI taps her by it)
+        pads.update(rects, dpr)
+    }
 
     fun emit(channel: String, json: String) {
         val js = "window.__capri&&window.__capri.emit(${JSONObject.quote(channel)},${JSONObject.quote(json)})"

@@ -85,6 +85,7 @@ class MainActivity : Activity() {
                 gravity = Gravity.CENTER
                 setPadding(ui.dpi(14), ui.dpi(10), ui.dpi(14), ui.dpi(10))
                 isClickable = true
+                contentDescription = getString(label)
                 setOnClickListener { show(i) }
             }
             btn.addView(View(this).apply { background = icon }, LinearLayout.LayoutParams(ui.dpi(20), ui.dpi(20)))
@@ -214,17 +215,18 @@ class MainActivity : Activity() {
 
     /** "- **Title:** the rest" → a spark, the title in her display face, the rest as body text. */
     private fun bullet(item: String, fresh: Boolean): TextView {
-        val clean = item.replace("`", "").replace(Regex("\\*([^*]+)\\*"), "$1")
+        val clean = item.replace("`", "")
         val m = Regex("^\\*\\*(.+?)\\*\\*\\s*(.*)$", RegexOption.DOT_MATCHES_ALL).find(clean)
+        val plain = { t: String -> t.replace("*", "") } // *italics* and any ** left: just the words
         val s = SpannableStringBuilder("✦ ")
         s.setSpan(ForegroundColorSpan(if (fresh) Hud.CYAN else Hud.PAPER_3), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         if (m != null) {
             val start = s.length
-            s.append(m.groupValues[1].replace("**", ""))
+            s.append(plain(m.groupValues[1]))
             s.setSpan(FaceSpan(ui.head), start, s.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             s.setSpan(ForegroundColorSpan(Hud.PAPER), start, s.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            s.append(" ").append(m.groupValues[2].replace("**", ""))
-        } else s.append(clean.replace("**", ""))
+            s.append(" ").append(plain(m.groupValues[2]))
+        } else s.append(plain(clean))
         return ui.text(s, 14f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.18f) }
     }
 

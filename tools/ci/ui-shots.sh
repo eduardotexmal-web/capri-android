@@ -19,9 +19,9 @@ tap() {
 import re, sys
 want = sys.argv[1].lower()
 xml = open('/tmp/ui.xml', encoding='utf-8').read()
-for m in re.finditer(r'<node [^>]*?text="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml):
-    if want in m.group(1).lower():
-        x1, y1, x2, y2 = map(int, m.groups()[1:])
+for m in re.finditer(r'<node [^>]*?text="([^"]*)"[^>]*?content-desc="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml):
+    if want in m.group(1).lower() or want in m.group(2).lower():
+        x1, y1, x2, y2 = map(int, m.groups()[2:])
         print((x1 + x2) // 2, (y1 + y2) // 2)
         break
 PY
@@ -59,28 +59,31 @@ shot 10-done 3
 adb shell appops set $PKG SYSTEM_ALERT_WINDOW deny
 tap "iniciar"
 shot 11-main 3
-dump; cp /tmp/ui.xml shots/main.xml
-python3 - <<'PY' > /tmp/tabs
-import re
-xml = open('/tmp/ui.xml', encoding='utf-8').read()
-nodes = [tuple(map(int, m.groups())) for m in re.finditer(r'clickable="true"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml)]
-h = max(n[3] for n in nodes)
-row = sorted([n for n in nodes if n[3] > h - 400 and (n[2] - n[0]) < 600], key=lambda n: n[0])
-for x1, y1, x2, y2 in row[-3:]:
-    print((x1 + x2) // 2, (y1 + y2) // 2)
-PY
-cat /tmp/tabs
 adb shell input swipe 500 1800 500 600 300
 shot 12-main-scrolled 2
-adb shell input tap $(sed -n 2p /tmp/tabs)
+tap "permisos"
 shot 13-perms-tab 2
-adb shell input tap $(sed -n 3p /tmp/tabs)
+tap "ajustes"
 shot 14-settings-tab 2
-adb shell input tap $(sed -n 1p /tmp/tabs)
+tap "novedades"
 adb shell appops set $PKG SYSTEM_ALERT_WINDOW allow
 adb shell input swipe 500 600 500 1800 300
-tap "iniciar"
+tap "iniciar capri"
 shot 15-capri-on 14
 adb shell input keyevent KEYCODE_HOME
 shot 16-capri-home 6
+# the keyboard over her: open her chat (a tap on her), type, see where she is
+her=$(adb logcat -d -s capri | grep ' regions ' | tail -1 | python3 -c "
+import sys, json, re
+l = sys.stdin.read()
+m = re.search(r'regions ([0-9.]+) (\[.*\])', l)
+if m:
+    dpr = float(m.group(1)); r = json.loads(m.group(2))[0]
+    print(int((r[0] + r[2]) / 2 * dpr), int((r[1] * 0.4 + r[3] * 0.6) * dpr))
+")
+echo "her at: $her"
+[ -n "$her" ] && adb shell input tap $her
+shot 17-tap-her 4
+adb shell input text "hola"
+shot 18-typing 3
 adb logcat -d -s capri capri-js AndroidRuntime | tail -60
