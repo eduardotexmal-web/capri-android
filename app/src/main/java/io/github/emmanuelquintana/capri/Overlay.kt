@@ -233,7 +233,13 @@ class Overlay(private val context: Context, private val bridge: HostBridge) {
     fun pause() = main.post {
         if (paused) return@post
         paused = true
+        trim() // the screen is off: what she can fetch again goes
         webView?.onPause()
+    }
+
+    /** Android is short of memory (or the screen went off): her page lets go of what it can fetch again. */
+    fun trim() = main.post {
+        webView?.evaluateJavascript("window.__capriTrim&&window.__capriTrim()", null)
     }
 
     fun resume() = main.post {

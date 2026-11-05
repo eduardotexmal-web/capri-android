@@ -112,8 +112,11 @@ export class Touch {
       const q = 16;
       return [Math.floor(r.left / q) * q - q, Math.floor(r.top / q) * q - q, Math.ceil(r.right / q) * q + q, Math.ceil(r.bottom / q) * q + q];
     };
+    // every frame while a finger is on her (the pads follow it), else ten times a second: her own
+    // moves are slow next to that, and the pads are 16 px wider than her
     const tick = () => {
-      requestAnimationFrame(tick);
+      if (this.drag || this.pet) requestAnimationFrame(tick);
+      else setTimeout(() => requestAnimationFrame(tick), 90);
       const list = [
         rectOf(document.getElementById('sprite')),
         rectOf(document.getElementById('panel')),

@@ -451,10 +451,20 @@ export class Capri {
     return this.mode === 'sleep' ? ASLEEP : ON_TWOS;
   }
 
+  // She's drawn 6 to 24 times a second: between her frames the page sleeps (a timer to just before
+  // the next one) instead of waking at every screen refresh for nothing (Android: battery, CPU).
   loop(now) {
+    if (this.hidden) {
+      setTimeout(() => requestAnimationFrame(this.loop), 200);
+      return;
+    }
+    const wait = this.interval() - 1 - (now - this.lastDraw);
+    if (wait > 0) {
+      if (wait > 20) setTimeout(() => requestAnimationFrame(this.loop), wait - 12);
+      else requestAnimationFrame(this.loop);
+      return;
+    }
     requestAnimationFrame(this.loop);
-    if (this.hidden) return;
-    if (now - this.lastDraw < this.interval() - 1) return;
     this.drawFrame(now);
     this.behave(now);
   }

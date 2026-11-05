@@ -38,14 +38,17 @@ const SNOOZE_MS = 10 * 60 * 1000;
 const mine = (cfg) => ({ userName: cfg.userName || '', persona: cfg.persona || '', myLines: cfg.myLines || [], memories: cfg.memories || [] });
 
 async function boot() {
+  // her intro: her close-up grabbing the screen, and its drawings with her mouth and arm moving
+  const loadIntro = () => Promise.all(GRAB_FRAMES.map((name) => loadImage(`../../assets/capri/intro-${name}.webp`).catch(() => null)))
+    // decoded now, not the first time each one shows up (a hitch right on "hi", on the wave)
+    .then((cels) => Promise.all(cels.map((cel) => cel && createImageBitmap(cel))))
+    .then((cels) => (cels[0] ? Object.fromEntries(GRAB_FRAMES.map((name, i) => [name, cels[i]])) : null));
+  const startConfig = host.getConfig();
   const [config, image, intro, ...cutins] = await Promise.all([
-    host.getConfig(),
+    startConfig,
     loadImage('../../assets/capri/capri-full.png'),
-    // her intro: her close-up grabbing the screen, and its drawings with her mouth and arm moving
-    Promise.all(GRAB_FRAMES.map((name) => loadImage(`../../assets/capri/intro-${name}.webp`).catch(() => null)))
-      // decoded now, not the first time each one shows up (a hitch right on "hi", on the wave)
-      .then((cels) => Promise.all(cels.map((cel) => cel && createImageBitmap(cel))))
-      .then((cels) => (cels[0] ? Object.fromEntries(GRAB_FRAMES.map((name, i) => [name, cels[i]])) : null)),
+    // Android: only when she starts with it (not when she starts put away); let go once it's played
+    startConfig.then((cfg) => (cfg.visible === false ? null : loadIntro())),
     ...CUTINS.map((name) => loadImage(`../../assets/capri/cutin-${name}.png`)),
     document.fonts.load('600 16px "Chakra Petch"'),
     document.fonts.load('400 11px "JetBrains Mono"'),
@@ -67,6 +70,7 @@ async function boot() {
   const fx = new FxLayer(document.getElementById('fx'), {
     cutins: Object.fromEntries(CUTINS.map((name, i) => [name, cutins[i]])),
     intro,
+    loadIntro,
   });
   fx.resize(innerWidth, innerHeight);
   // how far the top of the taskbar is from the bottom of her window: she covers it too while she
