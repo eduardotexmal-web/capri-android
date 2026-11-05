@@ -197,9 +197,15 @@ class Ears(private val service: CapriService) {
         val cm = service.getSystemService(CameraManager::class.java) ?: return null
         val id = runCatching {
             cm.cameraIdList.firstOrNull { cm.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true }
-        }.getOrNull() ?: return null
+        }.getOrNull()
+        if (id == null) {
+            Diag.add("I", "voice: no flashlight on this phone")
+            return null
+        }
         val want = on ?: !torch
-        return runCatching { cm.setTorchMode(id, want); torch = want; want }.getOrNull()
+        return runCatching { cm.setTorchMode(id, want); torch = want; want }
+            .onFailure { Diag.add("W", "voice: flashlight: ${it.message}") }
+            .getOrNull()
     }
 
     private fun language(): String {

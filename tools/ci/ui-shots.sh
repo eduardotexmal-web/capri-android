@@ -143,7 +143,7 @@ shot 28-heard-hide 4
 hear "Capri ven"
 shot 29-heard-back 4
 adb shell dumpsys activity services $PKG | grep -iE "foregroundServiceType|types=" | head -4
-adb logcat -d -s capri | grep -iE "voice|listening|microphone" | tail -20
+adb logcat -d | grep -iE "capri|chromium|torch" | grep -viE "regions|keyboard" | tail -40
 adb shell dumpsys window windows | grep -E "Window #" | head -16
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density

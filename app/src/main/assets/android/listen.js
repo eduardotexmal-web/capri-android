@@ -102,7 +102,7 @@ async function handle(text, { toggleVisible, visible }) {
   }
   if (TIME_ASK.test(text) && text.split(/\s+/).length <= 8) {
     const time = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date());
-    return answer(fill(t.time, { time }), 'look');
+    return answer(fill(t.time, { time }).replace(/\.\.$/, '.'), 'look');
   }
   if (DATE_ASK.test(text) && text.split(/\s+/).length <= 8) {
     const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
@@ -110,7 +110,7 @@ async function handle(text, { toggleVisible, visible }) {
   }
   if (TORCH.test(text)) {
     const want = OFF.test(text) ? false : ON.test(text) ? true : null;
-    const res = await call('voice:torch', { on: want }).catch(() => null);
+    const res = await Promise.race([call('voice:torch', { on: want }), new Promise((r) => setTimeout(() => r(null), 4000))]).catch(() => null);
     if (res == null) return answer(t.noTorch, 'aside');
     capri.pulse?.();
     return answer(res ? t.torchOn : t.torchOff, 'smug');
