@@ -410,7 +410,12 @@ object Permissions {
         Perm(R.string.perm_notes_title, R.string.perm_notes_why, false, { CapriNotifications.allowed(a) }) {
             a.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         },
+        Perm(R.string.perm_mic_title, R.string.perm_mic_why, false, { Ears.allowed(a) }) {
+            a.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), MIC)
+        },
     )
+
+    const val MIC = 2
 
     /** Its card (tag, title, why, and a GRANT plate or a mark) and how to redraw it. */
     fun row(a: Activity, ui: Ui, p: Perm): Pair<View, () -> Unit> {

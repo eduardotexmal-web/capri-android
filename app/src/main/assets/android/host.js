@@ -22,6 +22,7 @@ import './setup.js'; // her setup without a terminal (before app.js builds it)
 import { Notes } from './notes.js';
 import './wink.js'; // what she says, also in her notification
 import { followTurns } from './turn.js';
+import { listen } from './listen.js';
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -745,6 +746,7 @@ let notes = null;
 ready.then(() => {
   notes = new Notes({ config: () => cfg, lang: () => resolveLang(cfg.lang) });
   followTurns(() => resolveLang(cfg.lang)); // the phone turned: she turns too
+  listen({ toggleVisible, visible: () => cfg.visible !== false }); // "Capri, …" out loud (Ears.kt)
 });
 
 // the screen turned (or the keyboard took some of it): her window is another size

@@ -26,6 +26,8 @@ class CapriService : Service() {
     private lateinit var bridge: HostBridge
     private var hooks: HookServer? = null
     private var visible = true
+    var ears: Ears? = null
+        private set
 
     private val screen = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -33,6 +35,7 @@ class CapriService : Service() {
                 Intent.ACTION_SCREEN_OFF -> overlay?.pause()
                 Intent.ACTION_SCREEN_ON, Intent.ACTION_USER_PRESENT -> overlay?.resume()
             }
+            ears?.update() // her ears only with the screen on
         }
     }
 
@@ -72,6 +75,7 @@ class CapriService : Service() {
             Diag.add("E", "her window could not open: ${e.message}")
             null
         }
+        ears = Ears(this).also { it.update() }
         hooks = HookServer(assets) { evt -> overlay?.emit("claude:event", evt) }.also { it.start() }
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -89,6 +93,8 @@ class CapriService : Service() {
             ACTION_QUIT -> quit()
             ACTION_CHAT -> command("chat")
             ACTION_SETUP -> if (pageReady) command("setupChat") else queued = "setupChat"
+            // debug builds only (the service isn't exported otherwise): what she'd hear, for tests
+            ACTION_HEAR -> if (BuildConfig.DEBUG) overlay?.emit("capri:heard", JSONObject().put("text", intent.getStringExtra("text") ?: "").toString())
         }
         return START_STICKY
     }
@@ -115,6 +121,12 @@ class CapriService : Service() {
         }
     }
 
+    /** Her ears switched on or off (the app's Settings), or the mic allowed: her service's type too. */
+    fun voiceChanged() {
+        startForegroundCompat()
+        ears?.update()
+    }
+
     fun refreshNotification() {
         getSystemService(NotificationManager::class.java)!!.notify(NOTIFICATION_ID, buildNotification())
     }
@@ -131,6 +143,8 @@ class CapriService : Service() {
         Diag.add("I", "service stopped")
         try { unregisterReceiver(screen) } catch (_: Exception) {}
         hooks?.stop()
+        ears?.destroy()
+        ears = null
         overlay?.destroy()
         overlay = null
         if (::bridge.isInitialized) bridge.shutdown()
@@ -149,8 +163,18 @@ class CapriService : Service() {
 
     private fun startForegroundCompat() {
         val n = buildNotification()
+        // the microphone, only while her ears are on (and allowed): Android shows it's in use
+        val mic = Ears.enabled(this) && Ears.allowed(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            val special = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            try {
+                startForeground(NOTIFICATION_ID, n, if (mic) special or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else special)
+            } catch (e: Exception) {
+                Diag.add("W", "microphone not allowed for her service now: ${e.message}")
+                startForeground(NOTIFICATION_ID, n, special)
+            }
+        } else if (mic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
         } else {
             startForeground(NOTIFICATION_ID, n)
         }
@@ -232,6 +256,7 @@ class CapriService : Service() {
         const val ACTION_QUIT = "capri.QUIT"
         const val ACTION_SETUP = "capri.SETUP"
         const val ACTION_CHAT = "capri.CHAT"
+        const val ACTION_HEAR = "capri.HEAR"
         private val FACES = setOf("aside", "calm", "laugh", "look", "many", "smug", "wide")
 
         fun start(context: Context, action: String? = null) {

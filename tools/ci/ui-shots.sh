@@ -117,6 +117,33 @@ adb shell input tap 300 2280
 sleep 3
 adb shell input text "hola"
 shot 22-other-app 3
+# her ears: the microphone allowed, "Activar" in Ajustes, then what she'd hear (a debug build lets
+# adb hand her service the words: the emulator has no microphone)
+adb shell input keyevent KEYCODE_BACK
+adb shell pm grant $PKG android.permission.RECORD_AUDIO
+adb shell am start -n $PKG/.MainActivity
+sleep 4
+tap "ajustes"
+sleep 2
+adb shell input swipe 500 1800 500 900 300
+shot 23-voice-card 2
+tap "activar"
+shot 24-voice-on 3
+adb shell input keyevent KEYCODE_HOME
+sleep 4
+hear() { adb shell am start-foreground-service -n $PKG/.CapriService -a capri.HEAR --es text "'$1'" >/dev/null; }
+hear "Capri"
+shot 25-heard-name 3
+hear "Capri qué hora es"
+shot 26-heard-time 3
+hear "Capri prende la linterna"
+shot 27-heard-torch 3
+hear "Capri escóndete"
+shot 28-heard-hide 4
+hear "Capri ven"
+shot 29-heard-back 4
+adb shell dumpsys activity services $PKG | grep -iE "foregroundServiceType|types=" | head -4
+adb logcat -d -s capri | grep -iE "voice|listening|microphone" | tail -20
 adb shell dumpsys window windows | grep -E "Window #" | head -16
 adb shell dumpsys window windows | grep -E "Window #|mFrame=|mAttrs=.*ty=" | grep -B1 -A1 -iE "capri|InputMethod" | head -40
 adb shell wm size; adb shell wm density

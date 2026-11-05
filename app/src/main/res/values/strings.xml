@@ -108,4 +108,14 @@
     <string name="perms_bank">Some banking apps block you if another app shows on top or can see notifications, even if it reads nothing from them. I never read anything from your bank or send your data anywhere. If your bank complains: turn off “See your notifications” and put me away (“Put away”, in my notification) before opening it.</string>
     <string name="dev_on">Developer mode: the log shows in Settings.</string>
     <string name="dev_off">Developer mode off.</string>
+    <string name="perm_mic_title">Hear you say “Capri”</string>
+    <string name="perm_mic_why">Only if you turn on “Talk to her” in Settings, and only with the screen on. Your phone\'s own speech recognizer turns what you say into words; I only keep what comes after my name, and I never record audio. Android shows the microphone dot while I\'m listening. Heads-up: some banking apps and antivirus apps get wary of apps with the microphone; if yours complains, turn it off.</string>
+    <string name="settings_voice">Talk to her</string>
+    <string name="settings_voice_how">Say “Capri” and then what you want: “Capri, what time is it?”, “Capri, open Spotify”, “Capri, next song”, “Capri, turn on the flashlight”, “Capri, set a 10 minute timer”, “Capri, hide”. Anything else goes to her AI, and she answers out loud. Only with the screen on.</string>
+    <string name="settings_voice_on">On: she\'s listening for her name.</string>
+    <string name="settings_voice_off">Off.</string>
+    <string name="settings_voice_turn_on">Turn on</string>
+    <string name="settings_voice_turn_off">Turn off</string>
+    <string name="settings_voice_nomic">Without the microphone she can\'t hear you.</string>
+    <string name="settings_voice_none">This phone has no speech recognizer (install or update the Google app).</string>
 </resources>

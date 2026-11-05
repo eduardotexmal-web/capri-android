@@ -52,6 +52,8 @@ class MainActivity : Activity() {
     // Settings
     private lateinit var nameField: android.widget.EditText
     private lateinit var aiText: TextView
+    private lateinit var voiceText: TextView
+    private lateinit var voiceBtn: TextView
     private lateinit var logText: TextView
     private lateinit var logBox: LinearLayout
 
@@ -138,6 +140,9 @@ class MainActivity : Activity() {
         super.onResume()
         if (!::ui.isInitialized) return
         Diag.onChange = { runOnUiThread { showLog() } }
+        // back in the app: her service can take the microphone again if her ears are on (Android
+        // only lets it while the app is in front)
+        if (Ears.enabled(this)) CapriService.current?.voiceChanged()
         refresh()
         checkUpdate()
     }
@@ -147,7 +152,30 @@ class MainActivity : Activity() {
         Diag.onChange = null
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) = refresh()
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        // the microphone just allowed from "Turn on": her ears go on with it
+        if (requestCode == Permissions.MIC && wantVoice && Ears.allowed(this)) Ears.setEnabled(this, true)
+        wantVoice = false
+        CapriService.current?.voiceChanged()
+        refresh()
+    }
+
+    private var wantVoice = false
+
+    private fun toggleVoice() {
+        if (Ears.enabled(this)) return Ears.setEnabled(this, false).also { refresh() }
+        if (!android.speech.SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, R.string.settings_voice_none, Toast.LENGTH_LONG).show()
+            return
+        }
+        if (!Ears.allowed(this)) {
+            wantVoice = true
+            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), Permissions.MIC)
+            return
+        }
+        Ears.setEnabled(this, true)
+        refresh()
+    }
 
     private fun page(build: LinearLayout.() -> Unit): View {
         val col = ui.col().apply {
@@ -315,6 +343,16 @@ class MainActivity : Activity() {
             addView(ui.button(getString(R.string.settings_ai_panel) + " ›", Ui.Kind.LINE) { pickAi() }, ui.block(8))
         }, ui.block(16))
 
+        // her ears: "Capri, …"
+        addView(ui.card(Hud.MANE).apply {
+            addView(ui.label(getString(R.string.settings_voice)))
+            voiceText = ui.text("", 17f, Hud.PAPER, ui.head)
+            addView(voiceText, ui.block(6))
+            addView(ui.text(getString(R.string.settings_voice_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            voiceBtn = ui.button("", Ui.Kind.GREEN) { toggleVoice() }
+            addView(voiceBtn, ui.block(12))
+        }, ui.block(16))
+
         addView(ui.button(getString(R.string.settings_intro_again), Ui.Kind.LINE) {
             getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("welcomed", false).apply()
             startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
@@ -370,6 +408,14 @@ class MainActivity : Activity() {
             else -> CapriSettings.KEYED.firstOrNull { it.id == p }?.name ?: p
         })
         if (!nameField.hasFocus()) nameField.setText(CapriSettings.name(this))
+        val voice = Ears.enabled(this)
+        voiceText.text = getString(when {
+            voice && !Ears.allowed(this) -> R.string.settings_voice_nomic
+            voice -> R.string.settings_voice_on
+            else -> R.string.settings_voice_off
+        })
+        voiceText.setTextColor(if (voice && Ears.allowed(this)) Hud.GREEN else Hud.PAPER)
+        voiceBtn.text = getString(if (voice) R.string.settings_voice_turn_off else R.string.settings_voice_turn_on).uppercase()
         showLog()
     }
 

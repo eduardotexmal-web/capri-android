@@ -106,4 +106,14 @@
     <string name="perms_bank">Algunas apps de banco (como Nu) bloquean el acceso si otra app se muestra encima o puede ver notificaciones, aunque no lea nada de ellas. Yo nunca leo nada de tu banco ni mando tus datos a ningún lado. Si tu banco se queja: quita «Ver tus notificaciones» y guárdame (botón «Guardarla» de mi notificación) antes de abrirlo.</string>
     <string name="dev_on">Modo desarrollador: el registro aparece en Ajustes.</string>
     <string name="dev_off">Modo desarrollador apagado.</string>
+    <string name="perm_mic_title">Oírte decir «Capri»</string>
+    <string name="perm_mic_why">Solo si activas «Háblale» en Ajustes, y solo con la pantalla encendida. El reconocedor de voz de tu propio teléfono convierte lo que dices en palabras; yo solo me quedo con lo que viene después de mi nombre y nunca grabo audio. Android muestra el puntito del micrófono mientras escucho. Ojo: algunas apps de banco y antivirus desconfían de apps con micrófono; si la tuya se queja, desactívalo.</string>
+    <string name="settings_voice">Háblale</string>
+    <string name="settings_voice_how">Di «Capri» y luego lo que quieras: «Capri, ¿qué hora es?», «Capri, abre Spotify», «Capri, siguiente canción», «Capri, prende la linterna», «Capri, pon un temporizador de 10 minutos», «Capri, escóndete». Lo demás se lo pregunta a su IA y te contesta en voz alta. Solo con la pantalla encendida.</string>
+    <string name="settings_voice_on">Activado: está atenta a su nombre.</string>
+    <string name="settings_voice_off">Desactivado.</string>
+    <string name="settings_voice_turn_on">Activar</string>
+    <string name="settings_voice_turn_off">Desactivar</string>
+    <string name="settings_voice_nomic">Sin el micrófono no te puede oír.</string>
+    <string name="settings_voice_none">Este teléfono no tiene reconocedor de voz (instala o actualiza la app de Google).</string>
 </resources>
