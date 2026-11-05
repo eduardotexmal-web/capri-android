@@ -110,8 +110,25 @@ object Updater {
         return file
     }
 
-    /** Hands the APK to Android's installer; it asks you, then InstallResult hears how it went. */
+    /**
+     * Android's own installer screen with the downloaded APK, as when you open it from the browser
+     * (some phones, Samsung's among them, refuse an app updating itself any other way). Falls back
+     * to an install session when nothing takes it.
+     */
     fun install(context: Context, apk: File) {
+        val view = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(ApkProvider.uri(context), "application/vnd.android.package-archive")
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(view)
+        } catch (e: Exception) {
+            Diag.add("W", "installer screen: ${e.message}")
+            session(context, apk)
+        }
+    }
+
+    /** Hands the APK to Android's installer; it asks you, then InstallResult hears how it went. */
+    private fun session(context: Context, apk: File) {
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName)
@@ -184,6 +201,10 @@ object Updater {
                     val msg = if (status == PackageInstaller.STATUS_FAILURE_CONFLICT || status == PackageInstaller.STATUS_FAILURE_INCOMPATIBLE)
                         R.string.update_conflict else R.string.update_failed
                     Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    // its page, to download it there instead
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/$REPO/releases/latest")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
                 }
             }
         }

@@ -102,6 +102,41 @@ export class Touch {
     window.addEventListener('touchcancel', end, { passive: false });
   }
 
+  // Her body itself, not her whole drawing's square: that square is much bigger than her (room for
+  // her poses, turned when she leans), and touches in its empty corners would land on nothing,
+  // neither on her nor on the app under her. Three bands (mane, waist, legs), each as wide as
+  // what of her is really there, found with her own hit test. While she's held, or can't be
+  // touched (mid-teleport, see-through), the square or nothing.
+  body(r) {
+    const capri = window.dev?.capri;
+    if (!r) return [];
+    if (!capri) return [r];
+    if (capri.hidden || capri.p?.alpha < 0.5) return [];
+    if (this.drag || this.pet || capri.dragging) return [r];
+    try {
+      const [l, t, rr, b] = r;
+      const step = 12, pad = 14, bands = 3;
+      const h = (b - t) / bands;
+      const out = [];
+      for (let i = 0; i < bands; i++) {
+        let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+        for (let y = t + i * h; y < t + (i + 1) * h; y += step) {
+          for (let x = l; x < rr; x += step) {
+            if (!capri.hit(x, y)) continue;
+            if (x < x1) x1 = x;
+            if (x > x2) x2 = x;
+            if (y < y1) y1 = y;
+            if (y > y2) y2 = y;
+          }
+        }
+        if (x1 <= x2) out.push([Math.max(l, x1 - pad), Math.max(t, y1 - pad), Math.min(rr, x2 + pad), Math.min(b, y2 + pad)].map((v) => Math.round(v / 8) * 8));
+      }
+      return out;
+    } catch {
+      return [r];
+    }
+  }
+
   // Where touches should reach her, sent to Kotlin when it changes: her body, her panel, her biochip.
   watch() {
     const rectOf = (el) => {
@@ -118,7 +153,7 @@ export class Touch {
       if (this.drag || this.pet) requestAnimationFrame(tick);
       else setTimeout(() => requestAnimationFrame(tick), 90);
       const list = [
-        rectOf(document.getElementById('sprite')),
+        ...this.body(rectOf(document.getElementById('sprite'))),
         rectOf(document.getElementById('panel')),
         rectOf(document.getElementById('chip')),
         rectOf(document.getElementById('mask')),

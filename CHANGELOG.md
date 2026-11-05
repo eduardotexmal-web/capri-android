@@ -3,6 +3,15 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.4.1
+
+- **Ya no hay zonas muertas junto a Capri:** después de teletransportarse, tocar cerca de ella (no sobre ella) no
+  respondía, ni Capri ni la app de abajo, hasta que la movías. La zona táctil ahora sigue la silueta de su cuerpo
+  en vez de un cuadro grande alrededor, y mientras se teletransporta no bloquea nada.
+- **Actualizar desde la app en más teléfonos:** en algunos (como Samsung con Android 16) la instalación fallaba con
+  «Self update is blocked». Ahora la versión nueva se abre en la pantalla de instalación de Android, igual que si la
+  abrieras desde el navegador. Si aun así falla, se abre su página para descargarla.
+
 ## 1.4.0
 
 - **Tarjetas con animación:** los avisos de tus notificaciones entran deslizándose con un glitch y se van igual, ya

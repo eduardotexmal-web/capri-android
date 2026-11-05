@@ -81,6 +81,13 @@
             </intent-filter>
         </service>
 
+        <!-- the downloaded update, for Android's installer screen only (ApkProvider.kt) -->
+        <provider
+            android:name=".ApkProvider"
+            android:authorities="${applicationId}.apk"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
         <receiver
             android:name=".Updater$InstallResult"
             android:exported="false" />
