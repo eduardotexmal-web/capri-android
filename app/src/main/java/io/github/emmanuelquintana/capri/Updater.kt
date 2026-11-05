@@ -4,20 +4,16 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageInstaller
 import android.os.Build
-import android.widget.Toast
 import org.json.JSONObject
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
  * Updates from the repo's GitHub releases: the latest one, its APK, installed over this one with
- * Android's own installer (it asks you to confirm). Needs every release signed with the same key
+ * your browser, which hands it to Android's installer. Needs every release signed with the same key
  * (CI's CAPRI_KEYSTORE secrets), or Android refuses to install over.
  */
 object Updater {
@@ -74,62 +70,6 @@ object Updater {
         return false
     }
 
-    /** The APK into the app's cache, with how far along it is (0..1). */
-    fun download(context: Context, release: Release, progress: (Float) -> Unit): File {
-        val dir = File(context.cacheDir, "updates").apply { mkdirs() }
-        dir.listFiles()?.forEach { it.delete() }
-        val file = File(dir, "capri.apk")
-        var conn = URL(release.apk).openConnection() as HttpURLConnection
-        conn.setRequestProperty("User-Agent", "Capri-Android")
-        conn.instanceFollowRedirects = true
-        conn.connectTimeout = 15000
-        conn.readTimeout = 30000
-        // GitHub sends the file from another host: follow it by hand if Java doesn't (https to https is fine)
-        var hops = 0
-        while (conn.responseCode in 300..399 && hops++ < 5) {
-            val next = conn.getHeaderField("Location") ?: break
-            conn.disconnect()
-            conn = URL(next).openConnection() as HttpURLConnection
-            conn.setRequestProperty("User-Agent", "Capri-Android")
-        }
-        if (conn.responseCode != 200) throw IllegalStateException("HTTP ${conn.responseCode}")
-        val total = conn.contentLengthLong.takeIf { it > 0 } ?: release.size
-        conn.inputStream.use { input ->
-            file.outputStream().use { out ->
-                val buf = ByteArray(64 * 1024)
-                var done = 0L
-                while (true) {
-                    val n = input.read(buf)
-                    if (n < 0) break
-                    out.write(buf, 0, n)
-                    done += n
-                    if (total > 0) progress(done.toFloat() / total)
-                }
-            }
-        }
-        return file
-    }
-
-    /** Hands the APK to Android's installer; it asks you, then InstallResult hears how it went. */
-    fun install(context: Context, apk: File) {
-        val installer = context.packageManager.packageInstaller
-        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-            setAppPackageName(context.packageName)
-            setSize(apk.length())
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-        }
-        val id = installer.createSession(params)
-        installer.openSession(id).use { session ->
-            session.openWrite("capri.apk", 0, apk.length()).use { out ->
-                apk.inputStream().use { it.copyTo(out) }
-                session.fsync(out)
-            }
-            val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
-            val result = PendingIntent.getBroadcast(context, id, Intent(context, InstallResult::class.java), flags)
-            session.commit(result.intentSender)
-        }
-    }
-
     /** Every few hours at most, from her service: a notification (and her own word) when there's a newer release. */
     fun checkInBackground(context: Context, onNew: (Release) -> Unit = {}) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -160,26 +100,5 @@ object Updater {
             .setAutoCancel(true)
             .build()
         runCatching { nm.notify(NOTIFICATION_ID, n) }
-    }
-
-    /** How the install went: Android's confirmation screen first, then done or why not. */
-    class InstallResult : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
-                PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                    @Suppress("DEPRECATION")
-                    val confirm = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT) ?: return
-                    context.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                }
-                PackageInstaller.STATUS_SUCCESS -> Diag.add("I", "updated")
-                else -> {
-                    val why = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "status $status"
-                    Diag.add("E", "update failed: $why")
-                    val msg = if (status == PackageInstaller.STATUS_FAILURE_CONFLICT || status == PackageInstaller.STATUS_FAILURE_INCOMPATIBLE)
-                        R.string.update_conflict else R.string.update_failed
-                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                }
-            }
-        }
     }
 }

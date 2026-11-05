@@ -260,6 +260,11 @@ class MainActivity : Activity() {
             addView(view, ui.block(if (i == 0) 18 else 12))
             permRows.add(refresh)
         }
+        // banking apps see her overlay and her notification access as risks: what to do about it
+        addView(ui.card(Hud.CYAN).apply {
+            addView(ui.label(getString(R.string.perms_bank_head)))
+            addView(ui.text(getString(R.string.perms_bank), 14f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.2f) }, ui.block(6))
+        }, ui.block(18))
     }
 
     // ---------- Settings ----------
@@ -365,37 +370,16 @@ class MainActivity : Activity() {
         updateBtn.text = getString(R.string.update_go).uppercase() + " ›"
     }
 
-    /** Download it and hand it to Android's installer (after letting Capri install apps, once). */
+    /**
+     * The new APK, downloaded by your browser: you open it from there and Android installs it over
+     * this one (same signature, nothing lost). Capri doesn't install apps herself: one permission
+     * fewer, and none that antivirus apps and banks see as a risk.
+     */
     private fun update() {
         val r = release ?: return
-        if (downloading) return
-        if (!packageManager.canRequestPackageInstalls()) {
-            Toast.makeText(this, R.string.update_allow, Toast.LENGTH_LONG).show()
-            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
-            return
-        }
-        downloading = true
-        updateBtn.isEnabled = false
-        Thread {
-            try {
-                var shown = -1
-                val apk = Updater.download(this, r) { k ->
-                    val pct = (k * 100).toInt()
-                    if (pct != shown) {
-                        shown = pct
-                        runOnUiThread { updateBtn.text = getString(R.string.update_downloading, pct) }
-                    }
-                }
-                Updater.install(this, apk)
-                runOnUiThread { updateBtn.text = getString(R.string.update_installing) }
-            } catch (e: Exception) {
-                Diag.add("E", "update: ${e.message}")
-                runOnUiThread { Toast.makeText(this, R.string.update_failed, Toast.LENGTH_LONG).show() }
-            } finally {
-                downloading = false
-                runOnUiThread { updateBtn.isEnabled = true }
-            }
-        }.start()
+        Toast.makeText(this, R.string.update_browser, Toast.LENGTH_LONG).show()
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.apk)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            .onFailure { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.page)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
 
     /** Her setup panel, over whatever is on screen: she starts first if she isn't on yet. */

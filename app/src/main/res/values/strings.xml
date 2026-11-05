@@ -82,7 +82,7 @@
     <string name="perm_notify_title">Her notification</string>
     <string name="perm_notify_why">Android needs a pinned notification so it doesn’t close me. It’s also my panel: Menu, Put away and Quit, and my winks.</string>
     <string name="perm_notes_title">See your notifications</string>
-    <string name="perm_notes_why">So I can sit on your music with its controls and jump on your notices. I only see the app and the title, never the message, and nothing leaves the phone.</string>
+    <string name="perm_notes_why">So I can sit on your music with its controls and jump on your notices. I only see the app and the title, never the message, and nothing leaves the phone. Heads-up: with this on, some banking apps block you; if you use one, better leave it off.</string>
     <string name="perm_install_title">Install her updates</string>
     <string name="perm_install_why">So I can update myself from GitHub without uninstalling. Android still asks you to confirm each time.</string>
     <string name="perm_required">NEEDED</string>
@@ -103,4 +103,7 @@
     <string name="settings_ai_panel">Pick in her panel</string>
     <string name="settings_intro_again">Replay the welcome</string>
     <string name="choom">choom</string>
+    <string name="update_browser">It downloads in your browser. When it\'s done, open it and tap Update: it installs over this one, nothing lost.</string>
+    <string name="perms_bank_head">Banking apps</string>
+    <string name="perms_bank">Some banking apps block you if another app shows on top or can see notifications, even if it reads nothing from them. I never read anything from your bank or send your data anywhere. If your bank complains: turn off “See your notifications” and put me away (“Put away”, in my notification) before opening it.</string>
 </resources>

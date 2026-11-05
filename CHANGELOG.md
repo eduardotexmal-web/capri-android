@@ -3,6 +3,16 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.1.1
+
+- **Más segura:** Capri ya no pide el permiso de *instalar apps*. Al tocar *Actualizar*, la versión nueva se
+  descarga en tu navegador; ábrela y se instala encima, sin perder nada. Es justo el tipo de permiso que hace
+  que los antivirus desconfíen.
+- **Código legible:** el APK ya no ofusca los nombres de su código, así cualquiera (y cualquier antivirus) puede
+  ver qué hace. Capri no lee nada de tus apps de banco ni manda tus datos a ningún lado.
+- **Apps de banco:** algunas (como Nu) bloquean el acceso si una app puede ver tus notificaciones. Ese permiso
+  sigue siendo opcional y apagado hasta que tú lo das. En *Permisos* te explicamos qué hacer si tu banco se queja.
+
 ## 1.1.0
 
 - **Tarjeta de música a tu gusto:** arrástrala con el dedo a donde quieras (desde sus puntitos o cualquier parte
