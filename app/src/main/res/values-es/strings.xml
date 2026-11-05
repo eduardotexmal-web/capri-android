@@ -116,4 +116,13 @@
     <string name="settings_voice_turn_off">Desactivar</string>
     <string name="settings_voice_nomic">Sin el micrófono no te puede oír.</string>
     <string name="settings_voice_none">Este teléfono no tiene reconocedor de voz (instala o actualiza la app de Google).</string>
+    <string name="voice_listening">● Escuchando. Di «Capri…»</string>
+    <string name="voice_heard">✓ Oyó su nombre: «%1$s»</string>
+    <string name="voice_other">Oyó «%1$s», pero no «Capri».</string>
+    <string name="voice_busy">El micrófono está ocupado (una llamada u otra app).</string>
+    <string name="voice_nomic">Sin permiso de micrófono: dáselo en Permisos.</string>
+    <string name="voice_screenoff">Descansando: la pantalla está apagada.</string>
+    <string name="voice_norecognizer">Este teléfono no tiene reconocedor de voz (instala o actualiza la app de Google).</string>
+    <string name="voice_error">Falló el reconocedor de voz (error %1$s). Reintentando…</string>
+    <string name="voice_starting">Arrancando… (¿Capri está encendida?)</string>
 </resources>

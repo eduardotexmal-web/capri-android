@@ -3,6 +3,17 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.3.1
+
+- **Arreglo de «Háblale»:** Capri no reaccionaba al decirle «Capri…». Ahora usa el reconocedor de voz de Google
+  cuando está en el teléfono (algunos teléfonos traen otro que no escucha desde segundo plano), ya no exige el modo
+  sin conexión, y entiende su nombre aunque el teléfono lo escriba distinto («Kapri», «Capry», «Caprí»…).
+- **Te contesta en voz alta aunque el teléfono esté en silencio**, con el volumen multimedia (el de la música). Si lo
+  tienes en cero, solo te responde en su panel.
+- **Ves qué está oyendo:** en *Ajustes → Háblale* aparece en vivo si está escuchando, qué fue lo último que oyó, o
+  por qué no puede (micrófono ocupado, sin permiso, error del reconocedor).
+- Ya no se puede quedar trabada después de un comando que tarda en responder.
+
 ## 1.3.0
 
 - **Háblale:** di «Capri» y lo que quieras, como a un asistente. «Capri, ¿qué hora es?», «Capri, abre Spotify»,

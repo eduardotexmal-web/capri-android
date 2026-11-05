@@ -54,6 +54,14 @@ class MainActivity : Activity() {
     private lateinit var aiText: TextView
     private lateinit var voiceText: TextView
     private lateinit var voiceBtn: TextView
+    private lateinit var voiceState: TextView
+    private val ticker = android.os.Handler(android.os.Looper.getMainLooper())
+    private val tick = object : Runnable {
+        override fun run() {
+            showVoice()
+            ticker.postDelayed(this, 1500)
+        }
+    }
     private lateinit var logText: TextView
     private lateinit var logBox: LinearLayout
 
@@ -145,11 +153,13 @@ class MainActivity : Activity() {
         if (Ears.enabled(this)) CapriService.current?.voiceChanged()
         refresh()
         checkUpdate()
+        ticker.post(tick)
     }
 
     override fun onPause() {
         super.onPause()
         Diag.onChange = null
+        ticker.removeCallbacks(tick)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -348,6 +358,9 @@ class MainActivity : Activity() {
             addView(ui.label(getString(R.string.settings_voice)))
             voiceText = ui.text("", 17f, Hud.PAPER, ui.head)
             addView(voiceText, ui.block(6))
+            // what her ears are doing right now (listening, what they heard, why not)
+            voiceState = ui.text("", 12f, Hud.YELLOW, ui.mono).apply { setLineSpacing(0f, 1.15f) }
+            addView(voiceState, ui.block(6))
             addView(ui.text(getString(R.string.settings_voice_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
             voiceBtn = ui.button("", Ui.Kind.GREEN) { toggleVoice() }
             addView(voiceBtn, ui.block(12))
@@ -374,6 +387,26 @@ class MainActivity : Activity() {
             setPadding(ui.dpi(12), ui.dpi(10), ui.dpi(12), ui.dpi(12))
         }
         logBox.addView(logText, ui.block(8))
+    }
+
+    private fun showVoice() {
+        if (!::voiceState.isInitialized) return
+        val said = Ears.heardLast.take(80)
+        val s = Ears.status
+        voiceState.text = when {
+            !Ears.enabled(this) -> ""
+            !CapriService.running -> getString(R.string.voice_starting)
+            s == "listening" -> getString(R.string.voice_listening)
+            s == "heard" -> getString(R.string.voice_heard, said)
+            s == "other" -> getString(R.string.voice_other, said)
+            s == "busy" -> getString(R.string.voice_busy)
+            s == "nomic" -> getString(R.string.voice_nomic)
+            s == "screenoff" -> getString(R.string.voice_screenoff)
+            s == "norecognizer" -> getString(R.string.voice_norecognizer)
+            s.startsWith("error:") -> getString(R.string.voice_error, s.removePrefix("error:"))
+            else -> getString(R.string.voice_starting)
+        }
+        voiceState.visibility = if (voiceState.text.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun devMode() = BuildConfig.DEBUG || getSharedPreferences("app", MODE_PRIVATE).getBoolean("dev", false)
@@ -416,6 +449,7 @@ class MainActivity : Activity() {
         })
         voiceText.setTextColor(if (voice && Ears.allowed(this)) Hud.GREEN else Hud.PAPER)
         voiceBtn.text = getString(if (voice) R.string.settings_voice_turn_off else R.string.settings_voice_turn_on).uppercase()
+        showVoice()
         showLog()
     }
 

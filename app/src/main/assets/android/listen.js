@@ -47,17 +47,19 @@ const SHOW_ASK = /^(?:ven|aparece|regresa|vuelve|mu[eé]strate|sal|come back|com
 const DEAF_ASK = /deja de escuchar|no me escuches|stop listening/i;
 const CHAT_ASK = /^(?:abre (?:el |tu )?chat|hablemos|quiero hablar|platiquemos|open (?:the |your )?chat|let'?s talk)\b/i;
 // what's left of her name at the start, as the recognizer may write it
-const NAME = /^\s*(?:hey|oye|ey|hola|ok)?[\s,]*(?:capri|kapri|capry|kapry|caprí)[\s,.!?:]*/i;
+// (and whatever came before it: "oye Capri", "ok Kapri")
+const NAME = /^.*?(?<![\p{L}])[ck]a[pb]r[iíy]s?(?![\p{L}])[\s,.!?:]*/iu;
 
-let busy = false;
+let busy = 0;
 
 export function listen({ toggleVisible, visible }) {
   on('capri:heard', (heard) => {
-    if (!window.dev || busy) return;
-    busy = true;
+    // one at a time, but never stuck on one that never finished
+    if (!window.dev || (busy && Date.now() - busy < 20000)) return;
+    busy = Date.now();
     handle(String(heard?.text || '').replace(NAME, '').trim(), { toggleVisible, visible })
       .catch((err) => console.error('[capri] voice', err))
-      .finally(() => { busy = false; });
+      .finally(() => { busy = 0; });
   });
 }
 

@@ -118,4 +118,13 @@
     <string name="settings_voice_turn_off">Turn off</string>
     <string name="settings_voice_nomic">Without the microphone she can\'t hear you.</string>
     <string name="settings_voice_none">This phone has no speech recognizer (install or update the Google app).</string>
+    <string name="voice_listening">● Listening. Say “Capri…”</string>
+    <string name="voice_heard">✓ Heard her name: “%1$s”</string>
+    <string name="voice_other">Heard “%1$s”, but not “Capri”.</string>
+    <string name="voice_busy">The microphone is busy (a call or another app).</string>
+    <string name="voice_nomic">No microphone permission: give it in Permissions.</string>
+    <string name="voice_screenoff">Resting: the screen is off.</string>
+    <string name="voice_norecognizer">This phone has no speech recognizer (install or update the Google app).</string>
+    <string name="voice_error">The speech recognizer failed (error %1$s). Trying again…</string>
+    <string name="voice_starting">Starting… (is Capri on?)</string>
 </resources>

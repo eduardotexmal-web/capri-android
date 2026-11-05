@@ -43,6 +43,13 @@ class Ears(private val service: CapriService) {
     fun update() = main.post {
         val pm = service.getSystemService(PowerManager::class.java)!!
         val should = enabled(service) && allowed(service) && pm.isInteractive && SpeechRecognizer.isRecognitionAvailable(service)
+        status = when {
+            !enabled(service) -> ""
+            !allowed(service) -> "nomic"
+            !SpeechRecognizer.isRecognitionAvailable(service) -> "norecognizer"
+            !pm.isInteractive -> "screenoff"
+            else -> status
+        }
         if (should == wanted) return@post
         wanted = should
         if (should) {
@@ -77,7 +84,10 @@ class Ears(private val service: CapriService) {
         if (!wanted || speaking || listening) return
         // a call, a voice note, another app recording: the mic is theirs
         val audio = service.getSystemService(AudioManager::class.java)!!
-        if (audio.mode != AudioManager.MODE_NORMAL) return next(5000)
+        if (audio.mode != AudioManager.MODE_NORMAL) {
+            status = "busy"
+            return next(5000)
+        }
         val r = recognizer ?: create().also { recognizer = it }
         val lang = language()
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -85,7 +95,6 @@ class Ears(private val service: CapriService) {
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
             .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
             .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, service.packageName)
         listening = true
         runCatching { r.startListening(intent) }.onFailure {
@@ -96,8 +105,20 @@ class Ears(private val service: CapriService) {
 
     // on the phone itself when it can (Android 12+, its speech pack installed): nothing goes out
     private fun create(): SpeechRecognizer {
-        val local = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && runCatching { SpeechRecognizer.isOnDeviceRecognitionAvailable(service) }.getOrDefault(false)
-        val r = if (local && failures < 3) SpeechRecognizer.createOnDeviceSpeechRecognizer(service) else SpeechRecognizer.createSpeechRecognizer(service)
+        // Google's when it's there (some phones default to their own, which won't listen from a service),
+        // else the phone's default; the on-device one only when those keep failing
+        val google = runCatching {
+            service.packageManager.queryIntentServices(Intent(android.speech.RecognitionService.SERVICE_INTERFACE), 0)
+                .firstOrNull { it.serviceInfo.packageName == GOOGLE }
+                ?.let { android.content.ComponentName(it.serviceInfo.packageName, it.serviceInfo.name) }
+        }.getOrNull()
+        val local = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && failures >= 4 && failures % 2 == 0 &&
+            runCatching { SpeechRecognizer.isOnDeviceRecognitionAvailable(service) }.getOrDefault(false)
+        val r = when {
+            local -> SpeechRecognizer.createOnDeviceSpeechRecognizer(service)
+            google != null && failures % 3 != 2 -> SpeechRecognizer.createSpeechRecognizer(service, google)
+            else -> SpeechRecognizer.createSpeechRecognizer(service)
+        }
         r.setRecognitionListener(object : RecognitionListener {
             override fun onResults(results: Bundle?) {
                 listening = false
@@ -109,7 +130,9 @@ class Ears(private val service: CapriService) {
                 listening = false
                 failed(error)
             }
-            override fun onReadyForSpeech(params: Bundle?) {}
+            override fun onReadyForSpeech(params: Bundle?) {
+                status = "listening"
+            }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
@@ -123,8 +146,12 @@ class Ears(private val service: CapriService) {
     private fun failed(error: Int) {
         when (error) {
             // silence, or words that weren't words: listen again right away
-            SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> next(200)
+            SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> {
+                failures = 0
+                next(200)
+            }
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
+                status = "nomic"
                 Diag.add("W", "voice: no microphone permission")
                 wanted = false
                 stop()
@@ -134,6 +161,7 @@ class Ears(private val service: CapriService) {
                 failures++
                 recognizer?.let { runCatching { it.destroy() } }
                 recognizer = null
+                status = "error:$error"
                 if (failures == 1 || failures % 10 == 0) Diag.add("W", "voice: recognizer error $error")
                 next(minOf(60_000L, 1000L * failures * failures))
             }
@@ -142,13 +170,20 @@ class Ears(private val service: CapriService) {
 
     private fun heard(options: List<String>) {
         val now = System.currentTimeMillis()
-        val named = options.firstOrNull { NAME.containsMatchIn(it) }
+        val plain = options.map { plain(it) }
+        val at = plain.indexOfFirst { NAME.containsMatchIn(it) }
+        val named = if (at >= 0) plain[at] else null
+        heardLast = options.firstOrNull() ?: ""
         val text = when {
-            named != null -> named.substring(NAME.find(named)!!.range.first)
+            named != null -> options[at] // as you said it (her page finds her name in it)
             now < awakeUntil && options.isNotEmpty() -> options[0]
-            else -> return
+            else -> {
+                status = "other"
+                return
+            }
         }
-        val rest = NAME.replace(text, "").trim(' ', ',', '.', '!', '?')
+        status = "heard"
+        val rest = if (named != null) named.substring(NAME.find(named)!!.range.last + 1).trim(' ', ',', '.', '!', '?') else text
         // just her name: what you say in the next few seconds is for her too
         awakeUntil = if (rest.isEmpty() && named != null) now + 8000 else 0L
         service.overlay?.emit("capri:heard", JSONObject().put("text", text).toString())
@@ -157,13 +192,17 @@ class Ears(private val service: CapriService) {
     /** Her answer, out loud (not on silent or vibrate), and not heard by her own ears meanwhile. */
     fun say(text: String, lang: String) = main.post {
         val audio = service.getSystemService(AudioManager::class.java)!!
-        if (text.isBlank() || audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return@post
+        // out loud through the media volume (what music uses): her ears asked you for it, even on silent
+        if (text.isBlank() || audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) return@post
         val speak = {
             tts?.language = Locale.forLanguageTag(lang)
             speaking = true
             recognizer?.let { runCatching { it.cancel() } }
             listening = false
             tts?.speak(text.take(600), TextToSpeech.QUEUE_FLUSH, null, "capri")
+            // never deaf for good if the voice engine forgets to say it's done
+            main.removeCallbacks(unstuck)
+            main.postDelayed(unstuck, 30_000)
             Unit
         }
         if (tts != null && ttsReady) {
@@ -187,7 +226,10 @@ class Ears(private val service: CapriService) {
         }
     }
 
+    private val unstuck = Runnable { if (speaking) spoke() }
+
     private fun spoke() {
+        main.removeCallbacks(unstuck)
         speaking = false
         if (wanted) next(300)
     }
@@ -221,7 +263,18 @@ class Ears(private val service: CapriService) {
     }
 
     companion object {
-        private val NAME = Regex("\\b(capri|kapri|capry|kapry|caprí)\\b", RegexOption.IGNORE_CASE)
+        // her name as recognizers write it: Capri, Kapri, Capry, Cabri, Caprí, Capris…
+        private val NAME = Regex("(?<![a-z])[ck]a[pb]r[iy]s?(?![a-z])")
+        private const val GOOGLE = "com.google.android.googlequicksearchbox"
+
+        /** What her ears are doing, for the app's Settings: "", listening, heard, other, busy, nomic, screenoff, error:N */
+        @Volatile var status = ""
+            private set
+        @Volatile var heardLast = ""
+            private set
+
+        // lower case, no accents: "Caprí" is "capri"
+        private fun plain(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{M}+"), "")
         private const val PREF = "voice"
 
         fun enabled(context: Context) = context.getSharedPreferences("app", Context.MODE_PRIVATE).getBoolean(PREF, false)
