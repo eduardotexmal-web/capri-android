@@ -45,7 +45,7 @@
     <string name="update_downloading">Downloading… %1$d %%</string>
     <string name="update_installing">Confirm it on the screen Android shows</string>
     <string name="update_allow">Allow Capri to install apps, then come back and tap Update.</string>
-    <string name="update_failed">The update didn\'t work. The log below says why.</string>
+    <string name="update_failed">The update didn\'t work from here: its page opens so you can download it.</string>
     <string name="update_conflict">This version was signed differently: uninstall Capri once and install it again. After that, updates install over.</string>
     <string name="update_channel">Updates</string>
     <string name="update_title">Capri %1$s is out</string>
@@ -127,4 +127,43 @@
     <string name="voice_norecognizer">This phone has no speech recognizer (install or update the Google app).</string>
     <string name="voice_error">The speech recognizer failed (error %1$s). Trying again…</string>
     <string name="voice_starting">Starting… (is Capri on?)</string>
+    <string name="tab_cmds">Commands</string>
+    <string name="cmds_intro">What you can ask her, out loud or typed in her chat.</string>
+    <string-array name="cmds">
+        <item>#Talk to her</item>
+        <item>Turn it on in Settings → Talk to her. Say “Capri” and what you want; if you only say “Capri”, she listens for a few seconds. All of this also works typed in her chat.</item>
+        <item>#Time and date</item>
+        <item>“Capri, what time is it?”</item>
+        <item>“Capri, what day is it?”</item>
+        <item>#Music</item>
+        <item>“Capri, play Bad Bunny on Spotify”</item>
+        <item>“Capri, play Never Fade Away on YouTube”</item>
+        <item>“Capri, pause” · “next” · “previous”</item>
+        <item>“Capri, turn it up” · “turn it down”</item>
+        <item>“Capri, volume 30” · “mute”</item>
+        <item>#Apps</item>
+        <item>“Capri, open WhatsApp”</item>
+        <item>“Capri, open youtube.com”</item>
+        <item>#Your phone</item>
+        <item>“Capri, turn on the flashlight” · “turn off the flashlight”</item>
+        <item>“Capri, how much battery do I have?”</item>
+        <item>“Capri, how much free space is left?”</item>
+        <item>“Capri, open wifi settings” (or bluetooth, sound, display…)</item>
+        <item>#Time</item>
+        <item>“Capri, set a 10 minute timer”</item>
+        <item>“Capri, remind me to call mom in 1 hour”</item>
+        <item>“Capri, remind me tomorrow at 9 to take out the trash”</item>
+        <item>#Her</item>
+        <item>“Capri, hide” · “Capri, come back”</item>
+        <item>“Capri, open the chat”</item>
+        <item>“Capri, call me Emma”</item>
+        <item>“Capri, remember that I like coffee”</item>
+        <item>“Capri, stop listening”</item>
+        <item>#Anything else</item>
+        <item>Anything else goes to her AI and she answers out loud: “Capri, tell me a joke”, “Capri, how do you say cat in Japanese?”</item>
+    </string-array>
+    <plurals name="news_changes">
+        <item quantity="one">%d change · tap to see it</item>
+        <item quantity="other">%d changes · tap to see them</item>
+    </plurals>
 </resources>

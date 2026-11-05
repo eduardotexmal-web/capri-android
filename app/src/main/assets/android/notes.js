@@ -11,7 +11,9 @@ import { call, send, on, emit } from './native.js';
 
 const NOTE_FOR = 7000;        // how long a notice stays on screen
 const MUSIC_SPOT = 'capri.musicCard'; // where you left her music card, and if it's folded
-const PAUSED_FOR = 90 * 1000; // music paused this long: its card goes
+const PAUSED_FOR = 12 * 1000; // music paused this long: its card goes
+const MUSIC_FOR = 15 * 1000;  // a new song, play or pause: its card shows this long, then slides away
+const OUT_MS = 320;           // a card's way out (android.css .is-out)
 const SAY_EVERY = 4 * 60 * 1000;
 
 const LINES = {
@@ -86,6 +88,38 @@ export class Notes {
 
   // ---------- the cards ----------
 
+  // In with a glitchy slide, out the same way (android.css): never just popping on and off
+  show(el) {
+    clearTimeout(el._out);
+    const was = el.hidden || el.classList.contains('is-out');
+    el.classList.remove('is-out');
+    el.hidden = false;
+    if (was) {
+      el.classList.remove('is-in');
+      void el.offsetWidth; // restart the animation
+      el.classList.add('is-in');
+    }
+    return was;
+  }
+
+  hide(el) {
+    if (el.hidden || el.classList.contains('is-out')) return;
+    el.classList.remove('is-in');
+    el.classList.add('is-out');
+    clearTimeout(el._out);
+    el._out = setTimeout(() => {
+      el.hidden = true;
+      el.classList.remove('is-out');
+      this.feed(); // she falls off it once it's gone
+    }, OUT_MS);
+  }
+
+  // the music card for a while, then away (it's not always on screen)
+  showMusicFor() {
+    clearTimeout(this.musicTimer);
+    this.musicTimer = setTimeout(() => this.hide(this.music), MUSIC_FOR);
+  }
+
   card(kind) {
     const el = document.createElement('div');
     el.className = `anote anote--${kind}`;
@@ -97,6 +131,7 @@ export class Notes {
         : '<button class="anote__x" data-a="dismiss" aria-label="dismiss">×</button>');
     if (kind === 'music') this.movable(el);
     el.addEventListener('click', (e) => {
+      if (kind === 'music') this.showMusicFor(); // in use: it stays a while longer
       if (el.dataset.dragged) return; // the end of a drag, not a tap
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (kind === 'music') {
@@ -215,8 +250,7 @@ export class Notes {
     const before = this.media;
     this.media = m?.title ? m : null;
     if (!this.media || this.config().musicCard === false) {
-      this.music.hidden = true;
-      this.feed();
+      this.hide(this.music);
       return;
     }
     const { title, artist, app, playing } = this.media;
@@ -224,10 +258,13 @@ export class Notes {
     if (playing) this.pausedAt = 0;
     this.fill(this.music, `♪ ${playing ? this.t.playing : this.t.paused} · ${app}`, title, artist);
     this.music.classList.toggle('is-paused', !playing);
-    const wasHidden = this.music.hidden;
-    this.music.hidden = false;
+    // only when something changed (a new song, play, pause): not every update of the same song
+    const changed = !before || before.title !== title || before.playing !== playing;
+    if (!changed && (this.music.hidden || this.music.classList.contains('is-out'))) return;
+    const wasHidden = this.show(this.music);
     if (wasHidden) this.place(); // laid out now: kept inside the screen at its real size
     this.feed();
+    if (changed || wasHidden) this.showMusicFor();
     // a new song, or the music starting: she comes to sit on it
     const fresh = playing && (wasHidden || !before?.playing || before.title !== title);
     if (fresh) {
@@ -238,10 +275,7 @@ export class Notes {
   }
 
   tick() {
-    if (this.pausedAt && Date.now() - this.pausedAt > PAUSED_FOR && !this.music.hidden) {
-      this.music.hidden = true;
-      this.feed();
-    }
+    if (this.pausedAt && Date.now() - this.pausedAt > PAUSED_FOR && !this.music.hidden) this.hide(this.music);
   }
 
   // ---------- notices ----------
@@ -250,11 +284,10 @@ export class Notes {
     if (!n?.key || this.config().noteHop === false) return;
     this.note = n;
     this.fill(this.notice, n.app.toUpperCase(), n.title || n.app, '');
-    this.notice.hidden = false;
-    // a fresh one: the card replays its glitch in
-    this.notice.classList.remove('is-new');
-    void this.notice.offsetWidth;
-    this.notice.classList.add('is-new');
+    // a fresh one: the card replays its glitch in, and its bar runs down while it stays
+    this.notice.hidden = true;
+    this.show(this.notice);
+    this.notice.style.setProperty('--stay', `${NOTE_FOR}ms`);
     this.feed();
     clearTimeout(this.noteTimer);
     this.noteTimer = setTimeout(() => this.hideNote(), NOTE_FOR);
@@ -266,8 +299,7 @@ export class Notes {
   hideNote() {
     clearTimeout(this.noteTimer);
     this.note = null;
-    this.notice.hidden = true;
-    this.feed();
+    this.hide(this.notice);
   }
 
   // ---------- her ----------
@@ -276,7 +308,7 @@ export class Notes {
   snapshot() {
     const wins = [];
     for (const [id, el] of [['note', this.notice], ['music', this.music]]) {
-      if (el.hidden) continue;
+      if (el.hidden || el.classList.contains('is-out')) continue;
       const r = el.getBoundingClientRect();
       wins.push({ id, x: r.left, y: r.top, w: r.width, h: r.height, max: false });
     }

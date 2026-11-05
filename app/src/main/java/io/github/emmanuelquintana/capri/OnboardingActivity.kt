@@ -410,6 +410,9 @@ object Permissions {
         Perm(R.string.perm_notes_title, R.string.perm_notes_why, false, { CapriNotifications.allowed(a) }) {
             a.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         },
+        Perm(R.string.perm_install_title, R.string.perm_install_why, false, { a.packageManager.canRequestPackageInstalls() }) {
+            a.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${a.packageName}")))
+        },
         Perm(R.string.perm_mic_title, R.string.perm_mic_why, false, { Ears.allowed(a) }) {
             a.requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), MIC)
         },

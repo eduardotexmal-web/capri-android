@@ -3,6 +3,8 @@
 
     <!-- her chat's AI, Ollama on your network, and the hook server Claude Code reaches -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- her updates, installed from the app (Android still asks you to confirm each one) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- on top of your apps, as she is on top of your windows on the desktop -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -78,6 +80,16 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <receiver
+            android:name=".Updater$InstallResult"
+            android:exported="false" />
+
+        <!-- every few hours, even with her off: is there a new version? (Updater.kt) -->
+        <service
+            android:name=".UpdateJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
             android:name=".CapriTile"

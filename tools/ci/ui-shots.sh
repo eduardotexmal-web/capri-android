@@ -76,6 +76,16 @@ tap "permisos"
 shot 13-perms-tab 2
 tap "ajustes"
 shot 14-settings-tab 2
+tap "comandos"
+shot 14b-commands-tab 2
+adb shell input swipe 500 1800 500 700 300
+shot 14c-commands-more 2
+tap "novedades"
+adb shell input swipe 500 1800 500 600 300
+shot 14d-news-folded 2
+tap "cambios"
+shot 14e-news-open 2
+adb shell input swipe 500 600 500 1800 300
 tap "novedades"
 adb shell appops set $PKG SYSTEM_ALERT_WINDOW allow
 adb shell input swipe 500 600 500 1800 300

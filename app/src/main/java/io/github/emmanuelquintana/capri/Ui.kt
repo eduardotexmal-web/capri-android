@@ -251,6 +251,16 @@ class Ui(private val a: Activity) {
                     path.moveTo(cx - s * 0.15f, cy); path.lineTo(cx - s * 0.03f, cy + s * 0.12f); path.lineTo(cx + s * 0.17f, cy - s * 0.1f)
                     c.drawPath(path, p)
                 }
+                "mic" -> {
+                    p.style = Paint.Style.STROKE
+                    p.strokeWidth = s * 0.1f
+                    p.strokeCap = Paint.Cap.SQUARE
+                    val w = s * 0.14f
+                    c.drawRoundRect(cx - w, cy - s * 0.44f, cx + w, cy + s * 0.08f, w, w, p)
+                    c.drawArc(cx - s * 0.3f, cy - s * 0.3f, cx + s * 0.3f, cy + s * 0.22f, 20f, 140f, false, p)
+                    c.drawLine(cx, cy + s * 0.22f, cx, cy + s * 0.42f, p)
+                    c.drawLine(cx - s * 0.16f, cy + s * 0.42f, cx + s * 0.16f, cy + s * 0.42f, p)
+                }
                 else -> { // sliders
                     p.style = Paint.Style.FILL
                     val h = s * 0.08f

@@ -190,12 +190,16 @@ class CapriService : Service() {
     private val check = Runnable { checkUpdates() }
 
     private fun checkUpdates() {
-        Updater.checkInBackground(this) { r ->
-            val json = JSONObject().put("version", r.version).put("notes", r.notes).toString()
-            ticker.postDelayed({ overlay?.emit("capri:update", json) }, if (pageReady) 0 else 20_000)
-        }
+        Updater.checkInBackground(this) { r -> newRelease(r) }
+        UpdateJob.schedule(this)
         ticker.removeCallbacks(check)
         ticker.postDelayed(check, Updater.CHECK_EVERY + 60_000)
+    }
+
+    /** A newer release just found: she says so on screen too (host.js). */
+    fun newRelease(r: Updater.Release) {
+        val json = JSONObject().put("version", r.version).put("notes", r.notes).toString()
+        ticker.postDelayed({ overlay?.emit("capri:update", json) }, if (pageReady) 0 else 20_000)
     }
 
     // her last word, for her notification (a wink in your notification shade): what she said, her face

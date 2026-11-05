@@ -74,6 +74,8 @@ class MainActivity : Activity() {
             finish()
             return
         }
+        UpdateJob.schedule(this)
+        wantsUpdate = intent?.getBooleanExtra(EXTRA_UPDATE, false) == true
         window.statusBarColor = Hud.INK
         window.navigationBarColor = Hud.INK
         ui = Ui(this)
@@ -82,13 +84,13 @@ class MainActivity : Activity() {
         content = FrameLayout(this)
         root.addView(content, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        val pages = listOf(newsPage(), permsPage(), settingsPage())
+        val pages = listOf(newsPage(), cmdsPage(), permsPage(), settingsPage())
         val bar = ui.row().apply {
             background = Ui.Pill(Hud.INK, Hud.MANE, ui.dp(1.5f))
             setPadding(ui.dpi(6), ui.dpi(6), ui.dpi(6), ui.dpi(6))
             elevation = ui.dp(6f)
         }
-        val labels = listOf(R.string.tab_news to "spark", R.string.tab_perms to "shield", R.string.tab_settings to "sliders")
+        val labels = listOf(R.string.tab_news to "spark", R.string.tab_cmds to "mic", R.string.tab_perms to "shield", R.string.tab_settings to "sliders")
         for ((i, pair) in labels.withIndex()) {
             val (label, kind) = pair
             val icon = Ui.Icon(kind, Hud.PAPER_2)
@@ -171,6 +173,15 @@ class MainActivity : Activity() {
     }
 
     private var wantVoice = false
+    private var wantsUpdate = false // opened from the "new version" notification: straight into it
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_UPDATE, false)) {
+            wantsUpdate = true
+            if (::ui.isInitialized) show(0)
+        }
+    }
 
     private fun toggleVoice() {
         if (Ears.enabled(this)) return Ears.setEnabled(this, false).also { refresh() }
@@ -243,7 +254,7 @@ class MainActivity : Activity() {
         startBtn = ui.button("", Ui.Kind.MAIN) {
             if (!Settings.canDrawOverlays(this@MainActivity)) {
                 Toast.makeText(this@MainActivity, R.string.ob_need_overlay, Toast.LENGTH_LONG).show()
-                show(1)
+                show(2)
                 return@button
             }
             if (CapriService.running) CapriService.send(this@MainActivity, CapriService.ACTION_QUIT) else CapriService.start(this@MainActivity)
@@ -262,10 +273,27 @@ class MainActivity : Activity() {
 
         // what each version brought (CHANGELOG.md)
         addView(ui.label(getString(R.string.news_head)), ui.block(26))
-        for ((i, v) in changelog().take(6).withIndex()) {
+        // folded: just the version and how many changes; a tap opens it (and folds it again)
+        for ((i, v) in changelog().take(8).withIndex()) {
             val card = ui.card(if (i == 0) Hud.YELLOW else Hud.LINE_STRONG, if (i == 0) Hud.MANE else 0)
-            card.addView(ui.text("v" + v.first, 12f, if (i == 0) Hud.YELLOW else Hud.PAPER_3, ui.mono).apply { letterSpacing = 0.08f })
-            for (item in v.second) card.addView(bullet(item, i == 0), ui.block(8))
+            val head = ui.row().apply { gravity = Gravity.CENTER_VERTICAL }
+            head.addView(ui.text("v" + v.first, 13f, if (i == 0) Hud.YELLOW else Hud.PAPER_2, ui.mono).apply { letterSpacing = 0.08f })
+            head.addView(ui.text(resources.getQuantityString(R.plurals.news_changes, v.second.size, v.second.size), 12f, Hud.PAPER_3, ui.body).apply {
+                setPadding(ui.dpi(10), 0, 0, 0)
+            }, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            val chevron = ui.text("▾", 16f, if (i == 0) Hud.MANE else Hud.PAPER_3, ui.mono)
+            head.addView(chevron)
+            card.addView(head)
+            val items = ui.col().apply { visibility = View.GONE }
+            for (item in v.second) items.addView(bullet(item, i == 0), ui.block(8))
+            card.addView(items)
+            card.isClickable = true
+            card.setOnClickListener {
+                val open = items.visibility != View.VISIBLE
+                items.visibility = if (open) View.VISIBLE else View.GONE
+                chevron.text = if (open) "▴" else "▾"
+                if (open) ui.glitchIn(items)
+            }
             addView(card, ui.block(10))
         }
 
@@ -308,6 +336,28 @@ class MainActivity : Activity() {
         }
         out.map { it.first to it.second.toList() }
     }.getOrDefault(emptyList())
+
+    // ---------- Commands: what she can do, so you know what to ask ----------
+
+    private fun cmdsPage() = page {
+        addView(ui.label(getString(R.string.tab_cmds)))
+        addView(ui.text(getString(R.string.cmds_intro), 15f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.2f) }, ui.block(8))
+        val colors = listOf(Hud.MANE, Hud.GREEN, Hud.YELLOW)
+        var card: LinearLayout? = null
+        var n = 0
+        for (item in resources.getStringArray(R.array.cmds)) {
+            if (item.startsWith("#")) {
+                card = ui.card(colors[n++ % colors.size])
+                card.addView(ui.label(item.removePrefix("#")))
+                addView(card, ui.block(if (n == 1) 18 else 12))
+            } else {
+                val quoted = item.startsWith("«") || item.startsWith("“")
+                card?.addView(ui.text(item, if (quoted) 15f else 14f, if (quoted) Hud.PAPER else Hud.PAPER_2, if (quoted) ui.head else ui.body).apply {
+                    setLineSpacing(0f, 1.18f)
+                }, ui.block(8))
+            }
+        }
+    }
 
     // ---------- Permissions ----------
 
@@ -474,18 +524,51 @@ class MainActivity : Activity() {
         updateText.setTextColor(if (release != null) Hud.YELLOW else Hud.PAPER_2)
         updateBtn.visibility = if (release != null) View.VISIBLE else View.GONE
         updateBtn.text = getString(R.string.update_go).uppercase() + " ›"
+        if (wantsUpdate && release != null) {
+            wantsUpdate = false
+            update()
+        }
     }
 
-    /**
-     * The new APK, downloaded by your browser: you open it from there and Android installs it over
-     * this one (same signature, nothing lost). Capri doesn't install apps herself: one permission
-     * fewer, and none that antivirus apps and banks see as a risk.
-     */
+    companion object {
+        const val EXTRA_UPDATE = "update"
+    }
+
+    /** Download it and hand it to Android's installer (after letting Capri install apps, once). */
     private fun update() {
         val r = release ?: return
-        Toast.makeText(this, R.string.update_browser, Toast.LENGTH_LONG).show()
-        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.apk)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-            .onFailure { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.page)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        if (downloading) return
+        if (!packageManager.canRequestPackageInstalls()) {
+            Toast.makeText(this, R.string.update_allow, Toast.LENGTH_LONG).show()
+            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+            return
+        }
+        downloading = true
+        updateBtn.isEnabled = false
+        Thread {
+            try {
+                var shown = -1
+                val apk = Updater.download(this, r) { k ->
+                    val pct = (k * 100).toInt()
+                    if (pct != shown) {
+                        shown = pct
+                        runOnUiThread { updateBtn.text = getString(R.string.update_downloading, pct) }
+                    }
+                }
+                Updater.install(this, apk)
+                runOnUiThread { updateBtn.text = getString(R.string.update_installing) }
+            } catch (e: Exception) {
+                Diag.add("E", "update: ${e.message}")
+                runOnUiThread {
+                    // it didn't work from here: the browser, as before
+                    Toast.makeText(this, R.string.update_failed, Toast.LENGTH_LONG).show()
+                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.page)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                }
+            } finally {
+                downloading = false
+                runOnUiThread { updateBtn.isEnabled = true }
+            }
+        }.start()
     }
 
     /** Her setup panel, over whatever is on screen: she starts first if she isn't on yet. */
