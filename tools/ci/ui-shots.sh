@@ -110,7 +110,7 @@ adb shell input keyevent KEYCODE_L
 shot 19-typed-l 3
 adb shell input text "choom"
 shot 20-typed-text 3
-adb shell input tap 1040 1700 # away from her: her chat closes, the keyboard goes
+adb shell input tap 1040 1300 # away from her (above the keyboard, beside her): her chat closes, the keyboard goes
 shot 21-tap-away 3
 # typing in another app (the launcher's search) with her on screen: its keyboard over her
 adb shell input tap 300 2280
