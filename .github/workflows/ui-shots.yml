@@ -1,9 +1,11 @@
 name: Capturas de la app
 
-# A mano: compila la versión de depuración, la abre en un emulador, recorre la bienvenida y las
+# En cada push a una rama que no es main (y a mano): compila la versión de depuración, la abre en un emulador, recorre la bienvenida y las
 # pestañas, y deja capturas en el registro (base64) y como artefacto.
 
 on:
+  push:
+    branches-ignore: [main]
   workflow_dispatch:
 
 jobs:
