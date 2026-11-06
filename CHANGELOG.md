@@ -8,7 +8,7 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
 - **Capri ya no sale disparada:** al tocarla o soltarla después de arrastrarla, a veces salía volando como si la
   lanzaras. Ahora solo la lanzas si de verdad la avientas con un movimiento rápido; si solo la sueltas, cae suave. Y
   cuando la lanzas, va con menos fuerza.
-- **Elige su tamaño:** en *Ajustes → Capri en tu pantalla*, de muy pequeña a grande.
+- **Elige su tamaño:** en *Ajustes → Capri en tu pantalla*, de mini a enorme.
 - **Modo fantasma:** Capri sigue en tu pantalla pero no se puede tocar y no estorba: tus toques pasan a la app de
   abajo, como un shimeji fantasma. Se activa en *Ajustes* o en su menú.
 - **Más movimiento:** ya no se queda parada. Elige qué tan inquieta es en *Ajustes → Movimiento*: tranquila (como
@@ -18,7 +18,7 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
   hasta que lo apagues. Android te pregunta antes cada vez que empieza a ver, y verás el ícono de transmisión mientras
   mira. Las capturas no se guardan: solo van a su IA. Las apps protegidas (bancos, contraseñas) le salen en negro.
   Necesita una IA que vea imágenes, como Gemini (su clave es gratis); la IA gratis no ve, y Capri te lo dice.
-- **El chat ya no se congela:** descubrimos por qué tardaba: la IA gratis solo deja una respuesta cada 45 segundos
+- **El chat ya no se congela:** ya sabemos por qué tardaba: la IA gratis solo deja una respuesta cada 45 segundos
   por teléfono, y si le escribías antes, se quedaba esperando o fallaba. Ahora Capri espera su turno y vuelve a
   preguntar sola, le pide a la IA pensar menos para que conteste más rápido, y mientras tanto te dice que está pensando
   en vez de quedarse muda. Si quieres respuestas al instante, ponle una clave gratis de Gemini.

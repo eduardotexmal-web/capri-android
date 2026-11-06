@@ -157,6 +157,9 @@
         <item>«Capri, llámame Emma»</item>
         <item>«Capri, recuerda que me gusta el café»</item>
         <item>«Capri, deja de escuchar»</item>
+        <item>#Tu pantalla</item>
+        <item>«Capri, mira mi pantalla» (Android te pide permiso; necesita una IA que vea imágenes, como Gemini)</item>
+        <item>En vivo: Ajustes → Que vea tu pantalla → Ver en vivo</item>
         <item>#Lo demás</item>
         <item>Cualquier otra cosa se la pregunta a su IA y te contesta en voz alta: «Capri, cuéntame un chiste», «Capri, ¿cómo se dice gato en japonés?»</item>
     </string-array>

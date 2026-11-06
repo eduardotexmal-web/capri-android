@@ -159,6 +159,9 @@
         <item>“Capri, call me Emma”</item>
         <item>“Capri, remember that I like coffee”</item>
         <item>“Capri, stop listening”</item>
+        <item>#Your screen</item>
+        <item>“Capri, look at my screen” (Android asks you first; it needs an AI that sees pictures, like Gemini)</item>
+        <item>Live: Settings → Let her see your screen → Watch live</item>
         <item>#Anything else</item>
         <item>Anything else goes to her AI and she answers out loud: “Capri, tell me a joke”, “Capri, how do you say cat in Japanese?”</item>
     </string-array>
