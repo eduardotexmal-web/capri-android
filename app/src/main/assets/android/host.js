@@ -44,7 +44,7 @@ const DEFAULTS = {
   welcomed: false, assistant: 'auto', linked: false, chatModel: null, provider: 'pollinations', apiKeys: {},
   customUrl: '', claudeCwd: null, userName: '', persona: '', myLines: [], memories: [], claudeMode: 'default',
   claude: true, rest: 'corner', theme: 'nightcity', motion: 'auto', motionAsked: false, render: 'auto', follow: true,
-  jealous: true, closePages: true, reminders: [], bond: null, pcReact: true, watchScreen: false, lookAsked: false,
+  jealous: true, closePages: true, reminders: [], bond: null, pcReact: true, watchScreen: false, lookAsked: false, gamer: false,
   // Android
   ollamaHost: '127.0.0.1:11434', // Ollama in Termux on the phone, or your PC's address on your network
   hooksCopied: false,            // the Termux command to plug her in was handed to you
@@ -85,6 +85,7 @@ async function loadConfig() {
   cfg = { ...DEFAULTS, ...(saved || {}) };
   // her live look needs Android's yes again after each start: off until you turn it on
   if (cfg.watchScreen) cfg.watchScreen = false;
+  if (cfg.gamer) cfg.gamer = false; // her gamer mode is for one session of play
   if (info) device = { ...device, ...info };
   env.OLLAMA_HOST = cfg.ollamaHost || DEFAULTS.ollamaHost;
 }
@@ -111,9 +112,13 @@ function resolveLang(setting) {
   return 'en';
 }
 
+const GAMER_SCALE = 0.35;
+
 function rendererConfig() {
   const { apiKeys, ...rest } = cfg;
-  return { ...rest, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(rest.lang), langSetting: rest.lang, floorGap: 0 };
+  // gamer mode: small, still, in a corner, out of the game's way (her settings stay as they were)
+  const gamer = cfg.gamer ? { scale: Math.min(cfg.scale || 0.6, GAMER_SCALE), wander: false, jealous: false, pcReact: false } : {};
+  return { ...rest, ...gamer, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(rest.lang), langSetting: rest.lang, floorGap: 0 };
 }
 
 const listeners = { config: new Set(), command: new Set() };
@@ -125,8 +130,9 @@ const sub = (set) => (fn) => {
 function updateConfig(patch) {
   const wasWatching = Boolean(cfg.watchScreen);
   saveConfig(patch);
-  if ('ghost' in patch) touch.ghost = Boolean(cfg.ghost);
+  if ('ghost' in patch || 'gamer' in patch) touch.ghost = Boolean(cfg.ghost || cfg.gamer);
   if ('scale' in patch) setTimeout(() => notes?.place(), 0); // her notice card sits just below her height
+  if ('gamer' in patch) setTimeout(() => gamerMode(Boolean(cfg.gamer)), 0);
   // her live look (Eyes.kt): Android asks you when it goes on; a "no" turns it back off
   if ('watchScreen' in patch && Boolean(cfg.watchScreen) !== wasWatching) {
     // an AI that can't see: no live look (she says why), and Android never asks
@@ -460,13 +466,13 @@ function toggleVisible(force) {
 // looking at your PC's screen, being jealous of other AIs' browser pages)
 const PHONE_LABELS = {
   es: {
-    possess: 'Poseer sus tarjetas', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
+    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
     motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
     soundsDir: 'Dónde poner sonidos propios',
     lookNow: 'Mira mi pantalla', lookAuto: 'Ver mi pantalla en vivo', ghost: 'Modo fantasma (no se puede tocar)',
   },
   en: {
-    possess: 'Possess her cards', startup: 'Start with the phone', pcReact: 'React to my phone',
+    possess: 'Possess her cards', gamer: 'Gamer mode', startup: 'Start with the phone', pcReact: 'React to my phone',
     motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
     soundsDir: 'Where to put my own sounds',
     lookNow: 'Look at my screen', lookAuto: 'Watch my screen live', ghost: 'Ghost mode (can’t be touched)',
@@ -556,6 +562,7 @@ function menuTemplate() {
     { label: t.lookNow, click: () => sendCommand('look') },
     { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
     { label: t.ghost || 'Ghost mode', type: 'checkbox', checked: Boolean(cfg.ghost), click: (item) => updateConfig({ ghost: item.checked }) },
+    { label: t.gamer || 'Gamer mode', type: 'checkbox', checked: Boolean(cfg.gamer), click: (item) => updateConfig({ gamer: item.checked }) },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
     { label: t.possess, type: 'checkbox', checked: cfg.possess, click: (item) => updateConfig({ possess: item.checked }) },
     ...(notes ? [notes.menu(updateConfig)] : []),
@@ -843,12 +850,32 @@ window.host = {
 let pulling = null;
 
 // what the app's screen set (CapriSettings.kt) while she's on: what she calls you, her AI
+// Gamer mode on or off: she goes to sit small in a corner (or comes back), her cards away
+const GAMER_LINES = {
+  es: { on: ['Modo gamer. Me hago chiquita aquí, tú dale.', 'Modo gamer activado. No te estorbo, choom.'], off: ['¿Qué tal la partida?', 'Se acabó el modo gamer. ¿Ganaste?'] },
+  en: { on: ['Gamer mode. I’ll stay small over here, go get them.', 'Gamer mode on. I won’t get in your way, choom.'], off: ['How was the game?', 'Gamer mode off. Did you win?'] },
+};
+function gamerMode(on) {
+  const dev = window.dev;
+  const capri = dev?.capri;
+  if (!capri) return;
+  notes?.gamer(on);
+  const lines = GAMER_LINES[resolveLang(cfg.lang)] || GAMER_LINES.en;
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  if (on) {
+    dev.chat?.close?.();
+    if (!capri.hidden && !capri.busy) capri.teleport(capri.spot('post'));
+  } else if (!capri.hidden && !capri.busy) capri.teleport(capri.spot('random'));
+  dev.panel?.say({ kind: 'info', face: on ? 'smug' : 'laugh', line: pick(on ? lines.on : lines.off), hold: 3500 });
+}
+
 on('settings:apply', async (p = {}) => {
   if ('userName' in p) updateConfig({ userName: String(p.userName || '').trim().slice(0, 24) });
   // her size, her ghost mode, how lively she is (the app's Settings)
   if (typeof p.scale === 'number') updateConfig({ scale: Math.min(1.1, Math.max(0.3, p.scale)) });
   if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
   if (p.lively) updateConfig({ lively: String(p.lively) });
+  if ('gamer' in p) updateConfig({ gamer: Boolean(p.gamer) });
   if ('musicCard' in p) updateConfig({ musicCard: Boolean(p.musicCard) });
   if (p.musicStay) updateConfig({ musicStay: String(p.musicStay) });
   if (('musicCard' in p || p.musicStay) && notes) notes.refreshMusic(); // shown or hidden now

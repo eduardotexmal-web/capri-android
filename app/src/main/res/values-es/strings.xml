@@ -157,6 +157,7 @@
         <item>«Capri, recuérdame mañana a las 9 sacar la basura»</item>
         <item>#Ella</item>
         <item>«Capri, escóndete» · «Capri, ven»</item>
+        <item>«Capri, modo gamer» (se quita en Ajustes o en su menú)</item>
         <item>«Capri, abre el chat»</item>
         <item>«Capri, llámame Emma»</item>
         <item>«Capri, recuerda que me gusta el café»</item>
@@ -179,6 +180,9 @@
     <string name="size_m">Normal</string>
     <string name="size_l">Grande</string>
     <string name="size_xl">Enorme</string>
+    <string name="settings_gamer">Modo gamer</string>
+    <string name="settings_gamer_how">Para cuando juegas: se hace chiquita en una esquina, no se puede tocar, no salen sus avisos, deja de escuchar y de vez en cuando te echa porras. También en su menú o diciéndole «Capri, modo gamer». Se quita al volver a tocarlo o al reiniciarla.</string>
+    <string name="voice_gamer">En pausa: modo gamer.</string>
     <string name="settings_music">Barra de música</string>
     <string name="music_always">Siempre</string>
     <string name="music_while">Un rato</string>

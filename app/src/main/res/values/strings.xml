@@ -159,6 +159,7 @@
         <item>“Capri, remind me tomorrow at 9 to take out the trash”</item>
         <item>#Her</item>
         <item>“Capri, hide” · “Capri, come back”</item>
+        <item>“Capri, gamer mode” (off in Settings or her menu)</item>
         <item>“Capri, open the chat”</item>
         <item>“Capri, call me Emma”</item>
         <item>“Capri, remember that I like coffee”</item>
@@ -180,6 +181,9 @@
     <string name="size_m">Normal</string>
     <string name="size_l">Large</string>
     <string name="size_xl">Huge</string>
+    <string name="settings_gamer">Gamer mode</string>
+    <string name="settings_gamer_how">For when you play: she gets small in a corner, can’t be touched, her cards stay away, she stops listening, and now and then she cheers you on. Also in her menu or by saying “Capri, gamer mode”. Off when you tap it again or restart her.</string>
+    <string name="voice_gamer">Paused: gamer mode.</string>
     <string name="settings_music">Music bar</string>
     <string name="music_always">Always</string>
     <string name="music_while">A while</string>

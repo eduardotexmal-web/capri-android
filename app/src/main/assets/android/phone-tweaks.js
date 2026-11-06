@@ -3,6 +3,7 @@
 // talks when she chats, and her look at your screen.
 
 import { call } from './native.js';
+import { GAMER_ASK } from './listen.js';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
@@ -102,7 +103,7 @@ export function tweak({ cfg, onConfig }) {
   if (lively) capri.nextMove = Math.min(capri.nextMove, performance.now() + rand(...lively.move));
   let nextAct = performance.now() + 8000;
   setInterval(() => {
-    if (!lively || document.hidden) return;
+    if (!lively || document.hidden || cfg().gamer) return;
     const now = performance.now();
     if (now < nextAct) return;
     nextAct = now + rand(...lively.act);
@@ -123,6 +124,14 @@ export function tweak({ cfg, onConfig }) {
     };
     const send = chat.send.bind(chat);
     chat.send = (text) => {
+      // "modo gamer" typed to her: on (or off, "sin modo gamer" / "quita el modo gamer")
+      if (GAMER_ASK.test(String(text || ''))) {
+        const off = /quita|apaga|sin |desactiva|salir|sal del|off|stop/i.test(text);
+        chat.close();
+        dev.panel?.hide?.();
+        window.host.setConfig({ gamer: !off });
+        return Promise.resolve();
+      }
       const words = cfg().provider === 'pollinations' ? FREE : THINKING;
       const lines = words[dev.brain?.lang] || words.en;
       const timers = [6000, 20000].map((ms, i) => setTimeout(() => {
@@ -158,6 +167,23 @@ export function tweak({ cfg, onConfig }) {
     clearInterval(look.liveTimer);
     look.liveTimer = setInterval(() => look.tick(), 15000);
   }
+
+  // ---------- gamer mode: now and then a word of support from her corner ----------
+  const CHEERS = {
+    es: ['¡Tú puedes!', 'Uff, esa estuvo cerca.', 'Vas bien, choom.', 'No te distraigo… bueno, solo un poquito.', 'GG en camino.', 'Respira. Ahora sí, dale.'],
+    en: ['You got this!', 'Ooh, that was close.', 'Looking good, choom.', 'Not distracting you… well, just a little.', 'GG incoming.', 'Breathe. Now go.'],
+  };
+  let nextCheer = 0;
+  setInterval(() => {
+    if (!cfg().gamer || document.hidden || capri.hidden) return (nextCheer = 0);
+    const now = Date.now();
+    if (!nextCheer) nextCheer = now + rand(4, 8) * 60000;
+    if (now < nextCheer || dev.panel?.current) return;
+    nextCheer = now + rand(4, 8) * 60000;
+    const lines = CHEERS[dev.brain?.lang] || CHEERS.en;
+    capri.perform?.(pick(['hop', 'look']), 1);
+    dev.panel?.say({ kind: 'info', face: pick(['smug', 'laugh']), line: pick(lines), hold: 3000, noWink: true });
+  }, 5000);
 
   onConfig((c) => {
     lively = LIVELY[c.lively || 'normal'];

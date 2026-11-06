@@ -42,12 +42,13 @@ class Ears(private val service: CapriService) {
     /** Switched on or off, the screen on or off, the mic allowed or not: listening or not. */
     fun update() = main.post {
         val pm = service.getSystemService(PowerManager::class.java)!!
-        val should = enabled(service) && allowed(service) && pm.isInteractive && SpeechRecognizer.isRecognitionAvailable(service)
+        val should = enabled(service) && allowed(service) && pm.isInteractive && SpeechRecognizer.isRecognitionAvailable(service) && !CapriService.gamer
         status = when {
             !enabled(service) -> ""
             !allowed(service) -> "nomic"
             !SpeechRecognizer.isRecognitionAvailable(service) -> "norecognizer"
             !pm.isInteractive -> "screenoff"
+            CapriService.gamer -> "gamer"
             else -> status
         }
         if (should == wanted) return@post

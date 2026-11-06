@@ -116,6 +116,11 @@ class CapriService : Service() {
 
     /** Her settings changed (host.js saved them): what the notification shows may have too. */
     fun onConfig(cfg: JSONObject) {
+        val g = cfg.optBoolean("gamer", false)
+        if (g != gamer) {
+            gamer = g
+            ears?.update() // gamer mode: no ears (the game's sound and your voice chat are yours)
+        }
         val v = cfg.optBoolean("visible", true)
         if (v != visible) {
             visible = v
@@ -259,6 +264,10 @@ class CapriService : Service() {
     }
 
     companion object {
+        /** Her gamer mode is on (her page's config): small in a corner, no ears. */
+        @Volatile
+        var gamer = false
+            private set
         @Volatile
         var running = false
             private set

@@ -3,6 +3,14 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.6.0
+
+- **Modo gamer (idea de la misma Capri):** para cuando juegas. Se hace chiquita en una esquina, no se puede tocar
+  (tus toques llegan al juego), no salen sus avisos ni su barra de música, deja de escuchar y no se pasea. De vez en
+  cuando te echa porras. Actívalo en *Ajustes → Modo gamer*, en su menú, diciéndole «Capri, modo gamer» o
+  escribiéndoselo en su chat. Se quita igual (en su chat: «quita el modo gamer») o al reiniciarla, y cuando sales te
+  pregunta cómo te fue.
+
 ## 1.5.1
 
 - **Ya no se pausan tus videos ni tu música:** con «Háblale» activado, cada vez que Capri volvía a escuchar, el

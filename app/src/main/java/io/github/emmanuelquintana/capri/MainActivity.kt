@@ -464,6 +464,13 @@ class MainActivity : Activity() {
             addView(ui.text(getString(R.string.settings_ghost_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
             addView(choice(listOf(R.string.off to false, R.string.on to true),
                 { Store(this@MainActivity).configFlag("ghost", false) }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "ghost", it) }, ui.block(6))
+            // gamer mode: small in a corner, untouchable, no cards, no ears (only while she's on)
+            addView(ui.text(getString(R.string.settings_gamer), 14f, Hud.PAPER, ui.head), ui.block(14))
+            addView(ui.text(getString(R.string.settings_gamer_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            addView(choice(listOf(R.string.off to false, R.string.on to true),
+                { CapriService.gamer }, { a, b -> a == b }) {
+                if (!CapriSettings.tell(org.json.JSONObject().put("gamer", it))) Toast.makeText(this@MainActivity, R.string.settings_need_on, Toast.LENGTH_LONG).show()
+            }, ui.block(6))
             // her music card: always while a song plays, a while after each change, or never
             addView(ui.text(getString(R.string.settings_music), 14f, Hud.PAPER, ui.head), ui.block(14))
             addView(choice(listOf(R.string.music_always to "always", R.string.music_while to "while", R.string.music_off to "off"),
@@ -527,6 +534,7 @@ class MainActivity : Activity() {
             s == "other" -> getString(R.string.voice_other, said)
             s == "busy" -> getString(R.string.voice_busy)
             s == "media" -> getString(R.string.voice_media)
+            s == "gamer" -> getString(R.string.voice_gamer)
             s == "nomic" -> getString(R.string.voice_nomic)
             s == "screenoff" -> getString(R.string.voice_screenoff)
             s == "norecognizer" -> getString(R.string.voice_norecognizer)

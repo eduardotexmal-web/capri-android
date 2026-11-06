@@ -45,6 +45,7 @@ const ON = /enciende|prende|activa|pon|turn on|switch on|\bon\b/i;
 const HIDE_ASK = /^(?:esc[oó]ndete|vete|desaparece|ocúltate|ocultate|hide|go away|get lost)\b/i;
 const SHOW_ASK = /^(?:ven|aparece|regresa|vuelve|mu[eé]strate|sal|come back|come here|show up|appear)\b/i;
 const DEAF_ASK = /deja de escuchar|no me escuches|stop listening/i;
+export const GAMER_ASK = /modo gamer|modo juego|voy a jugar|gamer mode|gaming mode/i;
 const CHAT_ASK = /^(?:abre (?:el |tu )?chat|hablemos|quiero hablar|platiquemos|open (?:the |your )?chat|let'?s talk)\b/i;
 // what's left of her name at the start, as the recognizer may write it
 // (and whatever came before it: "oye Capri", "ok Kapri")
@@ -121,6 +122,8 @@ async function handle(text, { toggleVisible, visible }) {
     return answer(res ? t.torchOn : t.torchOff, 'smug');
   }
   if (CHAT_ASK.test(text)) return chat.start();
+  // gamer mode: she says so herself (host.js gamerMode), and her ears rest until it's off
+  if (GAMER_ASK.test(text)) return window.host.setConfig({ gamer: true });
 
   // her chat open: what you said goes into it, as if you typed it
   if (chat.open) return chat.send(text);

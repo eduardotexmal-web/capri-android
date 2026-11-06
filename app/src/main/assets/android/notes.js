@@ -252,7 +252,7 @@ export class Notes {
   onMedia(m) {
     const before = this.media;
     this.media = m?.title ? m : null;
-    if (!this.media || this.config().musicCard === false) {
+    if (!this.media || this.config().musicCard === false || this.config().gamer) {
       this.hide(this.music);
       return;
     }
@@ -276,9 +276,17 @@ export class Notes {
     }
   }
 
+  // Gamer mode (host.js): her cards out of the game's way; the music back after it
+  gamer(on) {
+    if (on) {
+      this.hideNote();
+      this.hide(this.music);
+    } else if (this.media?.playing) this.refreshMusic();
+  }
+
   // Ajustes changed the music bar: shown again now if a song is on, or away
   refreshMusic() {
-    if (!this.media || this.config().musicCard === false) return this.hide(this.music);
+    if (!this.media || this.config().musicCard === false || this.config().gamer) return this.hide(this.music);
     if (this.show(this.music)) this.place();
     this.feed();
     this.showMusicFor();
@@ -291,7 +299,7 @@ export class Notes {
   // ---------- notices ----------
 
   onNote(n) {
-    if (!n?.key || this.config().noteHop === false) return;
+    if (!n?.key || this.config().noteHop === false || this.config().gamer) return;
     this.note = n;
     this.fill(this.notice, n.app.toUpperCase(), n.title || n.app, '');
     // a fresh one: the card replays its glitch in, and its bar runs down while it stays
