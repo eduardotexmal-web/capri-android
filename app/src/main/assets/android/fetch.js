@@ -18,6 +18,19 @@ function abortError() {
   return Object.assign(new Error('This operation was aborted'), { name: 'AbortError' });
 }
 
+// The free online AI's only model "thinks" before it answers, out of sight, for a long while on a
+// long message (40 s and more): asked to think little, she answers sooner.
+function quick(url, body) {
+  if (!/text\.pollinations\.ai\/openai\/chat\/completions/.test(url)) return body;
+  try {
+    const json = JSON.parse(body);
+    if (!json.reasoning_effort) json.reasoning_effort = 'low';
+    return JSON.stringify(json);
+  } catch {
+    return body;
+  }
+}
+
 export function nativeFetch(url, init = {}) {
   const id = `f${++seq}`;
   const signal = init.signal;
@@ -117,7 +130,7 @@ export function nativeFetch(url, init = {}) {
 
     try {
       window.CapriNative.fetchStart(id, String(url), String(init.method || 'GET'), JSON.stringify(headers),
-        init.body == null ? '' : String(init.body));
+        init.body == null ? '' : quick(String(url), String(init.body)));
     } catch (err) {
       streams.get(id)?.fail(err);
     }

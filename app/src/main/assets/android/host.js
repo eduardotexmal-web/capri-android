@@ -263,7 +263,9 @@ function refreshCloud(force = false) {
 
 // No first word this long from a server (not Ollama on your PC, which may be loading its model):
 // it's stuck, so the next model gets a go instead of her looking frozen.
-const FIRST_WORD_MS = 25000;
+// (the free online one is slow on long messages: it gets longer)
+const FIRST_WORD_MS = 40000;
+const FIRST_WORD_FREE_MS = 80000;
 
 async function chatWithFallback(c, messages, sendDelta, signal, streamed) {
   let model = pickModel(c);
@@ -279,7 +281,7 @@ async function chatWithFallback(c, messages, sendDelta, signal, streamed) {
       if (streamed()) return;
       stuck = true;
       inner.abort();
-    }, FIRST_WORD_MS);
+    }, c.provider === 'pollinations' ? FIRST_WORD_FREE_MS : FIRST_WORD_MS);
     try {
       const text = await llm.chat(c.provider, await llmConfig(c), { model, messages }, sendDelta, inner.signal);
       if (model !== pickModel(c)) updateConfig({ chatModel: model });

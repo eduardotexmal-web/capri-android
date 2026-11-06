@@ -74,6 +74,22 @@ export function tweak({ cfg, onConfig }) {
     capri.perform(pick(ACTS[capri.stance] || ACTS.stand), Math.random() < 0.5 ? -1 : 1);
   }, 1000);
 
+  // ---------- waiting on her AI: she says she's thinking, never just frozen ----------
+  if (chat) {
+    const THINKING = {
+      es: ['Déjame pensarlo…', 'Sigo pensando… la IA gratis va lenta ahorita, ya casi.'],
+      en: ['Let me think…', 'Still thinking… the free AI is slow right now, almost there.'],
+    };
+    const send = chat.send.bind(chat);
+    chat.send = (text) => {
+      const lines = THINKING[dev.brain?.lang] || THINKING.en;
+      const timers = [6000, 25000].map((ms, i) => setTimeout(() => {
+        if (chat.turn && !chat.answer && !chat.agent) chat.panel.stream(lines[i]);
+      }, ms));
+      return Promise.resolve(send(text)).finally(() => timers.forEach(clearTimeout));
+    };
+  }
+
   // ---------- how she talks ----------
   if (chat) {
     const persona = chat.persona.bind(chat);

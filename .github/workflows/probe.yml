@@ -1,0 +1,15 @@
+name: Prueba de la IA gratis
+
+# En ramas probe-*: cuánto tarda la IA gratis (Pollinations) en contestar, para elegir cómo pedirle.
+
+on:
+  push:
+    branches: ['probe-*']
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash tools/ci/chat-probe.sh
