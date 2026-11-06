@@ -3,7 +3,7 @@
     <string name="channel_name">Capri en tu pantalla</string>
     <string name="channel_desc">Mantiene a Capri activa y guarda su menú.</string>
     <string name="notify_title">Capri está en línea</string>
-    <string name="notify_text">Escuchando a Claude Code en 127.0.0.1:%1$d</string>
+    <string name="notify_text">En tu pantalla. Toca aquí para abrir mi menú.</string>
     <string name="notify_text_hidden">Guardada en su biochip</string>
     <string name="action_menu">Menú</string>
     <string name="action_hide">Guardarla</string>
@@ -66,6 +66,8 @@
     <string name="ai_pc_title">Ollama de tu PC</string>
     <string name="ai_pc_how">Tu PC hace de cerebro por Wi-Fi. En Ollama activa «Expose Ollama to the network» y escribe aquí la IP del PC.</string>
     <string name="ai_key_hint">Pega tu clave</string>
+    <string name="ai_paste">Pegar clave</string>
+    <string name="ai_paste_none">No hay nada copiado.</string>
     <string name="ai_get_key">Conseguir clave</string>
     <string name="ai_ip_hint">IP del PC, ej. 192.168.1.20</string>
     <string name="ai_use">Usar esta</string>
@@ -120,6 +122,7 @@
     <string name="voice_heard">✓ Oyó su nombre: «%1$s»</string>
     <string name="voice_other">Oyó «%1$s», pero no «Capri».</string>
     <string name="voice_busy">El micrófono está ocupado (una llamada u otra app).</string>
+    <string name="voice_media">En pausa mientras suena un video o música: si escuchara, te los pausaría. Vuelve sola cuando termine.</string>
     <string name="voice_nomic">Sin permiso de micrófono: dáselo en Permisos.</string>
     <string name="voice_screenoff">Descansando: la pantalla está apagada.</string>
     <string name="voice_norecognizer">Este teléfono no tiene reconocedor de voz (instala o actualiza la app de Google).</string>
@@ -137,6 +140,7 @@
         <item>«Capri, pon Bad Bunny en Spotify»</item>
         <item>«Capri, pon Never Fade Away en YouTube»</item>
         <item>«Capri, pausa» · «siguiente» · «anterior»</item>
+        <item>Mientras suena algo no te escucha (te lo pausaría): usa su barra de música o escríbeselo en su chat.</item>
         <item>«Capri, sube el volumen» · «baja el volumen»</item>
         <item>«Capri, volumen al 30» · «silencia»</item>
         <item>#Apps</item>
@@ -175,6 +179,10 @@
     <string name="size_m">Normal</string>
     <string name="size_l">Grande</string>
     <string name="size_xl">Enorme</string>
+    <string name="settings_music">Barra de música</string>
+    <string name="music_always">Siempre</string>
+    <string name="music_while">Un rato</string>
+    <string name="music_off">Nunca</string>
     <string name="settings_lively">Movimiento</string>
     <string name="lively_calm">Tranquila</string>
     <string name="lively_normal">Normal</string>

@@ -88,6 +88,12 @@ class Ears(private val service: CapriService) {
             status = "busy"
             return next(5000)
         }
+        // a video or music playing: the recognizer takes the sound from it each time it starts (the
+        // video pauses, the song stops), so she waits for it to end
+        if (audio.isMusicActive) {
+            status = "media"
+            return next(3000)
+        }
         val r = recognizer ?: create().also { recognizer = it }
         val lang = language()
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -270,7 +276,7 @@ class Ears(private val service: CapriService) {
         private val NAME = Regex("(?<![a-z])[ck]a[pb]r[iy]s?(?![a-z])")
         private const val GOOGLE = "com.google.android.googlequicksearchbox"
 
-        /** What her ears are doing, for the app's Settings: "", listening, heard, other, busy, nomic, screenoff, error:N */
+        /** What her ears are doing, for the app's Settings: "", listening, heard, other, busy, media, nomic, screenoff, error:N */
         @Volatile var status = ""
             private set
         @Volatile var heardLast = ""

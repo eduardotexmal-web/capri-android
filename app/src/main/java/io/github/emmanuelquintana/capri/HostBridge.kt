@@ -45,6 +45,20 @@ class HostBridge(private val service: CapriService) {
 
     private fun obj(args: Any?) = args as? JSONObject ?: JSONObject()
 
+    private fun clipboard(): String {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var text = ""
+        android.os.Handler(service.mainLooper).post {
+            runCatching {
+                val cm = service.getSystemService(android.content.ClipboardManager::class.java)
+                text = cm?.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(service)?.toString().orEmpty()
+            }.onFailure { log.add("W", "clipboard: ${it.message}") }
+            latch.countDown()
+        }
+        latch.await(3, java.util.concurrent.TimeUnit.SECONDS)
+        return text.trim()
+    }
+
     private fun handle(method: String, args: Any?): Any? = when (method) {
         // her settings and her memory (config.js, main.js)
         "config:load" -> store.read(Store.CONFIG)?.let { JSONObject(it) }
@@ -53,6 +67,8 @@ class HostBridge(private val service: CapriService) {
         "memory:save" -> store.write(Store.MEMORY, obj(args).toString())
         "keys:seal" -> store.seal(obj(args).optString("value"))
         "keys:open" -> store.open(obj(args).optString("value"))
+        // "Pegar" for her key box: what you copied (Android lets her read it while you type in her panel)
+        "clipboard:read" -> clipboard()
         "device:info" -> actions.deviceInfo()
 
         // her window

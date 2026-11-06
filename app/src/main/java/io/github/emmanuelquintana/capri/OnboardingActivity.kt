@@ -305,6 +305,13 @@ class OnboardingActivity : Activity() {
             keyField?.text?.let { if (it.isNotEmpty()) f.setText(it) }
             keyField = f
             card.addView(f, ui.block(8))
+            // what you copied, straight in (some keyboards make a long key hard to paste)
+            card.addView(ui.button(getString(R.string.ai_paste), Ui.Kind.LINE) {
+                val clip = getSystemService(android.content.ClipboardManager::class.java)?.primaryClip
+                val text = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty().replace(Regex("\\s+"), "")
+                if (text.isEmpty()) android.widget.Toast.makeText(this, R.string.ai_paste_none, android.widget.Toast.LENGTH_SHORT).show()
+                else f.setText(text)
+            }, ui.block(8))
             card.addView(ui.button(getString(R.string.ai_get_key) + " ↗", Ui.Kind.LINE) {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(aiKeyed.keyPage)))
             }, ui.block(10))

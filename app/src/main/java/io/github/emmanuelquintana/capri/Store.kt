@@ -64,7 +64,8 @@ class Store(private val context: Context) {
             cipher.init(Cipher.ENCRYPT_MODE, key())
             val out = cipher.iv + cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
             "enc:" + Base64.encodeToString(out, Base64.NO_WRAP)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Diag.add("W", "key: can't seal it (${e.javaClass.simpleName}), kept as is")
             plain
         }
     }
@@ -76,14 +77,15 @@ class Store(private val context: Context) {
             val cipher = Cipher.getInstance(TRANSFORM)
             cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, raw, 0, 12))
             String(cipher.doFinal(raw, 12, raw.size - 12), Charsets.UTF_8)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Diag.add("W", "key: can't open it (${e.javaClass.simpleName})")
             ""
         }
     }
 
-    private fun key(): SecretKey {
+    private fun key(): SecretKey = synchronized(LOCK) {
         val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
+        (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return@synchronized it.secretKey }
         val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
         gen.init(
             KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
@@ -92,7 +94,7 @@ class Store(private val context: Context) {
                 .setKeySize(256)
                 .build(),
         )
-        return gen.generateKey()
+        gen.generateKey()
     }
 
     companion object {
@@ -100,5 +102,6 @@ class Store(private val context: Context) {
         const val MEMORY = "memory.json"
         private const val ALIAS = "capri-api-keys"
         private const val TRANSFORM = "AES/GCM/NoPadding"
+        private val LOCK = Any()
     }
 }

@@ -3,6 +3,24 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.5.1
+
+- **Ya no se pausan tus videos ni tu música:** con «Háblale» activado, cada vez que Capri volvía a escuchar, el
+  teléfono le daba el sonido a ella y pausaba lo que estabas viendo. Ahora, mientras suena un video o música, no
+  escucha (en *Ajustes → Háblale* lo dice) y vuelve sola cuando termina. Para la música, usa su barra o escríbele.
+- **Botón «Pegar» para tu clave de IA:** en su panel, mantener pulsado no deja pegar. Ahora hay un botón *Pegar* que
+  pone lo que copiaste y lo revisa de una vez. En la app también hay *Pegar clave*.
+- **La clave puesta desde la app ya no se queda pidiendo otra:** si su panel te estaba pidiendo la clave y la
+  pusiste desde la app, el panel se quita solo.
+- **Barra de música a tu gusto:** en *Ajustes → Barra de música* eliges *Siempre* (se queda mientras suena), *Un
+  rato* (como antes) o *Nunca*.
+- **Avisos más arriba:** las tarjetas de tus notificaciones ya no salen a media pantalla, sino arriba, justo donde
+  Capri todavía se puede subir.
+- **Capri ya no se pierde:** a veces se asomaba desde el borde de arriba, que en el teléfono tapa la barra de
+  estado, y parecía que había desaparecido. Ahora solo se asoma por los lados, y nunca se queda escondida.
+- **Su notificación, más limpia:** ya no repite cada notificación ni canción que te llega (Android ya las muestra),
+  dice «En tu pantalla. Toca aquí para abrir mi menú», y lo último que dijo se quita a los 10 minutos.
+
 ## 1.5.0
 
 - **Capri ya no sale disparada:** al tocarla o soltarla después de arrastrarla, a veces salía volando como si la

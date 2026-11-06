@@ -220,7 +220,12 @@ class CapriService : Service() {
         winkFace = face
         winkAt = System.currentTimeMillis()
         refreshNotification()
+        // an old line doesn't stay there for hours: back to how she is after a while
+        ticker.removeCallbacks(winkGone)
+        ticker.postDelayed(winkGone, WINK_FOR)
     }
+
+    private val winkGone = Runnable { wink = null; refreshNotification() }
 
     private fun face(name: String): android.graphics.Bitmap? = faces.getOrPut(name) {
         val file = if (name in FACES) "face-$name.png" else "capri-face.png"
@@ -232,7 +237,7 @@ class CapriService : Service() {
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notify)
             .setContentTitle(if (said != null) "Capri" else getString(R.string.notify_title))
-            .setContentText(said ?: if (visible) getString(R.string.notify_text, HookServer.PORT) else getString(R.string.notify_text_hidden))
+            .setContentText(said ?: if (visible) getString(R.string.notify_text) else getString(R.string.notify_text_hidden))
             .also { b ->
                 if (said != null) {
                     b.setStyle(Notification.BigTextStyle().bigText(said))
@@ -262,6 +267,7 @@ class CapriService : Service() {
             private set
         private const val CHANNEL = "capri"
         private const val NOTIFICATION_ID = 1
+        private const val WINK_FOR = 10 * 60 * 1000L
         const val ACTION_MENU = "capri.MENU"
         const val ACTION_TOGGLE = "capri.TOGGLE"
         const val ACTION_QUIT = "capri.QUIT"

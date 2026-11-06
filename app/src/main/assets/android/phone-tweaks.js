@@ -32,6 +32,33 @@ export function tweak({ cfg, onConfig }) {
   if (!dev?.capri) return;
   const { capri, chat, look } = dev;
 
+  // ---------- "Pegar" for her key box: a long-press doesn't paste in her panel ----------
+  const guide = dev.guide;
+  if (guide?.askText) {
+    const PASTE = { es: ['Pegar', 'No veo nada copiado. Copia la clave y vuelve a tocar «Pegar».'], en: ['Paste', 'Nothing copied that I can see. Copy the key and tap “Paste” again.'] };
+    const askText = guide.askText.bind(guide);
+    guide.askText = (o = {}) => {
+      if (!o.secret) return askText(o);
+      const [label, none] = PASTE[dev.brain?.lang] || PASTE.en;
+      const onAction = o.onAction || (() => false);
+      return askText({
+        ...o,
+        actions: [{ id: 'paste', label, primary: true }, ...(o.actions || [])],
+        onAction: (id) => {
+          if (id !== 'paste') return onAction(id);
+          call('clipboard:read').then((text) => {
+            const panel = dev.panel;
+            const key = String(text || '').trim().replace(/\s+/g, '');
+            if (!key || !panel?.chatInput) return panel?.quote && (panel.quote.textContent = none);
+            panel.chatInput.value = key;
+            panel.chatForm?.requestSubmit?.(); // checked and saved right away
+          }, () => dev.panel?.quote && (dev.panel.quote.textContent = none));
+          return true;
+        },
+      });
+    };
+  }
+
   // ---------- held and let go: only a real flick throws her ----------
   const throwHer = capri.throwHer.bind(capri);
   capri.throwHer = (vx, vy) => {
@@ -55,6 +82,15 @@ export function tweak({ cfg, onConfig }) {
     }
     throwHer(vx * 0.75, vy * 0.75);
   };
+
+  // ---------- peeking in from an edge: never from the top ----------
+  // (on a phone the status bar covers the top edge: hanging from it, she was just gone for half a
+  // minute), and never stuck peeking (asleep mid-peek, she stayed out of sight)
+  const peek = capri.peek.bind(capri);
+  capri.peek = (side) => peek(side === 'left' || side === 'right' ? side : pick(['left', 'right']));
+  setInterval(() => {
+    if (capri.stance === 'peek' && !capri.busy && performance.now() > (capri.peekUntil || 0) + 8000) capri.unpeek();
+  }, 3000);
 
   // ---------- lively: more of her own moves than on a desktop ----------
   let lively = LIVELY[cfg().lively || 'normal'];

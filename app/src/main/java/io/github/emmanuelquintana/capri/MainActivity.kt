@@ -464,6 +464,16 @@ class MainActivity : Activity() {
             addView(ui.text(getString(R.string.settings_ghost_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
             addView(choice(listOf(R.string.off to false, R.string.on to true),
                 { Store(this@MainActivity).configFlag("ghost", false) }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "ghost", it) }, ui.block(6))
+            // her music card: always while a song plays, a while after each change, or never
+            addView(ui.text(getString(R.string.settings_music), 14f, Hud.PAPER, ui.head), ui.block(14))
+            addView(choice(listOf(R.string.music_always to "always", R.string.music_while to "while", R.string.music_off to "off"),
+                {
+                    val store = Store(this@MainActivity)
+                    if (!store.configFlag("musicCard", true)) "off" else store.configString("musicStay") ?: "while"
+                }, { a, b -> a == b }) {
+                CapriSettings.set(this@MainActivity, "musicCard", it != "off")
+                if (it != "off") CapriSettings.set(this@MainActivity, "musicStay", it)
+            }, ui.block(6))
         }, ui.block(16))
 
         // her look at your screen
@@ -516,6 +526,7 @@ class MainActivity : Activity() {
             s == "heard" -> getString(R.string.voice_heard, said)
             s == "other" -> getString(R.string.voice_other, said)
             s == "busy" -> getString(R.string.voice_busy)
+            s == "media" -> getString(R.string.voice_media)
             s == "nomic" -> getString(R.string.voice_nomic)
             s == "screenoff" -> getString(R.string.voice_screenoff)
             s == "norecognizer" -> getString(R.string.voice_norecognizer)

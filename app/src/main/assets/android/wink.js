@@ -12,7 +12,7 @@ Panel.prototype.say = function wink(msg) {
   const shown = say.call(this, msg);
   const line = typeof msg?.line === 'string' ? msg.line.trim() : '';
   // her own words only: not a progress line, not a box to type into
-  if (shown !== false && line && msg.kind !== 'work' && !msg.chat && !msg.progress && line !== last && performance.now() - lastAt > 1500) {
+  if (shown !== false && line && !msg.noWink && msg.kind !== 'work' && !msg.chat && !msg.progress && line !== last && performance.now() - lastAt > 1500) {
     last = line;
     lastAt = performance.now();
     send('notify:wink', { line, face: msg.face || '' });

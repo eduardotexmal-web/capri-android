@@ -117,6 +117,7 @@ export class Notes {
   // the music card for a while, then away (it's not always on screen)
   showMusicFor() {
     clearTimeout(this.musicTimer);
+    if (this.config().musicStay === 'always') return; // Ajustes › Barra de música › Siempre: while it plays
     this.musicTimer = setTimeout(() => this.hide(this.music), MUSIC_FOR);
   }
 
@@ -148,11 +149,13 @@ export class Notes {
   }
 
   // Where the cards go, from the top of what's visible (some phones give her window more height
-  // than the screen shows): the notice up in the middle, the music lower down, both well clear of
-  // the navigation bar, with room above each for her to sit.
+  // than the screen shows): the notice near the top, the music lower down, both well clear of the
+  // navigation bar, with room above each for her to sit.
   place() {
     const h = this.visible();
-    this.notice.style.top = `${Math.round(h * 0.3)}px`;
+    // the notice up top, out of the middle of your screen, just low enough for her to sit on it
+    const scale = Number(this.config().scale) || 0.6;
+    this.notice.style.top = `${Math.round(Math.max(40, 232 * scale + 26))}px`;
     const spot = this.saved();
     this.music.classList.toggle('is-folded', Boolean(spot.folded));
     if (spot.x != null && spot.y != null) this.moveMusic(spot.x * innerWidth, spot.y * h);
@@ -269,9 +272,16 @@ export class Notes {
     const fresh = playing && (wasHidden || !before?.playing || before.title !== title);
     if (fresh) {
       const line = fmt(pick(this.t.music), { title });
-      send('notify:wink', { line: `${line}\n♪ ${title}${artist ? ` · ${artist}` : ''} (${app})`, face: 'smug' });
       this.hop('music', () => this.say(line));
     }
+  }
+
+  // Ajustes changed the music bar: shown again now if a song is on, or away
+  refreshMusic() {
+    if (!this.media || this.config().musicCard === false) return this.hide(this.music);
+    if (this.show(this.music)) this.place();
+    this.feed();
+    this.showMusicFor();
   }
 
   tick() {
@@ -292,7 +302,6 @@ export class Notes {
     clearTimeout(this.noteTimer);
     this.noteTimer = setTimeout(() => this.hideNote(), NOTE_FOR);
     const line = fmt(pick(this.t.note), { app: n.app });
-    send('notify:wink', { line, face: 'look' });
     this.hop('note', () => this.say(line));
   }
 
@@ -342,7 +351,7 @@ export class Notes {
     const panel = window.dev?.panel;
     if (!panel || panel.current || Date.now() - this.saidAt < SAY_EVERY) return;
     this.saidAt = Date.now();
-    panel.say({ kind: 'info', face: 'smug', line, hold: 4500 });
+    panel.say({ kind: 'info', face: 'smug', line, hold: 4500, noWink: true }); // the shade already shows it
   }
 
   // Her menu's entries for this (host.js menuTemplate).

@@ -4,7 +4,7 @@
     <string name="channel_name">Capri on your screen</string>
     <string name="channel_desc">Keeps Capri running and holds her menu.</string>
     <string name="notify_title">Capri is online</string>
-    <string name="notify_text">Listening for Claude Code on 127.0.0.1:%1$d</string>
+    <string name="notify_text">On your screen. Tap here for my menu.</string>
     <string name="notify_text_hidden">Put away in her biochip</string>
     <string name="action_menu">Menu</string>
     <string name="action_hide">Put away</string>
@@ -68,6 +68,8 @@
     <string name="ai_pc_title">Your PC’s Ollama</string>
     <string name="ai_pc_how">Your PC is her brain over Wi-Fi. In Ollama turn on “Expose Ollama to the network” and type the PC’s IP here.</string>
     <string name="ai_key_hint">Paste your key</string>
+    <string name="ai_paste">Paste key</string>
+    <string name="ai_paste_none">Nothing copied.</string>
     <string name="ai_get_key">Get a key</string>
     <string name="ai_ip_hint">PC’s IP, e.g. 192.168.1.20</string>
     <string name="ai_use">Use this one</string>
@@ -122,6 +124,7 @@
     <string name="voice_heard">✓ Heard her name: “%1$s”</string>
     <string name="voice_other">Heard “%1$s”, but not “Capri”.</string>
     <string name="voice_busy">The microphone is busy (a call or another app).</string>
+    <string name="voice_media">Paused while a video or music plays: listening would pause it. Back on its own when it ends.</string>
     <string name="voice_nomic">No microphone permission: give it in Permissions.</string>
     <string name="voice_screenoff">Resting: the screen is off.</string>
     <string name="voice_norecognizer">This phone has no speech recognizer (install or update the Google app).</string>
@@ -139,6 +142,7 @@
         <item>“Capri, play Bad Bunny on Spotify”</item>
         <item>“Capri, play Never Fade Away on YouTube”</item>
         <item>“Capri, pause” · “next” · “previous”</item>
+        <item>While something plays she doesn’t listen (it would pause it): use her music bar or type it in her chat.</item>
         <item>“Capri, turn it up” · “turn it down”</item>
         <item>“Capri, volume 30” · “mute”</item>
         <item>#Apps</item>
@@ -176,6 +180,10 @@
     <string name="size_m">Normal</string>
     <string name="size_l">Large</string>
     <string name="size_xl">Huge</string>
+    <string name="settings_music">Music bar</string>
+    <string name="music_always">Always</string>
+    <string name="music_while">A while</string>
+    <string name="music_off">Never</string>
     <string name="settings_lively">Movement</string>
     <string name="lively_calm">Calm</string>
     <string name="lively_normal">Normal</string>

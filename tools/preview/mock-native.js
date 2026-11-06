@@ -20,6 +20,7 @@
     'media:control': ({ action }) => { state.media = action; return true; },
     'media:open': () => true,
     'note:open': () => true,
+    'clipboard:read': () => state.clipboard || '',
   };
   const aborts = new Map();
   window.CapriNative = {

@@ -126,6 +126,7 @@ function updateConfig(patch) {
   const wasWatching = Boolean(cfg.watchScreen);
   saveConfig(patch);
   if ('ghost' in patch) touch.ghost = Boolean(cfg.ghost);
+  if ('scale' in patch) setTimeout(() => notes?.place(), 0); // her notice card sits just below her height
   // her live look (Eyes.kt): Android asks you when it goes on; a "no" turns it back off
   if ('watchScreen' in patch && Boolean(cfg.watchScreen) !== wasWatching) {
     // an AI that can't see: no live look (she says why), and Android never asks
@@ -848,11 +849,16 @@ on('settings:apply', async (p = {}) => {
   if (typeof p.scale === 'number') updateConfig({ scale: Math.min(1.1, Math.max(0.3, p.scale)) });
   if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
   if (p.lively) updateConfig({ lively: String(p.lively) });
+  if ('musicCard' in p) updateConfig({ musicCard: Boolean(p.musicCard) });
+  if (p.musicStay) updateConfig({ musicStay: String(p.musicStay) });
+  if (('musicCard' in p || p.musicStay) && notes) notes.refreshMusic(); // shown or hidden now
   if ('watchScreen' in p) sendCommand('watchScreen', { on: Boolean(p.watchScreen) });
   if (p.look) sendCommand('look');
   if (p.provider) {
     const res = await window.host.useProvider({ provider: p.provider, key: p.key || undefined, url: p.url || undefined });
     if (!res.ok) send('log', { level: 'W', text: `AI ${p.provider}: ${res.error}` });
+    // set from the app: her panel still asking for a key (from before) goes away
+    else if (window.dev?.guide?.waiting && window.dev?.panel?.chatInput?.type === 'password') window.dev.guide.answer(null);
   }
 });
 
