@@ -23,6 +23,7 @@ import { Notes } from './notes.js';
 import './wink.js'; // what she says, also in her notification
 import { followTurns } from './turn.js';
 import { listen } from './listen.js';
+import { tweak } from './phone-tweaks.js';
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -47,6 +48,8 @@ const DEFAULTS = {
   // Android
   ollamaHost: '127.0.0.1:11434', // Ollama in Termux on the phone, or your PC's address on your network
   hooksCopied: false,            // the Termux command to plug her in was handed to you
+  ghost: false,                  // a ghost: on screen, but your touches go through her to your apps
+  lively: 'normal',              // how often she moves on her own: calm, normal, restless
   lan: false,                    // the hook server also listens on your Wi-Fi (a PC's Claude Code can reach her)
 };
 
@@ -80,6 +83,8 @@ let device = { lang: 'en', ram: 4 * 1024 ** 3, sdk: 0, model: '', ip: null, term
 async function loadConfig() {
   const [saved, info] = await Promise.all([call('config:load').catch(() => null), call('device:info').catch(() => null)]);
   cfg = { ...DEFAULTS, ...(saved || {}) };
+  // her live look needs Android's yes again after each start: off until you turn it on
+  if (cfg.watchScreen) cfg.watchScreen = false;
   if (info) device = { ...device, ...info };
   env.OLLAMA_HOST = cfg.ollamaHost || DEFAULTS.ollamaHost;
 }
@@ -118,7 +123,15 @@ const sub = (set) => (fn) => {
 };
 
 function updateConfig(patch) {
+  const wasWatching = Boolean(cfg.watchScreen);
   saveConfig(patch);
+  if ('ghost' in patch) touch.ghost = Boolean(cfg.ghost);
+  // her live look (Eyes.kt): Android asks you when it goes on; a "no" turns it back off
+  if ('watchScreen' in patch && Boolean(cfg.watchScreen) !== wasWatching) {
+    call('look:live', { on: Boolean(cfg.watchScreen) }).then((ok) => {
+      if (cfg.watchScreen && !ok) updateConfig({ watchScreen: false });
+    }, () => cfg.watchScreen && updateConfig({ watchScreen: false }));
+  }
   if ('visible' in patch) send('notify:update', { visible: cfg.visible });
   if ('lan' in patch) send('bridge:lan', { on: Boolean(cfg.lan) });
   const out = rendererConfig();
@@ -178,10 +191,25 @@ let chatErrorCode = null;
 let cloud = { at: 0, account: null, free: [] };
 const chats = new Map();
 
+// Not for chatting (speech, images, filters) or slow to say a first word (models that "think"
+// first, out of sight: she'd look frozen for a long while), and the quick, good ones first.
+const NOT_CHAT = /whisper|tts|speech|audio|transcri|guard|embed|moderation|image|imagen|dall|vision-only|search|roblox|evil|uncensored|bidara|midijourney|rtist|compound/i;
+const SLOW = /reason|think|r1\b|-r1|o1|o3|o4|qwq|deepseek-r|gpt-oss-120|large|405b|pro\b|opus/i;
+const QUICK = [/^openai-fast$/, /^openai$/, /llama-3\.3-70b/, /llama-3\.1-8b-instant/, /gemini-[\d.]+-flash(?!-lite)/, /gemini.*flash/, /gpt-4o-mini|gpt-4\.1-mini|gpt-4\.1-nano/, /mistral-small|mistral$/, /deepseek-chat|deepseek-v3/, /llama/i];
+function rankModels(list) {
+  const usable = list.filter((m) => !NOT_CHAT.test(m));
+  const score = (m) => {
+    const q = QUICK.findIndex((re) => re.test(m));
+    return (SLOW.test(m) ? 100 : 0) + (q < 0 ? 50 : q);
+  };
+  return (usable.length ? usable : list).slice().sort((a, b) => score(a) - score(b));
+}
+
 function pickModel(c = cfg) {
   if (!chatModels?.length) return null;
   if (chatModels.includes(c.chatModel)) return c.chatModel;
-  return chatModels.find((m) => !ollama.isCloud(m)) || chatModels[0];
+  if (c.provider === 'ollama') return chatModels.find((m) => !ollama.isCloud(m)) || chatModels[0];
+  return rankModels(chatModels)[0];
 }
 
 async function openKeys(apiKeys = {}) {
@@ -191,14 +219,30 @@ async function openKeys(apiKeys = {}) {
 }
 const llmConfig = async (c = cfg) => ({ ...c, apiKeys: await openKeys(c.apiKeys) });
 
-async function refreshModels() {
+// The provider's models, kept a while: asked of the server every time her chat opened, a slow
+// network made her wait for it (or say she had no AI when it timed out once).
+let modelsFor = null; // { key, at, list }
+const KEEP_MODELS = 10 * 60 * 1000;
+async function refreshModels({ fresh = false } = {}) {
+  const key = JSON.stringify([cfg.provider, cfg.apiKeys?.[cfg.provider] || '', cfg.customUrl || '', cfg.ollamaHost || '']);
+  if (!fresh && modelsFor?.key === key && Date.now() - modelsFor.at < KEEP_MODELS) {
+    chatModels = modelsFor.list;
+    return chatModels;
+  }
   chatError = null;
   chatErrorCode = null;
-  chatModels = await llm.models(cfg.provider, await llmConfig()).catch((err) => {
+  const list = await llm.models(cfg.provider, await llmConfig()).catch((err) => {
     chatError = err.message;
     chatErrorCode = err.code || null;
     return null;
   });
+  // a slow answer once (timed out): the list from a little while ago still holds
+  if (!list && modelsFor?.key === key && Date.now() - modelsFor.at < 6 * KEEP_MODELS && !/40[13]|invalid|unauthor/i.test(chatError || '')) {
+    chatModels = modelsFor.list;
+    return chatModels;
+  }
+  chatModels = list;
+  if (list?.length) modelsFor = { key, at: Date.now(), list };
   if (cfg.provider === 'ollama' && chatModels) refreshCloud();
   return chatModels;
 }
@@ -217,26 +261,46 @@ function refreshCloud(force = false) {
   return cloudCheck;
 }
 
+// No first word this long from a server (not Ollama on your PC, which may be loading its model):
+// it's stuck, so the next model gets a go instead of her looking frozen.
+const FIRST_WORD_MS = 25000;
+
 async function chatWithFallback(c, messages, sendDelta, signal, streamed) {
   let model = pickModel(c);
   const tried = new Set();
   let busy = 0;
+  const watched = c.provider !== 'ollama' && c.provider !== 'claude';
   for (;;) {
+    const inner = new AbortController();
+    const stop = () => inner.abort();
+    signal.addEventListener('abort', stop, { once: true });
+    let stuck = false;
+    const timer = watched && setTimeout(() => {
+      if (streamed()) return;
+      stuck = true;
+      inner.abort();
+    }, FIRST_WORD_MS);
     try {
-      const text = await llm.chat(c.provider, await llmConfig(c), { model, messages }, sendDelta, signal);
+      const text = await llm.chat(c.provider, await llmConfig(c), { model, messages }, sendDelta, inner.signal);
       if (model !== pickModel(c)) updateConfig({ chatModel: model });
       return text;
     } catch (err) {
+      if (stuck && !signal.aborted) err = Object.assign(new Error('timeout'), { code: 'busy' });
+      if (stuck && !signal.aborted) busy = 1; // straight to another model
       if (signal.aborted || streamed() || !['busy', 'gone', 'signin'].includes(err.code)) throw err;
       if (err.code === 'busy' && busy++ === 0) {
         await new Promise((r) => setTimeout(r, 1500));
         continue;
       }
       tried.add(model);
-      const next = chatModels?.find((m) => !tried.has(m) && !ollama.isCloud(m)) || chatModels?.find((m) => !tried.has(m));
+      const ranked = c.provider === 'ollama' ? chatModels || [] : rankModels(chatModels || []);
+      const next = ranked.find((m) => !tried.has(m) && !ollama.isCloud(m)) || ranked.find((m) => !tried.has(m));
       if (!next || tried.size >= 3) throw err;
       model = next;
       busy = 0;
+    } finally {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', stop);
     }
   }
 }
@@ -350,11 +414,13 @@ const PHONE_LABELS = {
     possess: 'Poseer sus tarjetas', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
     motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
     soundsDir: 'Dónde poner sonidos propios',
+    lookNow: 'Mira mi pantalla', lookAuto: 'Ver mi pantalla en vivo', ghost: 'Modo fantasma (no se puede tocar)',
   },
   en: {
     possess: 'Possess her cards', startup: 'Start with the phone', pcReact: 'React to my phone',
     motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
     soundsDir: 'Where to put my own sounds',
+    lookNow: 'Look at my screen', lookAuto: 'Watch my screen live', ghost: 'Ghost mode (can’t be touched)',
   },
 };
 
@@ -438,6 +504,9 @@ function menuTemplate() {
       // the models, as they are now, when the menu opens on it
       open: () => refreshModels(),
     },
+    { label: t.lookNow, click: () => sendCommand('look') },
+    { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
+    { label: t.ghost || 'Ghost mode', type: 'checkbox', checked: Boolean(cfg.ghost), click: (item) => updateConfig({ ghost: item.checked }) },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
     { label: t.possess, type: 'checkbox', checked: cfg.possess, click: (item) => updateConfig({ possess: item.checked }) },
     ...(notes ? [notes.menu(updateConfig)] : []),
@@ -679,9 +748,15 @@ window.host = {
     if (url && provider === 'ollama') patch.ollamaHost = String(url).trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
     else if (url) patch.customUrl = String(url).trim();
     updateConfig(patch);
-    const models = await refreshModels();
+    const models = await refreshModels({ fresh: true });
     if (models?.length) return { ok: true, model: pickModel() };
     const error = models ? 'no model' : chatError || 'offline';
+    // a key the server turned down goes; one that only met a slow or broken network stays (it was
+    // undone before, and she kept saying she had no AI)
+    if (key && !/40[13]|invalid|unauthor|incorrect|api key not valid/i.test(error)) {
+      send('log', { level: 'W', text: `AI ${provider}: kept the key (${error})` });
+      return { ok: true, model: null, pending: true };
+    }
     updateConfig(before);
     await refreshModels();
     return { ok: false, error };
@@ -720,6 +795,12 @@ let pulling = null;
 // what the app's screen set (CapriSettings.kt) while she's on: what she calls you, her AI
 on('settings:apply', async (p = {}) => {
   if ('userName' in p) updateConfig({ userName: String(p.userName || '').trim().slice(0, 24) });
+  // her size, her ghost mode, how lively she is (the app's Settings)
+  if (typeof p.scale === 'number') updateConfig({ scale: Math.min(1.1, Math.max(0.3, p.scale)) });
+  if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
+  if (p.lively) updateConfig({ lively: String(p.lively) });
+  if ('watchScreen' in p) sendCommand('watchScreen', { on: Boolean(p.watchScreen) });
+  if (p.look) sendCommand('look');
   if (p.provider) {
     const res = await window.host.useProvider({ provider: p.provider, key: p.key || undefined, url: p.url || undefined });
     if (!res.ok) send('log', { level: 'W', text: `AI ${p.provider}: ${res.error}` });
@@ -747,7 +828,17 @@ ready.then(() => {
   notes = new Notes({ config: () => cfg, lang: () => resolveLang(cfg.lang) });
   followTurns(() => resolveLang(cfg.lang)); // the phone turned: she turns too
   listen({ toggleVisible, visible: () => cfg.visible !== false }); // "Capri, …" out loud (Ears.kt)
+  touch.ghost = Boolean(cfg.ghost);
+  // once her page has built her: the phone's tunings (phone-tweaks.js)
+  const tuned = setInterval(() => {
+    if (!window.dev?.capri) return;
+    clearInterval(tuned);
+    tweak({ cfg: () => cfg, onConfig: (fn) => listeners.config.add(fn) });
+  }, 300);
 });
+
+// you stopped her live look (Android's cast mark): her setting goes off with it
+on('look:stopped', () => updateConfig({ watchScreen: false }));
 
 // the screen turned (or the keyboard took some of it): her window is another size
 // the keyboard up (Overlay.kt): her floor goes up above it, so she and her chat stay in sight

@@ -137,6 +137,12 @@ tap "ajustes"
 sleep 2
 adb shell input swipe 500 1800 500 900 300
 shot 23-voice-card 2
+adb shell input swipe 500 1800 500 700 300
+shot 23b-settings-more 2
+adb shell input swipe 500 1800 500 700 300
+shot 23c-settings-more 2
+adb shell input swipe 500 700 500 1800 300
+adb shell input swipe 500 700 500 1800 300
 tap "activar"
 shot 24-voice-on 3
 adb shell input keyevent KEYCODE_HOME

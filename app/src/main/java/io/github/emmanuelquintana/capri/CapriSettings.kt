@@ -65,6 +65,19 @@ object CapriSettings {
         return null
     }
 
+    /** One of her settings (size, ghost, lively): to her page if she's on, else into config.json. */
+    fun set(context: Context, key: String, value: Any) {
+        apply(context, JSONObject().put(key, value)) { it.put(key, value) }
+    }
+
+    /** Something only she can do right now (look at your screen): false if she isn't on. */
+    fun tell(live: JSONObject): Boolean {
+        val service = CapriService.current ?: return false
+        if (!service.pageReady) return false
+        service.overlay?.emit("settings:apply", live.toString())
+        return true
+    }
+
     /** "192.168.1.20" → "192.168.1.20:11434" (Ollama's port when none is given). */
     fun ollama(address: String): String? {
         val host = address.trim().removePrefix("http://").removePrefix("https://").substringBefore('/')

@@ -67,7 +67,8 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const fill = (line, vars) => line.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 
 async function handle(text, { toggleVisible, visible }) {
-  const { capri, panel, chat, brain } = window.dev;
+  const dev = window.dev;
+  const { capri, panel, chat, brain } = dev;
   const lang = brain.lang === 'es' ? 'es' : brain.lang === 'en' ? 'en' : 'es';
   const t = WORDS[lang];
   const locale = lang === 'es' ? 'es-MX' : 'en-US';
@@ -126,6 +127,10 @@ async function handle(text, { toggleVisible, visible }) {
 
   // what her chat does right away when you ask it plainly (music, volume, an app, a timer…)
   const asked = chat.asked(text);
+  // "Capri, mira mi pantalla": her look (Android asks first)
+  if (asked?.kind === 'look' || /mira (?:mi|la) pantalla|qu[ée] (?:ves|hay en mi pantalla)|look at my screen|what do you see/i.test(text)) {
+    return dev.look?.once();
+  }
   if (asked && !['look', 'close', 'files', 'shot'].includes(asked.kind)) {
     chat.listApps();
     const done = await chat.doNow(asked).catch(() => null);

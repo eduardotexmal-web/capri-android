@@ -42,6 +42,13 @@ class Store(private val context: Context) {
         null
     }
 
+    /** A number setting straight from config.json (her size). */
+    fun configNumber(key: String, default: Double): Double = try {
+        org.json.JSONObject(read(CONFIG) ?: "{}").optDouble(key, default)
+    } catch (_: Exception) {
+        default
+    }
+
     /** A setting straight from config.json, for the Kotlin side (boot, notification). */
     fun configFlag(key: String, default: Boolean): Boolean = try {
         val json = org.json.JSONObject(read(CONFIG) ?: "{}")

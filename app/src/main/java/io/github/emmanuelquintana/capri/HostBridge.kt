@@ -17,10 +17,12 @@ class HostBridge(private val service: CapriService) {
     private val actions = Actions(service, store)
     private val fetch = NativeFetch { channel, json -> service.overlay?.emit(channel, json) }
     private val worker = Executors.newSingleThreadExecutor()
+    // her eyes wait on Android's dialog (up to a minute or so): never in the way of everything else
+    private val slow = Executors.newSingleThreadExecutor()
 
     @JavascriptInterface
     fun invoke(id: String, method: String, argsJson: String) {
-        worker.execute {
+        (if (method.startsWith("look:")) slow else worker).execute {
             try {
                 val args: Any? = if (argsJson.isEmpty() || argsJson == "null") null else JSONArray("[$argsJson]").get(0)
                 val result = handle(method, args)
@@ -68,6 +70,11 @@ class HostBridge(private val service: CapriService) {
         "voice:torch" -> service.ears?.torch(if (obj(args).isNull("on")) null else obj(args).optBoolean("on")) ?: JSONObject.NULL
         "voice:off" -> Ears.setEnabled(service, false)
 
+        // her look at your screen (Eyes.kt): one picture, live on or off, how much it changed
+        "look:snap" -> JSONObject().put("image", service.eyes.snap())
+        "look:live" -> if (obj(args).optBoolean("on")) service.eyes.startLive() else service.eyes.stopLive().let { false }
+        "look:changed" -> service.eyes.changed()
+
         // her hooks, her sounds, links
         "hooks:copy" -> actions.copyHooksCommand(obj(args).optString("command"))
         "sounds:list" -> actions.sounds()
@@ -106,5 +113,6 @@ class HostBridge(private val service: CapriService) {
     fun shutdown() {
         fetch.shutdown()
         worker.shutdownNow()
+        slow.shutdownNow()
     }
 }

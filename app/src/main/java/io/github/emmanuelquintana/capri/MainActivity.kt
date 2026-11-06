@@ -55,6 +55,38 @@ class MainActivity : Activity() {
     private lateinit var voiceText: TextView
     private lateinit var voiceBtn: TextView
     private lateinit var voiceState: TextView
+    private lateinit var lookBtn: TextView
+    private val choices = mutableListOf<() -> Unit>()
+
+    /** A row of options, the chosen one in her green; a tap picks it (and saves it). */
+    private fun <T> choice(options: List<Pair<Int, T>>, current: () -> T, same: (T, T) -> Boolean, pick: (T) -> Unit): LinearLayout {
+        val row = ui.row()
+        val buttons = options.map { (label, value) ->
+            ui.text(getString(label).uppercase(), 11f, Hud.PAPER, ui.mono).apply {
+                gravity = Gravity.CENTER
+                letterSpacing = 0.04f
+                isClickable = true
+                setPadding(ui.dpi(4), ui.dpi(10), ui.dpi(4), ui.dpi(10))
+                setOnClickListener {
+                    pick(value)
+                    postDelayed({ choices.forEach { it() } }, 300)
+                }
+            } to value
+        }
+        for ((b, _) in buttons) row.addView(b, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { rightMargin = ui.dpi(4) })
+        val redraw = {
+            val now = current()
+            for ((b, v) in buttons) {
+                val on = same(now, v)
+                b.setTextColor(if (on) Hud.INK else Hud.PAPER_2)
+                b.background = if (on) Hud.Plate(Hud.GREEN, 0, cut = ui.dp(6f), stroke = 0f, offset = 0f)
+                else Hud.Plate(Hud.INK, Hud.LINE_STRONG, cut = ui.dp(6f), stroke = ui.dp(1f), offset = 0f)
+            }
+        }
+        redraw()
+        choices.add(redraw)
+        return row
+    }
     private val ticker = android.os.Handler(android.os.Looper.getMainLooper())
     private val tick = object : Runnable {
         override fun run() {
@@ -416,6 +448,37 @@ class MainActivity : Activity() {
             addView(voiceBtn, ui.block(12))
         }, ui.block(16))
 
+        // her on your screen: size, how lively, ghost mode
+        addView(ui.card(Hud.YELLOW).apply {
+            addView(ui.label(getString(R.string.settings_her)))
+            addView(ui.text(getString(R.string.settings_size), 14f, Hud.PAPER, ui.head), ui.block(10))
+            addView(choice(listOf(R.string.size_xs to 0.35, R.string.size_s to 0.45, R.string.size_m to 0.6, R.string.size_l to 0.8, R.string.size_xl to 1.0),
+                { Store(this@MainActivity).configNumber("scale", 0.6) }, { a, b -> Math.abs(a - b) < 0.02 }) { CapriSettings.set(this@MainActivity, "scale", it) }, ui.block(6))
+            addView(ui.text(getString(R.string.settings_lively), 14f, Hud.PAPER, ui.head), ui.block(14))
+            addView(choice(listOf(R.string.lively_calm to "calm", R.string.lively_normal to "normal", R.string.lively_restless to "restless"),
+                { Store(this@MainActivity).configString("lively") ?: "normal" }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "lively", it) }, ui.block(6))
+            addView(ui.text(getString(R.string.settings_ghost), 14f, Hud.PAPER, ui.head), ui.block(14))
+            addView(ui.text(getString(R.string.settings_ghost_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            addView(choice(listOf(R.string.off to false, R.string.on to true),
+                { Store(this@MainActivity).configFlag("ghost", false) }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "ghost", it) }, ui.block(6))
+        }, ui.block(16))
+
+        // her look at your screen
+        addView(ui.card(Hud.GREEN).apply {
+            addView(ui.label(getString(R.string.settings_look)))
+            addView(ui.text(getString(R.string.settings_look_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(6))
+            addView(ui.button(getString(R.string.settings_look_now) + " ›", Ui.Kind.GREEN) {
+                if (!CapriSettings.tell(org.json.JSONObject().put("look", true))) Toast.makeText(this@MainActivity, R.string.settings_need_on, Toast.LENGTH_LONG).show()
+                else moveTaskToBack(true) // out of the way: it's your screen she looks at
+            }, ui.block(12))
+            lookBtn = ui.button("", Ui.Kind.LINE) {
+                val on = !(CapriService.current?.eyes?.live ?: false)
+                if (!CapriSettings.tell(org.json.JSONObject().put("watchScreen", on))) Toast.makeText(this@MainActivity, R.string.settings_need_on, Toast.LENGTH_LONG).show()
+                lookBtn.postDelayed({ refresh() }, 1500)
+            }
+            addView(lookBtn, ui.block(8))
+        }, ui.block(16))
+
         addView(ui.button(getString(R.string.settings_intro_again), Ui.Kind.LINE) {
             getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("welcomed", false).apply()
             startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
@@ -500,6 +563,8 @@ class MainActivity : Activity() {
         voiceText.setTextColor(if (voice && Ears.allowed(this)) Hud.GREEN else Hud.PAPER)
         voiceBtn.text = getString(if (voice) R.string.settings_voice_turn_off else R.string.settings_voice_turn_on).uppercase()
         showVoice()
+        choices.forEach { it() }
+        lookBtn.text = getString(if (CapriService.current?.eyes?.live == true) R.string.settings_look_live_off else R.string.settings_look_live_on).uppercase()
         showLog()
     }
 

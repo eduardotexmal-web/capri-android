@@ -152,13 +152,15 @@ export class Touch {
     const tick = () => {
       if (this.drag || this.pet) requestAnimationFrame(tick);
       else setTimeout(() => requestAnimationFrame(tick), 90);
+      // a ghost: nothing of her stops your touches (her panel and her menu still do, to talk and to undo it)
+      const ghost = this.ghost;
       const list = [
-        ...this.body(rectOf(document.getElementById('sprite'))),
+        ...(ghost ? [] : this.body(rectOf(document.getElementById('sprite')))),
         rectOf(document.getElementById('panel')),
         rectOf(document.getElementById('chip')),
-        rectOf(document.getElementById('mask')),
+        ghost ? null : rectOf(document.getElementById('mask')),
         rectOf(document.querySelector('.cmenu:not([hidden])')),
-        ...[...document.querySelectorAll('.anote:not([hidden])')].map(rectOf),
+        ...(ghost ? [] : [...document.querySelectorAll('.anote:not([hidden])')].map(rectOf)),
       ].filter(Boolean);
       // (a finger already on her keeps her: Android sends the whole gesture to where it began)
       const all = list;

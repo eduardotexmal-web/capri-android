@@ -166,4 +166,25 @@
         <item quantity="one">%d change · tap to see it</item>
         <item quantity="other">%d changes · tap to see them</item>
     </plurals>
+    <string name="settings_her">Capri on your screen</string>
+    <string name="settings_size">Size</string>
+    <string name="size_xs">Mini</string>
+    <string name="size_s">Small</string>
+    <string name="size_m">Normal</string>
+    <string name="size_l">Large</string>
+    <string name="size_xl">Huge</string>
+    <string name="settings_lively">Movement</string>
+    <string name="lively_calm">Calm</string>
+    <string name="lively_normal">Normal</string>
+    <string name="lively_restless">Restless</string>
+    <string name="settings_ghost">Ghost mode</string>
+    <string name="settings_ghost_how">She stays on your screen but your touches go through her to your apps. To turn it off: here, or in her menu (tap her notification).</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="settings_look">Let her see your screen</string>
+    <string name="settings_look_how">“Capri, look at my screen” (or the button) lets her look once and comment. Live, she looks now and then and when you switch apps, until you turn it off. Android asks you each time it starts and shows its recording notice while she can see. The picture only goes to her chat\'s AI; banking apps come out black.</string>
+    <string name="settings_look_now">Look at my screen now</string>
+    <string name="settings_look_live_on">Watch live</string>
+    <string name="settings_look_live_off">Stop watching live</string>
+    <string name="settings_need_on">Start Capri first (in What\'s new).</string>
 </resources>

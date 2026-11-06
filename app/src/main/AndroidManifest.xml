@@ -13,6 +13,8 @@
     <!-- "Capri, …": only if you turn it on in Settings, and only with the screen on (Ears.kt) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- "Capri, mira mi pantalla": Android's screen capture, asked each time (Eyes.kt) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- "Start with Windows", here "start with the phone" -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -58,6 +60,13 @@
         </activity>
 
         <activity
+            android:name=".LookActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
             android:name=".OnboardingActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
@@ -65,7 +74,7 @@
         <service
             android:name=".CapriService"
             android:exported="${serviceExported}"
-            android:foregroundServiceType="specialUse|microphone">
+            android:foregroundServiceType="specialUse|microphone|mediaProjection">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Desktop companion character drawn over other apps; listens on 127.0.0.1 for coding-assistant hook events." />

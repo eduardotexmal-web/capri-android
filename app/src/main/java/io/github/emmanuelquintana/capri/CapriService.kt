@@ -28,6 +28,8 @@ class CapriService : Service() {
     private var visible = true
     var ears: Ears? = null
         private set
+    val eyes by lazy { eyesMade = true; Eyes(this) } // her look at your screen, only when you ask (Eyes.kt)
+    private var eyesMade = false
 
     private val screen = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -145,6 +147,7 @@ class CapriService : Service() {
         hooks?.stop()
         ears?.destroy()
         ears = null
+        if (eyesMade) eyes.destroy()
         overlay?.destroy()
         overlay = null
         if (::bridge.isInitialized) bridge.shutdown()
@@ -165,16 +168,20 @@ class CapriService : Service() {
         val n = buildNotification()
         // the microphone, only while her ears are on (and allowed): Android shows it's in use
         val mic = Ears.enabled(this) && Ears.allowed(this)
+        // and the screen capture, only while her eyes are open (Eyes.kt)
+        val cast = if (Eyes.projecting && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION else 0
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val special = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            val special = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE or cast
             try {
                 startForeground(NOTIFICATION_ID, n, if (mic) special or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else special)
             } catch (e: Exception) {
                 Diag.add("W", "microphone not allowed for her service now: ${e.message}")
                 startForeground(NOTIFICATION_ID, n, special)
             }
-        } else if (mic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
+        } else if ((mic || cast != 0) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            startForeground(NOTIFICATION_ID, n, (if (mic) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0) or cast)
+        } else if (cast != 0) {
+            startForeground(NOTIFICATION_ID, n, cast)
         } else {
             startForeground(NOTIFICATION_ID, n)
         }

@@ -165,4 +165,25 @@
         <item quantity="many">%d cambios · toca para verlos</item>
         <item quantity="other">%d cambios · toca para verlos</item>
     </plurals>
+    <string name="settings_her">Capri en tu pantalla</string>
+    <string name="settings_size">Tamaño</string>
+    <string name="size_xs">Mini</string>
+    <string name="size_s">Chica</string>
+    <string name="size_m">Normal</string>
+    <string name="size_l">Grande</string>
+    <string name="size_xl">Enorme</string>
+    <string name="settings_lively">Movimiento</string>
+    <string name="lively_calm">Tranquila</string>
+    <string name="lively_normal">Normal</string>
+    <string name="lively_restless">Inquieta</string>
+    <string name="settings_ghost">Modo fantasma</string>
+    <string name="settings_ghost_how">Se queda en tu pantalla pero tus toques la atraviesan y llegan a tus apps. Para quitarlo: aquí, o en su menú (toca su notificación).</string>
+    <string name="on">Activado</string>
+    <string name="off">Desactivado</string>
+    <string name="settings_look">Que vea tu pantalla</string>
+    <string name="settings_look_how">«Capri, mira mi pantalla» (o el botón) la deja ver una vez y comentar. En vivo, mira de vez en cuando y cuando cambias de app, hasta que lo apagues. Android te pide permiso cada vez que empieza y muestra su aviso de grabación mientras ve. La imagen solo va a la IA de su chat; las apps de banco salen en negro.</string>
+    <string name="settings_look_now">Mira mi pantalla ahora</string>
+    <string name="settings_look_live_on">Ver en vivo</string>
+    <string name="settings_look_live_off">Dejar de ver en vivo</string>
+    <string name="settings_need_on">Primero enciende a Capri (en Novedades).</string>
 </resources>
