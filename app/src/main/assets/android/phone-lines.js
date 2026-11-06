@@ -29,6 +29,7 @@ const PHONE = {
     'motion.line': 'Tu teléfono tiene las animaciones desactivadas, así que apenas me muevo.',
     'setup.readyHow': 'Tócame cuando quieras charlar.',
     'look.noAI': 'Necesito una IA para mirar: mantenme pulsada › Modelo de IA.',
+    'look.noVision': '{model} no puede ver imágenes. Para que mire tu pantalla ponme Gemini (su clave es gratis) u otra IA que vea: mantenme pulsada › Modelo de IA.',
   },
   en: {
     'chat.gone': 'That model isn’t available there anymore. Pick another one: long-press me › AI model.',
@@ -54,6 +55,7 @@ const PHONE = {
     'motion.line': 'Your phone has its animations turned off, so I’m barely moving.',
     'setup.readyHow': 'Tap me whenever you want to chat.',
     'look.noAI': 'I need an AI to look: long-press me › AI model.',
+    'look.noVision': '{model} can’t see pictures. To look at your screen, give me Gemini (its key is free) or another AI that sees: long-press me › AI model.',
   },
 };
 

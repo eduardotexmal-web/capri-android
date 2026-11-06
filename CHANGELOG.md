@@ -17,10 +17,11 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
   y te comenta lo que ve. Con *Ver en vivo* sigue mirando y reacciona sola de vez en cuando, o cuando cambias de app,
   hasta que lo apagues. Android te pregunta antes cada vez que empieza a ver, y verás el ícono de transmisión mientras
   mira. Las capturas no se guardan: solo van a su IA. Las apps protegidas (bancos, contraseñas) le salen en negro.
-  Necesita una IA que vea imágenes.
-- **El chat ya no se congela:** con mensajes largos se quedaba trabada. Ahora espera más a la IA gratis antes de
-  rendirse, le pide pensar menos para que conteste antes, y si un modelo no responde pasa a otro. Mientras tanto te
-  dice que está pensando en vez de quedarse muda.
+  Necesita una IA que vea imágenes, como Gemini (su clave es gratis); la IA gratis no ve, y Capri te lo dice.
+- **El chat ya no se congela:** descubrimos por qué tardaba: la IA gratis solo deja una respuesta cada 45 segundos
+  por teléfono, y si le escribías antes, se quedaba esperando o fallaba. Ahora Capri espera su turno y vuelve a
+  preguntar sola, le pide a la IA pensar menos para que conteste más rápido, y mientras tanto te dice que está pensando
+  en vez de quedarse muda. Si quieres respuestas al instante, ponle una clave gratis de Gemini.
 - **Elige mejor modelo solita:** prefiere los modelos rápidos y que sí son de chat, y recuerda la lista unos minutos
   para no preguntar cada vez.
 - **Tu clave de IA ya no se borra:** a veces, si la IA tardaba o fallaba una vez, Capri descartaba la clave y decía

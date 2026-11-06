@@ -77,13 +77,19 @@ export function tweak({ cfg, onConfig }) {
   // ---------- waiting on her AI: she says she's thinking, never just frozen ----------
   if (chat) {
     const THINKING = {
-      es: ['Déjame pensarlo…', 'Sigo pensando… la IA gratis va lenta ahorita, ya casi.'],
-      en: ['Let me think…', 'Still thinking… the free AI is slow right now, almost there.'],
+      es: ['Déjame pensarlo…', 'Sigo pensando… ya casi.'],
+      en: ['Let me think…', 'Still thinking… almost there.'],
+    };
+    // the free AI lets each phone have one answer every 45 seconds: said plainly
+    const FREE = {
+      es: ['Déjame pensarlo…', 'La IA gratis solo me deja contestar una vez cada 45 segundos… ya casi. Con una clave gratis de Gemini respondo al instante.'],
+      en: ['Let me think…', 'The free AI only lets me answer once every 45 seconds… almost there. With a free Gemini key I answer right away.'],
     };
     const send = chat.send.bind(chat);
     chat.send = (text) => {
-      const lines = THINKING[dev.brain?.lang] || THINKING.en;
-      const timers = [6000, 25000].map((ms, i) => setTimeout(() => {
+      const words = cfg().provider === 'pollinations' ? FREE : THINKING;
+      const lines = words[dev.brain?.lang] || words.en;
+      const timers = [6000, 20000].map((ms, i) => setTimeout(() => {
         if (chat.turn && !chat.answer && !chat.agent) chat.panel.stream(lines[i]);
       }, ms));
       return Promise.resolve(send(text)).finally(() => timers.forEach(clearTimeout));

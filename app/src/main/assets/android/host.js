@@ -128,9 +128,20 @@ function updateConfig(patch) {
   if ('ghost' in patch) touch.ghost = Boolean(cfg.ghost);
   // her live look (Eyes.kt): Android asks you when it goes on; a "no" turns it back off
   if ('watchScreen' in patch && Boolean(cfg.watchScreen) !== wasWatching) {
-    call('look:live', { on: Boolean(cfg.watchScreen) }).then((ok) => {
-      if (cfg.watchScreen && !ok) updateConfig({ watchScreen: false });
-    }, () => cfg.watchScreen && updateConfig({ watchScreen: false }));
+    // an AI that can't see: no live look (she says why), and Android never asks
+    (cfg.watchScreen ? cantSee().catch(() => null) : Promise.resolve(null)).then((blind) => {
+      if (blind && cfg.watchScreen) {
+        updateConfig({ watchScreen: false });
+        const t = window.dev?.brain?.t?.look;
+        const line = blind.code === 'noai' ? t?.noAI : t?.noVision?.replace('{model}', blind.model || '…');
+        if (line) window.dev?.panel?.say({ kind: 'info', face: 'aside', line, hold: 9000 });
+        return;
+      }
+      if (Boolean(cfg.watchScreen) !== Boolean(patch.watchScreen)) return; // changed again meanwhile
+      call('look:live', { on: Boolean(cfg.watchScreen) }).then((ok) => {
+        if (cfg.watchScreen && !ok) updateConfig({ watchScreen: false });
+      }, () => cfg.watchScreen && updateConfig({ watchScreen: false }));
+    });
   }
   if ('visible' in patch) send('notify:update', { visible: cfg.visible });
   if ('lan' in patch) send('bridge:lan', { on: Boolean(cfg.lan) });
@@ -271,6 +282,7 @@ async function chatWithFallback(c, messages, sendDelta, signal, streamed) {
   let model = pickModel(c);
   const tried = new Set();
   let busy = 0;
+  let waited = 0;
   const watched = c.provider !== 'ollama' && c.provider !== 'claude';
   for (;;) {
     const inner = new AbortController();
@@ -287,6 +299,16 @@ async function chatWithFallback(c, messages, sendDelta, signal, streamed) {
       if (model !== pickModel(c)) updateConfig({ chatModel: model });
       return text;
     } catch (err) {
+      // the free AI answers one message every 45 s per phone (and sometimes it's full): it says how
+      // long to wait, so she waits and asks again instead of giving up
+      const after = Number(/retry after (\d+)\s*s/i.exec(err.message || '')?.[1]);
+      if (!stuck && !signal.aborted && c.provider === 'pollinations' && after > 0 && after <= 60 && waited++ < 2) {
+        await new Promise((r) => {
+          const t = setTimeout(r, (after + 1) * 1000);
+          signal.addEventListener('abort', () => { clearTimeout(t); r(); }, { once: true });
+        });
+        if (!signal.aborted) continue;
+      }
       if (stuck && !signal.aborted) err = Object.assign(new Error('timeout'), { code: 'busy' });
       if (stuck && !signal.aborted) busy = 1; // straight to another model
       if (signal.aborted || streamed() || !['busy', 'gone', 'signin'].includes(err.code)) throw err;
@@ -354,15 +376,39 @@ async function pickProvider(provider) {
 // ---------- she looks at your screen ----------
 
 const snaps = new Map();
-async function sayAboutSnap({ id, persona, prompt, history = [] }) {
-  const image = snaps.get(id);
-  snaps.delete(id);
-  if (!image) return { ok: false, error: 'the picture is gone' };
+
+// her AI can't look at pictures: why, before Android asks you to share your screen for nothing
+async function cantSee() {
   if (!chatModels?.length) await refreshModels();
   const model = pickModel(cfg);
   if (!model) return { ok: false, code: 'noai' };
   if (cfg.provider === 'claude') return { ok: false, code: 'novision', model: 'Claude Code' };
   if (cfg.provider === 'ollama' && !(await ollama.canSee(model))) return { ok: false, code: 'novision', model };
+  if (cfg.provider === 'pollinations' && !(await freeSees(model))) return { ok: false, code: 'novision', model: brainLang() === 'es' ? 'La IA gratis' : 'The free AI' };
+  return null;
+}
+const brainLang = () => (window.dev?.brain?.lang === 'es' ? 'es' : 'en');
+
+// the free AI's models say whether they take pictures (its list has vision / input_modalities);
+// one that can't would answer about a picture it never saw
+let freeVision = null;
+async function freeSees(model) {
+  if (!freeVision || Date.now() - freeVision.at > KEEP_MODELS) {
+    const { nativeFetch } = await import('./fetch.js'); // the page itself can't reach the internet
+    const list = await nativeFetch('https://text.pollinations.ai/models', { signal: AbortSignal.timeout(8000) })
+      .then((r) => r.json()).catch(() => null);
+    if (!Array.isArray(list)) return true; // can't tell: let it try (a refusal says so)
+    freeVision = { at: Date.now(), sees: new Set(list.filter((m) => m?.vision === true || (m?.input_modalities || []).includes('image')).map((m) => m.name)) };
+  }
+  return freeVision.sees.has(model);
+}
+async function sayAboutSnap({ id, persona, prompt, history = [] }) {
+  const image = snaps.get(id);
+  snaps.delete(id);
+  const blind = await cantSee();
+  if (blind) return blind;
+  if (!image) return { ok: false, error: 'the picture is gone' };
+  const model = pickModel(cfg);
   const user = cfg.provider === 'ollama'
     ? { role: 'user', content: prompt, images: [image] }
     : { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } }] };
@@ -672,6 +718,7 @@ window.host = {
   onChatDelta: (fn) => on('chat:delta', fn),
   lookSnap: after(async () => {
     try {
+      if (await cantSee()) return { ok: true, id: 'blind' }; // she says why when she'd comment (lookSay)
       const res = await call('look:snap');
       const id = crypto.randomUUID();
       snaps.set(id, res.image);
