@@ -185,7 +185,7 @@
     <string name="on">On</string>
     <string name="off">Off</string>
     <string name="settings_look">Let her see your screen</string>
-    <string name="settings_look_how">“Capri, look at my screen” (or the button) lets her look once and comment. Live, she looks now and then and when you switch apps, until you turn it off. Android asks you each time it starts and shows its recording notice while she can see. The picture only goes to her chat\'s AI; banking apps come out black. It needs an AI that sees pictures, like Gemini (its key is free): Capri's free AI can't see.</string>
+    <string name="settings_look_how">“Capri, look at my screen” (or the button) lets her look once and comment. Live, she looks now and then and when you switch apps, until you turn it off. Android asks you each time it starts and shows its recording notice while she can see. The picture only goes to her chat\'s AI; banking apps come out black. It needs an AI that sees pictures, like Gemini (its key is free): Capri\'s free AI can\'t see.</string>
     <string name="settings_look_now">Look at my screen now</string>
     <string name="settings_look_live_on">Watch live</string>
     <string name="settings_look_live_off">Stop watching live</string>
