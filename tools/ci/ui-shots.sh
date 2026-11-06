@@ -131,18 +131,20 @@ shot 22-other-app 3
 # adb hand her service the words: the emulator has no microphone)
 adb shell input keyevent KEYCODE_BACK
 adb shell pm grant $PKG android.permission.RECORD_AUDIO
-adb shell am start -n $PKG/.MainActivity
+adb shell am start -n $PKG/.MainActivity --ei tab 3 # straight to Ajustes (Capri may sit on the pill bar)
 sleep 4
-tap "ajustes"
-sleep 2
 adb shell input swipe 500 1800 500 900 300
 shot 23-voice-card 2
 adb shell input swipe 500 1800 500 700 300
 shot 23b-settings-more 2
 adb shell input swipe 500 1800 500 700 300
 shot 23c-settings-more 2
-adb shell input swipe 500 700 500 1800 300
-adb shell input swipe 500 700 500 1800 300
+adb shell input swipe 500 1800 500 700 300
+shot 23d-settings-more 2
+adb shell input swipe 500 1800 500 700 300
+shot 23e-settings-end 2
+for i in 1 2 3 4 5; do adb shell input swipe 500 700 500 1800 200; done
+adb shell input swipe 500 1800 500 900 300
 tap "activar"
 shot 24-voice-on 3
 adb shell input keyevent KEYCODE_HOME

@@ -152,8 +152,11 @@ class MainActivity : Activity() {
             bar.layoutParams = barParams
         }
         setContentView(root)
-        show(savedInstanceState?.getInt("tab") ?: 0, animate = false)
+        show(savedInstanceState?.getInt("tab") ?: tabAsked(intent) ?: 0, animate = false)
     }
+
+    // a tab to open on ("tab", 0..3): the emulator's screenshots ask for one
+    private fun tabAsked(intent: Intent?) = intent?.getIntExtra(EXTRA_TAB, -1)?.takeIf { it in 0..3 }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -212,7 +215,7 @@ class MainActivity : Activity() {
         if (intent.getBooleanExtra(EXTRA_UPDATE, false)) {
             wantsUpdate = true
             if (::ui.isInitialized) show(0)
-        }
+        } else tabAsked(intent)?.let { if (::ui.isInitialized) show(it) }
     }
 
     private fun toggleVoice() {
@@ -597,6 +600,7 @@ class MainActivity : Activity() {
 
     companion object {
         const val EXTRA_UPDATE = "update"
+        const val EXTRA_TAB = "tab"
     }
 
     /** Download it and hand it to Android's installer (after letting Capri install apps, once). */
