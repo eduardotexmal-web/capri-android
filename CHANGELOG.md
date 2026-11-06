@@ -3,6 +3,31 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.5.0
+
+- **Capri ya no sale disparada:** al tocarla o soltarla después de arrastrarla, a veces salía volando como si la
+  lanzaras. Ahora solo la lanzas si de verdad la avientas con un movimiento rápido; si solo la sueltas, cae suave. Y
+  cuando la lanzas, va con menos fuerza.
+- **Elige su tamaño:** en *Ajustes → Capri en tu pantalla*, de muy pequeña a grande.
+- **Modo fantasma:** Capri sigue en tu pantalla pero no se puede tocar y no estorba: tus toques pasan a la app de
+  abajo, como un shimeji fantasma. Se activa en *Ajustes* o en su menú.
+- **Más movimiento:** ya no se queda parada. Elige qué tan inquieta es en *Ajustes → Movimiento*: tranquila (como
+  antes), normal o inquieta. Camina, salta, gira, se estira y mira a su alrededor por su cuenta.
+- **Capri ve tu pantalla:** dile «Capri, mira mi pantalla» (o toca *Mira mi pantalla ahora* en Ajustes, o en su menú)
+  y te comenta lo que ve. Con *Ver en vivo* sigue mirando y reacciona sola de vez en cuando, o cuando cambias de app,
+  hasta que lo apagues. Android te pregunta antes cada vez que empieza a ver, y verás el ícono de transmisión mientras
+  mira. Las capturas no se guardan: solo van a su IA. Las apps protegidas (bancos, contraseñas) le salen en negro.
+  Necesita una IA que vea imágenes.
+- **El chat ya no se congela:** con mensajes largos se quedaba trabada. Ahora espera más a la IA gratis antes de
+  rendirse, le pide pensar menos para que conteste antes, y si un modelo no responde pasa a otro. Mientras tanto te
+  dice que está pensando en vez de quedarse muda.
+- **Elige mejor modelo solita:** prefiere los modelos rápidos y que sí son de chat, y recuerda la lista unos minutos
+  para no preguntar cada vez.
+- **Tu clave de IA ya no se borra:** a veces, si la IA tardaba o fallaba una vez, Capri descartaba la clave y decía
+  que no tenía IA. Ahora solo la quita si de verdad es inválida.
+- **Habla más como Capri:** en el chat contesta como alguien con quien chateas, no como asistente: reacciona, bromea,
+  opina y responde a lo que de verdad le dijiste. En español habla como latina, con algo de jerga mexicana.
+
 ## 1.4.1
 
 - **Ya no hay zonas muertas junto a Capri:** después de teletransportarse, tocar cerca de ella (no sobre ella) no

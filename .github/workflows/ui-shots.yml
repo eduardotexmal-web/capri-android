@@ -19,8 +19,6 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - name: Prueba de velocidad de la IA gratis
-        run: bash tools/ci/chat-probe.sh || true
       - run: ./gradlew --no-daemon assembleDebug
       - name: KVM
         run: |
