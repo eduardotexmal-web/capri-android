@@ -183,6 +183,9 @@
     <string name="size_xl">Huge</string>
     <string name="settings_gamer">Gamer mode</string>
     <string name="settings_gamer_how">For when you play: she gets small in a corner, can’t be touched, her cards stay away, she stops listening, and now and then she cheers you on. Also in her menu or by saying “Capri, gamer mode”. Off when you tap it again or restart her.</string>
+    <string name="settings_gamer_auto">On its own when a game opens</string>
+    <string name="settings_gamer_auto_how">It turns on when you open a game and off when you leave. It needs “Usage access” in Android’s settings (she only sees which app is open, nothing inside it). Heads up: some banking and antivirus apps distrust that permission; if yours complains, leave this off.</string>
+    <string name="settings_gamer_auto_grant">Find Capri in the list and turn on “Permit usage access”.</string>
     <string name="voice_gamer">Paused: gamer mode.</string>
     <string name="settings_music">Music bar</string>
     <string name="music_always">Always</string>

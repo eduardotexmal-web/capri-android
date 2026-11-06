@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- her chat's AI, Ollama on your network, and the hook server Claude Code reaches -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -16,6 +17,8 @@
     <!-- "Capri, mira mi pantalla": Android's screen capture, asked each time (Eyes.kt) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- gamer mode on its own when a game is in front: only if you turn it on and give "Acceso de uso" -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <!-- "Start with Windows", here "start with the phone" -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Termux's RUN_COMMAND, to plug her hooks in from her own button -->

@@ -10,6 +10,10 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
   cuando te echa porras. Actívalo en *Ajustes → Modo gamer*, en su menú, diciéndole «Capri, modo gamer» o
   escribiéndoselo en su chat. Se quita igual (en su chat: «quita el modo gamer») o al reiniciarla, y cuando sales te
   pregunta cómo te fue.
+- **Modo gamer automático (opcional):** en *Ajustes → Modo gamer → Solita al abrir un juego*, se activa cuando abres
+  un juego y se quita cuando sales (si lo quitas tú a media partida, respeta tu decisión). Necesita el permiso
+  «Acceso de uso» de Android, que solo deja ver qué app tienes abierta. Viene apagado: algunas apps de banco y
+  antivirus desconfían de ese permiso.
 
 ## 1.5.1
 

@@ -182,6 +182,9 @@
     <string name="size_xl">Enorme</string>
     <string name="settings_gamer">Modo gamer</string>
     <string name="settings_gamer_how">Para cuando juegas: se hace chiquita en una esquina, no se puede tocar, no salen sus avisos, deja de escuchar y de vez en cuando te echa porras. También en su menú o diciéndole «Capri, modo gamer». Se quita al volver a tocarlo o al reiniciarla.</string>
+    <string name="settings_gamer_auto">Solita al abrir un juego</string>
+    <string name="settings_gamer_auto_how">Se activa cuando abres un juego y se quita cuando sales. Necesita que le des «Acceso de uso» en los ajustes de Android (solo ve qué app tienes abierta, nada de lo que hay dentro). Ojo: algunas apps de banco y antivirus desconfían de ese permiso; si la tuya se queja, déjalo apagado.</string>
+    <string name="settings_gamer_auto_grant">Busca Capri en la lista y activa «Permitir acceso de uso».</string>
     <string name="voice_gamer">En pausa: modo gamer.</string>
     <string name="settings_music">Barra de música</string>
     <string name="music_always">Siempre</string>

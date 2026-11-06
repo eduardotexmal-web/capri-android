@@ -28,6 +28,7 @@ class CapriService : Service() {
     private var visible = true
     var ears: Ears? = null
         private set
+    private var games: GameWatch? = null // gamer mode on its own, when you open a game (GameWatch.kt)
     val eyes by lazy { eyesMade = true; Eyes(this) } // her look at your screen, only when you ask (Eyes.kt)
     private var eyesMade = false
 
@@ -78,6 +79,7 @@ class CapriService : Service() {
             null
         }
         ears = Ears(this).also { it.update() }
+        games = GameWatch(this).also { it.start() }
         hooks = HookServer(assets) { evt -> overlay?.emit("claude:event", evt) }.also { it.start() }
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -152,6 +154,8 @@ class CapriService : Service() {
         hooks?.stop()
         ears?.destroy()
         ears = null
+        games?.stop()
+        games = null
         if (eyesMade) eyes.destroy()
         overlay?.destroy()
         overlay = null

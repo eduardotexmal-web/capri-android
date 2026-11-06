@@ -471,6 +471,17 @@ class MainActivity : Activity() {
                 { CapriService.gamer }, { a, b -> a == b }) {
                 if (!CapriSettings.tell(org.json.JSONObject().put("gamer", it))) Toast.makeText(this@MainActivity, R.string.settings_need_on, Toast.LENGTH_LONG).show()
             }, ui.block(6))
+            // …or on its own when a game is in front (needs Android's "Acceso de uso"; off unless you want it)
+            addView(ui.text(getString(R.string.settings_gamer_auto), 13f, Hud.PAPER, ui.head), ui.block(12))
+            addView(ui.text(getString(R.string.settings_gamer_auto_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            addView(choice(listOf(R.string.off to false, R.string.on to true),
+                { GameWatch.enabled(this@MainActivity) && GameWatch.allowed(this@MainActivity) }, { a, b -> a == b }) {
+                GameWatch.setEnabled(this@MainActivity, it)
+                if (it && !GameWatch.allowed(this@MainActivity)) {
+                    Toast.makeText(this@MainActivity, R.string.settings_gamer_auto_grant, Toast.LENGTH_LONG).show()
+                    runCatching { startActivity(Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+                }
+            }, ui.block(6))
             // her music card: always while a song plays, a while after each change, or never
             addView(ui.text(getString(R.string.settings_music), 14f, Hud.PAPER, ui.head), ui.block(14))
             addView(choice(listOf(R.string.music_always to "always", R.string.music_while to "while", R.string.music_off to "off"),
