@@ -153,6 +153,7 @@ class MainActivity : Activity() {
         }
         setContentView(root)
         show(savedInstanceState?.getInt("tab") ?: tabAsked(intent) ?: 0, animate = false)
+        if (savedInstanceState == null && tabAsked(intent) == null) root.postDelayed({ if (!isFinishing) inviteOnce() }, 1500)
     }
 
     // a tab to open on ("tab", 0..3): the emulator's screenshots ask for one
@@ -510,6 +511,9 @@ class MainActivity : Activity() {
             addView(lookBtn, ui.block(8))
         }, ui.block(16))
 
+        // her community: Emma's TikTok and Discord
+        addView(communityCard(), ui.block(16))
+
         addView(ui.button(getString(R.string.settings_intro_again), Ui.Kind.LINE) {
             getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("welcomed", false).apply()
             startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
@@ -601,6 +605,34 @@ class MainActivity : Activity() {
         showLog()
     }
 
+    // Emma's TikTok and Discord, as a card (the end of Ajustes, and the one-time invite)
+    private fun communityCard(onOpen: () -> Unit = {}) = ui.card(Hud.RED).apply {
+        addView(ui.label(getString(R.string.community_title), Hud.RED))
+        addView(ui.text(getString(R.string.community_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(6))
+        addView(ui.button(getString(R.string.community_discord) + " ↗", Ui.Kind.MAIN) { onOpen(); openLink(DISCORD) }, ui.block(10))
+        addView(ui.button(getString(R.string.community_tiktok) + " ↗", Ui.Kind.LINE) { onOpen(); openLink(TIKTOK) }, ui.block(8))
+    }
+
+    private fun openLink(url: String) {
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+    }
+
+    // once, ever: "join the community" (and then it lives at the end of Ajustes)
+    private fun inviteOnce() {
+        val prefs = getSharedPreferences("app", MODE_PRIVATE)
+        if (prefs.getBoolean("communityShown", false) || wantsUpdate) return
+        prefs.edit().putBoolean("communityShown", true).apply()
+        val dialog = android.app.Dialog(this)
+        val card = communityCard { dialog.dismiss() }
+        card.addView(ui.button(getString(R.string.community_later), Ui.Kind.LINE) { dialog.dismiss() }, ui.block(8))
+        val pad = FrameLayout(this).apply { setPadding(ui.dpi(4), ui.dpi(4), ui.dpi(10), ui.dpi(10)); addView(card) }
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+        dialog.setContentView(pad)
+        dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        dialog.window?.setLayout((resources.displayMetrics.widthPixels * 0.9).toInt(), WRAP_CONTENT)
+        dialog.show()
+    }
+
     private fun checkUpdate() {
         if (downloading) return
         if (release == null) updateText.text = getString(R.string.update_checking)
@@ -631,6 +663,8 @@ class MainActivity : Activity() {
     companion object {
         const val EXTRA_UPDATE = "update"
         const val EXTRA_TAB = "tab"
+        private const val TIKTOK = "https://www.tiktok.com/@emma180516_"
+        private const val DISCORD = "https://discord.gg/d8tsTKMhN"
     }
 
     /** Download it and hand it to Android's installer (after letting Capri install apps, once). */

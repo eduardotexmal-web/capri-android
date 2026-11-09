@@ -180,6 +180,11 @@
     <string name="size_m">Normal</string>
     <string name="size_l">Grande</string>
     <string name="size_xl">Enorme</string>
+    <string name="community_title">Únete a la comunidad</string>
+    <string name="community_how">Novedades de Capri antes que nadie, ideas, bugs y gente que también la tiene en su teléfono. Ven al Discord y sígueme en TikTok.</string>
+    <string name="community_discord">Entrar al Discord</string>
+    <string name="community_tiktok">Seguir en TikTok</string>
+    <string name="community_later">Ahora no</string>
     <string name="settings_gamer">Modo gamer</string>
     <string name="settings_gamer_how">Para cuando juegas: se hace chiquita en una esquina, no se puede tocar, no salen sus avisos, deja de escuchar y de vez en cuando te echa porras. También en su menú o diciéndole «Capri, modo gamer». Se quita al volver a tocarlo o al reiniciarla.</string>
     <string name="settings_gamer_auto">Solita al abrir un juego</string>

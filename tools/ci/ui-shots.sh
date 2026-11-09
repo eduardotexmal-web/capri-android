@@ -70,6 +70,10 @@ shot 10-done 3
 adb shell appops set $PKG SYSTEM_ALERT_WINDOW deny
 tap "iniciar"
 shot 11-main 3
+# the one-time "join the community" invite, then away
+shot 11b-community 1
+tap "ahora no"
+sleep 1
 adb shell input swipe 500 1800 500 600 300
 shot 12-main-scrolled 2
 tap "permisos"

@@ -464,15 +464,18 @@ function toggleVisible(force) {
 
 // Her menu's desktop words, the phone's way (the desktop-only entries are left out of it:
 // looking at your PC's screen, being jealous of other AIs' browser pages)
+// Emma's community: her Discord and her TikTok (also at the end of the app's Ajustes)
+const COMMUNITY = { discord: 'https://discord.gg/d8tsTKMhN', tiktok: 'https://www.tiktok.com/@emma180516_' };
+
 const PHONE_LABELS = {
   es: {
-    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
+    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', community: 'Únete a la comunidad', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
     motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
     soundsDir: 'Dónde poner sonidos propios',
     lookNow: 'Mira mi pantalla', lookAuto: 'Ver mi pantalla en vivo', ghost: 'Modo fantasma (no se puede tocar)',
   },
   en: {
-    possess: 'Possess her cards', gamer: 'Gamer mode', startup: 'Start with the phone', pcReact: 'React to my phone',
+    possess: 'Possess her cards', gamer: 'Gamer mode', community: 'Join the community', startup: 'Start with the phone', pcReact: 'React to my phone',
     motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
     soundsDir: 'Where to put my own sounds',
     lookNow: 'Look at my screen', lookAuto: 'Watch my screen live', ghost: 'Ghost mode (can’t be touched)',
@@ -619,6 +622,13 @@ function menuTemplate() {
       ...(hookState.installed ? [{ label: t.hooksRemove, click: () => runHooks('uninstall') }] : []),
     ] : []),
     { type: 'separator' },
+    {
+      label: t.community || 'Join the community',
+      submenu: [
+        { label: 'Discord', click: () => send('open:url', { url: COMMUNITY.discord }) },
+        { label: 'TikTok', click: () => send('open:url', { url: COMMUNITY.tiktok }) },
+      ],
+    },
     { label: t.quit, click: () => send('app:quit') },
   ];
 }

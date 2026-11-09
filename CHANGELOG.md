@@ -3,6 +3,11 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.6.2
+
+- **Únete a la comunidad:** el Discord de la comunidad y el TikTok de Emma, al final de *Ajustes* y al final del menú de
+  Capri. La primera vez que abras la app te los muestra una sola vez.
+
 ## 1.6.1
 
 - **El modo gamer automático ahora sí nota cuando sales del juego:** antes esperaba 20 segundos y a veces no se

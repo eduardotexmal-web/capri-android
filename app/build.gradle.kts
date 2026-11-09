@@ -13,8 +13,8 @@ android {
         targetSdk = 35
         // Capri Android's own numbering (MAJOR.MINOR.PATCH), not capri-desktop's;
         // versionCode = MAJOR*10000 + MINOR*100 + PATCH, always above the old 5xx builds
-        versionCode = 10601
-        versionName = "1.6.1"
+        versionCode = 10602
+        versionName = "1.6.2"
         // her service is only reachable from outside (adb, CI's screenshots) in debug builds
         manifestPlaceholders["serviceExported"] = "false"
     }
