@@ -21,6 +21,9 @@
     'media:open': () => true,
     'note:open': () => true,
     'clipboard:read': () => state.clipboard || '',
+    'look:snap': () => ({ image: 'iVBORw0KGgo=' }),
+    'look:live': () => true,
+    'look:changed': () => 0,
   };
   const aborts = new Map();
   window.CapriNative = {

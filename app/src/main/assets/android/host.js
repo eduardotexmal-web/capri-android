@@ -392,7 +392,25 @@ async function cantSee() {
   if (cfg.provider === 'claude') return { ok: false, code: 'novision', model: 'Claude Code' };
   if (cfg.provider === 'ollama' && !(await ollama.canSee(model))) return { ok: false, code: 'novision', model };
   if (cfg.provider === 'pollinations' && !(await freeSees(model))) return { ok: false, code: 'novision', model: brainLang() === 'es' ? 'La IA gratis' : 'The free AI' };
+  if (!['ollama', 'pollinations', 'custom'].includes(cfg.provider) && !lookModel()) return { ok: false, code: 'novision', model };
   return null;
+}
+
+// The model she looks with: her chat's own if it sees pictures, else one of the same service that
+// does (Groq's Llama 4, any Gemini, GPT-4o…), so a key for a text-only chat model still lets her
+// look. Null when the service has none (DeepSeek).
+const SEES = /vision|[-_ ]vl\b|llama-4|scout|maverick|gpt-4o|gpt-4\.1|gpt-5|chatgpt-4o|\bo[34]\b|gemini|pixtral|claude|llava|gemma-?3|qwen.*vl|mistral-(small|medium)|grok-.*vision/i;
+const BLIND = /embed|tts|audio|whisper|guard|moderation|image-gen|dall|imagen|-tts|transcri|search|nano-banana/i;
+function lookModel() {
+  const model = pickModel(cfg);
+  if (['ollama', 'pollinations', 'custom'].includes(cfg.provider)) return model;
+  if (cfg.provider === 'deepseek') return null;
+  const ok = (m) => SEES.test(m) && !BLIND.test(m);
+  if (model && ok(model)) return model;
+  const list = (chatModels || []).filter(ok);
+  // the newest-looking, non-preview one first (the lists come in no useful order)
+  const rank = (m) => (/preview|exp/i.test(m) ? 2 : 0) + (/mini|lite|small|scout|flash/i.test(m) ? 0 : 1);
+  return list.sort((a, b) => rank(a) - rank(b))[0] || null;
 }
 const brainLang = () => (window.dev?.brain?.lang === 'es' ? 'es' : 'en');
 
@@ -415,7 +433,7 @@ async function sayAboutSnap({ id, persona, prompt, history = [] }) {
   const blind = await cantSee();
   if (blind) return blind;
   if (!image) return { ok: false, error: 'the picture is gone' };
-  const model = pickModel(cfg);
+  const model = lookModel();
   const user = cfg.provider === 'ollama'
     ? { role: 'user', content: prompt, images: [image] }
     : { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } }] };
@@ -430,7 +448,7 @@ async function sayAboutSnap({ id, persona, prompt, history = [] }) {
         await new Promise((r) => setTimeout(r, 1500));
         continue;
       }
-      const novision = /image|vision|multimodal|modalit|image_url|content.*(part|type)/i.test(err.message);
+      const novision = /image|vision|multimodal|modalit|image_url|content.*(part|type)|must be a string|content.*string/i.test(err.message);
       return { ok: false, error: err.message, code: novision ? 'novision' : err.code || null, model };
     }
   }
