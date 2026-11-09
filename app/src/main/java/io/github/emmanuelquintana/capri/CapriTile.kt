@@ -5,6 +5,8 @@ import android.service.quicksettings.TileService
 
 /** Ctrl+Alt+C, on a phone: a Quick Settings tile that puts her away or brings her back (or starts her). */
 class CapriTile : TileService() {
+    override fun attachBaseContext(newBase: android.content.Context) = super.attachBaseContext(Lang.wrap(newBase))
+
     override fun onStartListening() {
         qsTile?.apply {
             state = if (CapriService.running) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE

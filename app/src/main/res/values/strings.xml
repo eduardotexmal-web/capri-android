@@ -187,6 +187,10 @@
     <string name="community_discord">Join the Discord</string>
     <string name="community_tiktok">Follow on TikTok</string>
     <string name="community_later">Not now</string>
+    <string name="settings_lang">Idioma · Language</string>
+    <string name="lang_auto">Automatic</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_en">English</string>
     <string name="settings_float">No gravity</string>
     <string name="settings_float_how">She stays exactly where you put her, even in the air: let go of her and she floats there. She doesn’t wander off or jump onto your notifications, and flinging her doesn’t throw her around, so she never gets mad about it. Put her in a corner or next to your chats and she stays.</string>
     <string name="settings_icon">Icon mode</string>

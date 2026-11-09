@@ -31,6 +31,8 @@ import android.widget.Toast
  * (what she calls you, her AI, the log). The first time, her welcome comes first.
  */
 class MainActivity : Activity() {
+    override fun attachBaseContext(newBase: android.content.Context) = super.attachBaseContext(Lang.wrap(newBase))
+
     private lateinit var ui: Ui
     private lateinit var content: FrameLayout
     private val tabs = mutableListOf<Tab>()
@@ -415,6 +417,17 @@ class MainActivity : Activity() {
     // ---------- Settings ----------
 
     private fun settingsPage() = page {
+        // the app's language, and hers (written in both, so it's found whatever the app is in)
+        addView(ui.card(Hud.MANE).apply {
+            addView(ui.label(getString(R.string.settings_lang)))
+            addView(choice(listOf(R.string.lang_auto to "auto", R.string.lang_es to "es", R.string.lang_en to "en"),
+                { Lang.get(this@MainActivity) }, { a, b -> a == b }) {
+                if (it == Lang.get(this@MainActivity)) return@choice
+                Lang.set(this@MainActivity, it)
+                postDelayed({ recreate() }, 350)
+            }, ui.block(8))
+        }, ui.block(0))
+
         // what she calls you
         addView(ui.card(Hud.YELLOW).apply {
             addView(ui.label(getString(R.string.settings_name)))
@@ -425,7 +438,7 @@ class MainActivity : Activity() {
             }
             addView(nameField, ui.block(6))
             addView(ui.button(getString(R.string.settings_save), Ui.Kind.GREEN) { saveName() }, ui.block(12))
-        })
+        }, ui.block(16))
 
         // her AI
         addView(ui.card(Hud.GREEN).apply {

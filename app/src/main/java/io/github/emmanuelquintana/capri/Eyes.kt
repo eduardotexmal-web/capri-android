@@ -206,6 +206,8 @@ class Eyes(private val service: CapriService) {
 
 /** Android's "start recording or casting?" dialog, with nothing of the app around it. */
 class LookActivity : Activity() {
+    override fun attachBaseContext(newBase: android.content.Context) = super.attachBaseContext(Lang.wrap(newBase))
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null) return

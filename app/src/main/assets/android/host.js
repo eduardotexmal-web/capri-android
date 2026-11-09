@@ -952,6 +952,7 @@ on('settings:apply', async (p = {}) => {
   if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
   if (p.lively) updateConfig({ lively: String(p.lively) });
   if ('gamer' in p) updateConfig({ gamer: Boolean(p.gamer) });
+  if (typeof p.lang === 'string') updateConfig({ lang: p.lang }); // Ajustes › Idioma (Lang.kt)
   if ('float' in p) updateConfig({ float: Boolean(p.float) });
   if ('icon' in p) updateConfig({ icon: Boolean(p.icon), ...(p.icon && { visible: true }) });
   if ('musicCard' in p) updateConfig({ musicCard: Boolean(p.musicCard) });

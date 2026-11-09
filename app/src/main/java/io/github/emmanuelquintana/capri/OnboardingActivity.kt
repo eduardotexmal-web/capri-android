@@ -29,6 +29,8 @@ import android.widget.Toast
  * Five pages, each arriving with a glitch and her line typed out as on her panel.
  */
 class OnboardingActivity : Activity() {
+    override fun attachBaseContext(newBase: android.content.Context) = super.attachBaseContext(Lang.wrap(newBase))
+
     private lateinit var ui: Ui
     private lateinit var page: LinearLayout
     private lateinit var scroll: ScrollView

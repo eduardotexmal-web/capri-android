@@ -21,6 +21,8 @@ import org.json.JSONObject
  * Menu, Put away / Bring back (Ctrl+Alt+C), Quit.
  */
 class CapriService : Service() {
+    override fun attachBaseContext(newBase: android.content.Context) = super.attachBaseContext(Lang.wrap(newBase))
+
     var overlay: Overlay? = null
         private set
     private lateinit var bridge: HostBridge
