@@ -309,8 +309,8 @@ export class Notes {
     this.feed();
     clearTimeout(this.noteTimer);
     this.noteTimer = setTimeout(() => this.hideNote(), NOTE_FOR);
-    const line = fmt(pick(this.t.note), { app: n.app });
-    this.hop('note', () => this.say(line));
+    // she just jumps on it: a line of hers would cover the very card it's about
+    this.hop('note');
   }
 
   hideNote() {
@@ -326,8 +326,10 @@ export class Notes {
     const wins = [];
     for (const [id, el] of [['note', this.notice], ['music', this.music]]) {
       if (el.hidden || el.classList.contains('is-out')) continue;
-      const r = el.getBoundingClientRect();
-      wins.push({ id, x: r.left, y: r.top, w: r.width, h: r.height, max: false });
+      // where it rests, not where its slide-in has it right now (it starts off the right edge: she
+      // used to jump there, out of sight, when a notice came in)
+      const x = el.offsetLeft, y = el.offsetTop;
+      wins.push({ id, x, y, w: el.offsetWidth, h: el.offsetHeight, max: false });
     }
     return { fg: wins[0]?.id || 0, taskbar: false, ai: [], pages: [], dl: false, game: null, usb: [], plug: null, wins };
   }
