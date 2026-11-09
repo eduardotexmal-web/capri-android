@@ -3,6 +3,27 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.7.0
+
+- **Modo ícono:** en la pantalla solo queda su máscara verde, con los ojos abiertos, y desde ahí sigue comentando (lo
+  que ve en tu pantalla, porras en el modo gamer, su chat, alguna frase de vez en cuando). Arrástrala con el dedo a
+  donde menos te estorbe; tócala para abrir su menú. Así puedes tenerla en tamaño grande y, cuando quieras, que casi
+  no ocupe. Se activa en *Ajustes*, en su menú o diciéndole «Capri, modo ícono» (y «Capri, sal del ícono»).
+- **Sin gravedad:** se queda justo donde la pongas, aunque sea en el aire. No se va a pasear sola, no brinca a tus
+  notificaciones y si la avientas no sale volando, así que ya no se enoja. Ideal para dejarla en una esquina o junto
+  a tus chats. En *Ajustes* o en su menú; recuerda dónde la dejaste.
+- **Idioma de la app:** en *Ajustes → Idioma · Language* eliges Automático, Español o English, para la app y para lo
+  que dice ella.
+- **Comenta lo que ves:** con «Ver mi pantalla en vivo» encendido, cuando cambias de video en TikTok, Reels o
+  YouTube opina de lo que ve (como mucho una vez cada 50 segundos).
+- **Ahora sí ve tu pantalla con más IAs:** si tu clave es de un servicio cuyo modelo de chat no ve imágenes (por
+  ejemplo Groq), para mirar usa uno del mismo servicio que sí ve.
+- **Ya no desaparece al llegar una notificación:** salta a donde queda la tarjeta, no a donde empieza su animación.
+- **El teclado ya no se cierra solo** mientras le escribes: no se mueve de lugar mientras su chat está abierto.
+- **Errores entendibles:** en vez de mensajes técnicos como «messages content must be a string» o «signal perdido»,
+  te dice con palabras normales qué pasó.
+- **Chat de voz:** si la IA tarda en contestar, te dice en voz alta que lo está pensando, en vez de quedarse callada.
+
 ## 1.6.2
 
 - **Únete a la comunidad:** el Discord de la comunidad y el TikTok de Emma, al final de *Ajustes* y al final del menú de
