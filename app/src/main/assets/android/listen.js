@@ -19,6 +19,7 @@ const WORDS = {
     bye: 'Me escondo. Dime «Capri, ven» y regreso.',
     deaf: 'Dejo de escuchar. Lo vuelves a activar en Ajustes.',
     thinking: '…',
+    wait: ['Déjame pensarlo…', 'Ya casi, la IA va lenta ahorita.'],
     failed: 'No pude contestarte ahora.',
   },
   en: {
@@ -32,6 +33,7 @@ const WORDS = {
     bye: "I'll hide. Say “Capri, come back” and I'm here.",
     deaf: "I'll stop listening. Turn it back on in Settings.",
     thinking: '…',
+    wait: ['Let me think…', 'Almost there, the AI is slow right now.'],
     failed: "I couldn't answer you right now.",
   },
 };
@@ -151,7 +153,10 @@ async function handle(text, { toggleVisible, visible }) {
     ...chat.history.slice(-20),
     { role: 'user', content: `${text}\n\n${note}` },
   ];
-  const res = await window.host.chatSend({ id, messages }).catch((err) => ({ ok: false, error: err.message }));
+  // a slow answer (the free AI gives one every 45 s): she says out loud that she heard you
+  const waits = [5000, 22000].map((ms, i) => setTimeout(() => answer(t.wait[i], 'aside', text), ms));
+  const res = await window.host.chatSend({ id, messages }).catch((err) => ({ ok: false, error: err.message }))
+    .finally(() => waits.forEach(clearTimeout));
   if (!res?.ok) return answer(t.failed, 'wide');
   const said = clean(res.text) || '…';
   chat.history.push({ role: 'user', content: text });
