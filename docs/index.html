@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101510">
+<meta name="description" content="Capri Android: lleva a Capri contigo en tu teléfono. Descarga gratuita para Android.">
+<title>Capri Android — Tu compañera digital</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#101510;
+  --panel:#18221a;
+  --green:#9bc58c;
+  --bright:#c4e6a9;
+  --muted:#a3afa0;
+  --line:#344536;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:#edf3e9;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  line-height:1.65;
+}
+a { color:var(--bright); }
+header {
+  max-width:1050px;
+  margin:auto;
+  padding:22px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+.logo {
+  color:var(--bright);
+  font-weight:800;
+  font-size:1.25rem;
+  letter-spacing:2px;
+}
+nav { display:flex; gap:20px; flex-wrap:wrap; }
+nav a { color:var(--muted); text-decoration:none; font-size:.9rem; }
+nav a:hover { color:var(--bright); }
+main { max-width:1050px; margin:auto; padding:35px 24px 70px; }
+.hero {
+  min-height:430px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:55px 15px;
+}
+.eyebrow {
+  color:var(--green);
+  text-transform:uppercase;
+  letter-spacing:3px;
+  font-size:.78rem;
+  font-weight:700;
+}
+h1 {
+  font-size:clamp(2.8rem,9vw,5.5rem);
+  line-height:1.05;
+  letter-spacing:-3px;
+  margin:18px 0;
+}
+h1 span { color:var(--green); }
+.hero p {
+  max-width:620px;
+  color:var(--muted);
+  font-size:1.1rem;
+}
+.download {
+  display:inline-block;
+  margin-top:25px;
+  padding:15px 30px;
+  border-radius:8px;
+  background:var(--bright);
+  color:#152016;
+  font-weight:800;
+  text-decoration:none;
+  transition:.2s;
+}
+.download:hover { background:#d8f4c3; transform:translateY(-2px); }
+.version { color:var(--muted); font-size:.85rem; margin-top:12px; }
+section { margin:55px 0; }
+h2 { font-size:1.8rem; margin-bottom:12px; }
+.intro { color:var(--muted); max-width:700px; }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
+  margin-top:25px;
+}
+.card {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:22px;
+}
+.card h3 { color:var(--bright); margin-top:0; }
+.card p { color:var(--muted); margin-bottom:0; }
+.steps { padding-left:22px; color:var(--muted); }
+.steps li { margin:12px 0; padding-left:5px; }
+.notice {
+  border-left:3px solid var(--green);
+  padding:15px 20px;
+  background:var(--panel);
+  color:var(--muted);
+  border-radius:0 8px 8px 0;
+}
+footer {
+  border-top:1px solid var(--line);
+  padding:30px 24px;
+  text-align:center;
+  color:var(--muted);
+  font-size:.85rem;
+}
+footer p { margin:7px 0; }
+@media(max-width:600px) {
+  header { align-items:flex-start; flex-direction:column; }
+  nav { gap:14px; }
+  main { padding-top:10px; }
+  .hero { min-height:380px; }
+  h1 { letter-spacing:-2px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CAPRI ANDROID</div>
+  <nav>
+    <a href="#funciones">Funciones</a>
+    <a href="#requisitos">Requisitos</a>
+    <a href="#instalar">Instalación</a>
+    <a href="#creditos">Créditos</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Project Capricorn · Android</div>
+    <h1>Tu compañera.<br><span>Donde vayas.</span></h1>
+    <p>Capri llega a Android. Una compañera digital que vive sobre tus aplicaciones, reacciona a tu música y te acompaña mientras utilizas tu teléfono.</p>
+    <a class="download" href="https://github.com/eduardotexmal-web/capri-android/releases/download/beta-1.2/Capri-Beta-1.2.apk">
+      ↓ Descargar gratis
+    </a>
+    <div class="version">Versión publicada: Capri Beta 1.2 · Android 8.0 o superior</div>
+  </div>
+
+  <section id="funciones">
+    <h2>¿Qué puede hacer Capri?</h2>
+    <p class="intro">No es solamente una aplicación de chat. Capri está diseñada para acompañarte mientras utilizas tu teléfono.</p>
+    <div class="grid">
+      <article class="card">
+        <h3>Siempre contigo</h3>
+        <p>Puede aparecer encima de tus aplicaciones y moverse por la pantalla.</p>
+      </article>
+      <article class="card">
+        <h3>Tu música</h3>
+        <p>Interactúa con la música que estás reproduciendo y ofrece controles multimedia.</p>
+      </article>
+      <article class="card">
+        <h3>Inteligencia artificial</h3>
+        <p>Permite conversar con proveedores de IA compatibles y configurar tu conexión.</p>
+      </article>
+      <article class="card">
+        <h3>Personalidad propia</h3>
+        <p>Animaciones, expresiones, sonidos, idiomas, recordatorios y otras interacciones.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="requisitos">
+    <h2>Requisitos</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Android</h3>
+        <p>Android 8.0 (Oreo) o superior. API 26 como versión mínima.</p>
+      </article>
+      <article class="card">
+        <h3>Internet</h3>
+        <p>Necesario para descargar la aplicación, recibir actualizaciones y utilizar servicios de IA en línea.</p>
+      </article>
+      <article class="card">
+        <h3>Permisos</h3>
+        <p>Permitir mostrarse sobre otras aplicaciones. Las notificaciones y el micrófono dependen de las funciones que actives.</p>
+      </article>
+      <article class="card">
+        <h3>Almacenamiento</h3>
+        <p>Espacio disponible para instalar el APK y almacenar los datos de la aplicación.</p>
+      </article>
+    </div>
+    <p class="notice">El rendimiento puede variar según el teléfono, su memoria y la versión de Android. Cumplir el requisito mínimo no garantiza que todas las funciones estén disponibles en todos los dispositivos.</p>
+  </section>
+
+  <section id="instalar">
+    <h2>Instalación</h2>
+    <ol class="steps">
+      <li>Pulsa el botón de descarga para abrir la última versión publicada en GitHub.</li>
+      <li>Descarga el archivo APK correspondiente.</li>
+      <li>Abre el archivo y autoriza la instalación desde esa fuente si Android lo solicita.</li>
+      <li>Abre Capri y concede los permisos de las funciones que quieras utilizar.</li>
+      <li>¡Listo! Ya puedes iniciar Capri.</li>
+    </ol>
+    <p class="intro">Las actualizaciones también se publican en GitHub Releases. Capri puede avisarte cuando haya una nueva versión.</p>
+    <a href="https://github.com/eduardotexmal-web/capri-android/releases" target="_blank" rel="noopener">Ver todas las versiones →</a>
+  </section>
+
+  <section id="creditos">
+    <h2>Créditos y licencias</h2>
+    <div class="card">
+      <h3>Proyecto original</h3>
+      <p>Capri Android es una adaptación independiente de Capri Desktop, creada originalmente por <strong>mochiiwuff</strong>.</p>
+      <p><a href="https://github.com/mochiiwuff/capri-desktop" target="_blank" rel="noopener">Visitar Capri Desktop original →</a></p>
+      <p style="margin-top:18px">Required Notice: Copyright (c) 2026 mochiiwuff</p>
+      <p><a href="https://github.com/eduardotexmal-web/capri-android/blob/main/LICENSE" target="_blank" rel="noopener">Consultar licencia PolyForm Noncommercial 1.0.0 →</a></p>
+    </div>
+    <p class="intro">Capri Android es gratuito y no oficial. No está afiliado a CD PROJEKT RED, Studio Trigger ni Netflix. Los personajes y sus imágenes pertenecen a sus respectivos titulares. La distribución debe respetar las licencias y avisos del proyecto original.</p>
+  </section>
+</main>
+
+<footer>
+  <p><strong>CAPRI ANDROID</strong></p>
+  <p>Hecho como proyecto independiente, para compartirlo gratuitamente.</p>
+  <p><a href="https://github.com/eduardotexmal-web/capri-android">Código fuente en GitHub</a></p>
+</footer>
+</body>
+</html>
