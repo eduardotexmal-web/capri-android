@@ -16,6 +16,8 @@ const WORDS = {
     torchOff: 'Linterna apagada.',
     noTorch: 'Este teléfono no me deja usar la linterna.',
     back: 'Aquí estoy.',
+    iconOn: 'Me hago ícono. Desde aquí te sigo hablando.',
+    iconOff: '¡Ya salí!',
     bye: 'Me escondo. Dime «Capri, ven» y regreso.',
     deaf: 'Dejo de escuchar. Lo vuelves a activar en Ajustes.',
     thinking: '…',
@@ -30,6 +32,8 @@ const WORDS = {
     torchOff: 'Flashlight off.',
     noTorch: "This phone won't let me use the flashlight.",
     back: 'Right here.',
+    iconOn: "I'll be an icon. I'll keep talking from here.",
+    iconOff: "I'm out!",
     bye: "I'll hide. Say “Capri, come back” and I'm here.",
     deaf: "I'll stop listening. Turn it back on in Settings.",
     thinking: '…',
@@ -48,6 +52,9 @@ const HIDE_ASK = /^(?:esc[oó]ndete|vete|desaparece|ocúltate|ocultate|hide|go a
 const SHOW_ASK = /^(?:ven|aparece|regresa|vuelve|mu[eé]strate|sal|come back|come here|show up|appear)\b/i;
 const DEAF_ASK = /deja de escuchar|no me escuches|stop listening/i;
 export const GAMER_ASK = /modo gamer|modo juego|voy a jugar|gamer mode|gaming mode/i;
+// her icon mode (icon.js): on, or off ("sal del ícono", "quita el modo ícono")
+export const ICON_ASK = /modo [ií]cono|hazte (?:un )?[ií]cono|en (?:tu )?[ií]cono|del [ií]cono|icon mode|as an icon/i;
+export const iconOff = (text) => /quita|apaga|sin |desactiva|salir|sal |sal$|off|stop|leave|exit/i.test(text);
 const CHAT_ASK = /^(?:abre (?:el |tu )?chat|hablemos|quiero hablar|platiquemos|open (?:the |your )?chat|let'?s talk)\b/i;
 // what's left of her name at the start, as the recognizer may write it
 // (and whatever came before it: "oye Capri", "ok Kapri")
@@ -126,6 +133,11 @@ async function handle(text, { toggleVisible, visible }) {
   if (CHAT_ASK.test(text)) return chat.start();
   // gamer mode: she says so herself (host.js gamerMode), and her ears rest until it's off
   if (GAMER_ASK.test(text)) return window.host.setConfig({ gamer: true });
+  if (ICON_ASK.test(text)) {
+    const on = !iconOff(text);
+    window.host.setConfig({ icon: on });
+    return setTimeout(() => answer(on ? t.iconOn : t.iconOff, on ? 'smug' : 'laugh'), 1200);
+  }
 
   // her chat open: what you said goes into it, as if you typed it
   if (chat.open) return chat.send(text);

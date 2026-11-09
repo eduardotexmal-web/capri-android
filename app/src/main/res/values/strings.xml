@@ -160,6 +160,7 @@
         <item>#Her</item>
         <item>“Capri, hide” · “Capri, come back”</item>
         <item>“Capri, gamer mode” (off in Settings or her menu)</item>
+        <item>“Capri, icon mode” / “Capri, icon mode off”</item>
         <item>“Capri, open the chat”</item>
         <item>“Capri, call me Emma”</item>
         <item>“Capri, remember that I like coffee”</item>
@@ -186,6 +187,8 @@
     <string name="community_discord">Join the Discord</string>
     <string name="community_tiktok">Follow on TikTok</string>
     <string name="community_later">Not now</string>
+    <string name="settings_icon">Icon mode</string>
+    <string name="settings_icon_how">Only her green mask stays on screen, with her eyes open, and she keeps commenting from there (your screen, your games, her chat). Drag it with a finger wherever it bothers you least; tap it for her menu. Handy if you like her big: when she’s out she’s big, as an icon she takes almost nothing.</string>
     <string name="settings_gamer">Gamer mode</string>
     <string name="settings_gamer_how">For when you play: she gets small in a corner, can’t be touched, her cards stay away, she stops listening, and now and then she cheers you on. Also in her menu or by saying “Capri, gamer mode”. Off when you tap it again or restart her.</string>
     <string name="settings_gamer_auto">On its own when a game opens</string>

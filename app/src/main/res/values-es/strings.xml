@@ -158,6 +158,7 @@
         <item>#Ella</item>
         <item>«Capri, escóndete» · «Capri, ven»</item>
         <item>«Capri, modo gamer» (se quita en Ajustes o en su menú)</item>
+        <item>«Capri, modo ícono» / «Capri, sal del ícono»</item>
         <item>«Capri, abre el chat»</item>
         <item>«Capri, llámame Emma»</item>
         <item>«Capri, recuerda que me gusta el café»</item>
@@ -185,6 +186,8 @@
     <string name="community_discord">Entrar al Discord</string>
     <string name="community_tiktok">Seguir en TikTok</string>
     <string name="community_later">Ahora no</string>
+    <string name="settings_icon">Modo ícono</string>
+    <string name="settings_icon_how">En la pantalla solo queda su máscara verde, con los ojos abiertos, y desde ahí sigue comentando (tu pantalla, tus juegos, su chat). Arrástrala con el dedo a donde menos te estorbe; tócala para abrir su menú. Útil si te gusta grande: afuera es grande, de ícono casi no ocupa.</string>
     <string name="settings_gamer">Modo gamer</string>
     <string name="settings_gamer_how">Para cuando juegas: se hace chiquita en una esquina, no se puede tocar, no salen sus avisos, deja de escuchar y de vez en cuando te echa porras. También en su menú o diciéndole «Capri, modo gamer». Se quita al volver a tocarlo o al reiniciarla.</string>
     <string name="settings_gamer_auto">Solita al abrir un juego</string>

@@ -24,6 +24,7 @@ import './wink.js'; // what she says, also in her notification
 import { followTurns } from './turn.js';
 import { listen } from './listen.js';
 import { tweak } from './phone-tweaks.js';
+import { iconMode } from './icon.js';
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -51,6 +52,8 @@ const DEFAULTS = {
   ghost: false,                  // a ghost: on screen, but your touches go through her to your apps
   lively: 'normal',              // how often she moves on her own: calm, normal, restless
   lan: false,                    // the hook server also listens on your Wi-Fi (a PC's Claude Code can reach her)
+  icon: false,                   // icon mode: only her mask on screen, still talking (icon.js)
+  iconAt: null,                  // where you left it, { x, y } as parts of the screen
 };
 
 // setup.js's
@@ -525,13 +528,13 @@ const COMMUNITY = { discord: 'https://discord.gg/d8tsTKMhN', tiktok: 'https://ww
 
 const PHONE_LABELS = {
   es: {
-    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', community: 'Únete a la comunidad', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
+    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', icon: 'Modo ícono (solo su máscara)', community: 'Únete a la comunidad', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
     motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
     soundsDir: 'Dónde poner sonidos propios',
     lookNow: 'Mira mi pantalla', lookAuto: 'Ver mi pantalla en vivo', ghost: 'Modo fantasma (no se puede tocar)',
   },
   en: {
-    possess: 'Possess her cards', gamer: 'Gamer mode', community: 'Join the community', startup: 'Start with the phone', pcReact: 'React to my phone',
+    possess: 'Possess her cards', gamer: 'Gamer mode', icon: 'Icon mode (just her mask)', community: 'Join the community', startup: 'Start with the phone', pcReact: 'React to my phone',
     motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
     soundsDir: 'Where to put my own sounds',
     lookNow: 'Look at my screen', lookAuto: 'Watch my screen live', ghost: 'Ghost mode (can’t be touched)',
@@ -621,6 +624,7 @@ function menuTemplate() {
     { label: t.lookNow, click: () => sendCommand('look') },
     { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
     { label: t.ghost || 'Ghost mode', type: 'checkbox', checked: Boolean(cfg.ghost), click: (item) => updateConfig({ ghost: item.checked }) },
+    { label: t.icon || 'Icon mode', type: 'checkbox', checked: Boolean(cfg.icon), click: (item) => updateConfig({ icon: item.checked, ...(item.checked && { visible: true }) }) },
     { label: t.gamer || 'Gamer mode', type: 'checkbox', checked: Boolean(cfg.gamer), click: (item) => updateConfig({ gamer: item.checked }) },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
     { label: t.possess, type: 'checkbox', checked: cfg.possess, click: (item) => updateConfig({ possess: item.checked }) },
@@ -942,6 +946,7 @@ on('settings:apply', async (p = {}) => {
   if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
   if (p.lively) updateConfig({ lively: String(p.lively) });
   if ('gamer' in p) updateConfig({ gamer: Boolean(p.gamer) });
+  if ('icon' in p) updateConfig({ icon: Boolean(p.icon), ...(p.icon && { visible: true }) });
   if ('musicCard' in p) updateConfig({ musicCard: Boolean(p.musicCard) });
   if (p.musicStay) updateConfig({ musicStay: String(p.musicStay) });
   if (('musicCard' in p || p.musicStay) && notes) notes.refreshMusic(); // shown or hidden now
@@ -982,6 +987,7 @@ ready.then(() => {
     if (!window.dev?.capri) return;
     clearInterval(tuned);
     tweak({ cfg: () => cfg, onConfig: (fn) => listeners.config.add(fn) });
+    iconMode({ cfg: () => cfg, onConfig: (fn) => listeners.config.add(fn), setConfig: updateConfig });
   }, 300);
 });
 

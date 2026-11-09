@@ -3,7 +3,7 @@
 // talks when she chats, and her look at your screen.
 
 import { call } from './native.js';
-import { GAMER_ASK } from './listen.js';
+import { GAMER_ASK, ICON_ASK, iconOff } from './listen.js';
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
@@ -138,6 +138,13 @@ export function tweak({ cfg, onConfig }) {
         window.host.setConfig({ gamer: !off });
         return Promise.resolve();
       }
+      // "modo ícono" typed to her: into her chip (or out of it)
+      if (ICON_ASK.test(String(text || ''))) {
+        chat.close();
+        dev.panel?.hide?.();
+        window.host.setConfig({ icon: !iconOff(text) });
+        return Promise.resolve();
+      }
       const words = cfg().provider === 'pollinations' ? FREE : THINKING;
       const lines = words[dev.brain?.lang] || words.en;
       const timers = [6000, 20000].map((ms, i) => setTimeout(() => {
@@ -181,7 +188,8 @@ export function tweak({ cfg, onConfig }) {
   };
   let nextCheer = 0;
   setInterval(() => {
-    if (!cfg().gamer || document.hidden || capri.hidden) return (nextCheer = 0);
+    const icon = cfg().icon && cfg().visible !== false && capri.stowed; // her icon mode: from her chip (icon.js)
+    if (!cfg().gamer || document.hidden || (capri.hidden && !icon)) return (nextCheer = 0);
     const now = Date.now();
     if (!nextCheer) nextCheer = now + rand(4, 8) * 60000;
     if (now < nextCheer || dev.panel?.current) return;
