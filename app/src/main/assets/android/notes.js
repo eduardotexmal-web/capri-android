@@ -344,6 +344,7 @@ export class Notes {
       const dev = window.dev;
       const capri = dev?.capri;
       if (!capri || capri.busy || capri.dragging || capri.hidden || capri.lounge) return;
+      if (this.config().float) return; // without gravity: she stays where you put her
       if (capri.perch?.id === id && capri.stance === 'sit') return then?.();
       if (dev.panel?.current && !dev.panel.current.hold) return; // something she's saying to you stays
       if (dev.chat?.open) return;

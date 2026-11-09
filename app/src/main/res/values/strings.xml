@@ -187,6 +187,8 @@
     <string name="community_discord">Join the Discord</string>
     <string name="community_tiktok">Follow on TikTok</string>
     <string name="community_later">Not now</string>
+    <string name="settings_float">No gravity</string>
+    <string name="settings_float_how">She stays exactly where you put her, even in the air: let go of her and she floats there. She doesn’t wander off or jump onto your notifications, and flinging her doesn’t throw her around, so she never gets mad about it. Put her in a corner or next to your chats and she stays.</string>
     <string name="settings_icon">Icon mode</string>
     <string name="settings_icon_how">Only her green mask stays on screen, with her eyes open, and she keeps commenting from there (your screen, your games, her chat). Drag it with a finger wherever it bothers you least; tap it for her menu. Handy if you like her big: when she’s out she’s big, as an icon she takes almost nothing.</string>
     <string name="settings_gamer">Gamer mode</string>

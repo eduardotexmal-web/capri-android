@@ -25,6 +25,7 @@ import { followTurns } from './turn.js';
 import { listen } from './listen.js';
 import { tweak } from './phone-tweaks.js';
 import { iconMode } from './icon.js';
+import { floatMode } from './float.js';
 
 const llm = load('llm');
 const ollama = load('ollama');
@@ -54,6 +55,8 @@ const DEFAULTS = {
   lan: false,                    // the hook server also listens on your Wi-Fi (a PC's Claude Code can reach her)
   icon: false,                   // icon mode: only her mask on screen, still talking (icon.js)
   iconAt: null,                  // where you left it, { x, y } as parts of the screen
+  float: false,                  // without gravity: she stays where you put her (float.js)
+  floatAt: null,                 // where that was, { x, y } as parts of the screen
 };
 
 // setup.js's
@@ -121,7 +124,9 @@ function rendererConfig() {
   const { apiKeys, ...rest } = cfg;
   // gamer mode: small, still, in a corner, out of the game's way (her settings stay as they were)
   const gamer = cfg.gamer ? { scale: Math.min(cfg.scale || 0.6, GAMER_SCALE), wander: false, jealous: false, pcReact: false } : {};
-  return { ...rest, ...gamer, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(rest.lang), langSetting: rest.lang, floorGap: 0 };
+  // without gravity: she stays where you put her (float.js), so she doesn't go off on her own either
+  const still = cfg.float ? { wander: false } : {};
+  return { ...rest, ...still, ...gamer, keys: Object.keys(apiKeys || {}), assistant: activeAssistant().id, lang: resolveLang(rest.lang), langSetting: rest.lang, floorGap: 0 };
 }
 
 const listeners = { config: new Set(), command: new Set() };
@@ -528,13 +533,13 @@ const COMMUNITY = { discord: 'https://discord.gg/d8tsTKMhN', tiktok: 'https://ww
 
 const PHONE_LABELS = {
   es: {
-    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', icon: 'Modo ícono (solo su máscara)', community: 'Únete a la comunidad', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
+    possess: 'Poseer sus tarjetas', gamer: 'Modo gamer', icon: 'Modo ícono (solo su máscara)', float: 'Sin gravedad (se queda donde la pongas)', community: 'Únete a la comunidad', startup: 'Iniciar con el teléfono', pcReact: 'Reaccionar a mi teléfono',
     motionAuto: 'Como el teléfono', restTaskbar: 'Sentada abajo, en el borde', theme: 'Estilo de sus paneles',
     soundsDir: 'Dónde poner sonidos propios',
     lookNow: 'Mira mi pantalla', lookAuto: 'Ver mi pantalla en vivo', ghost: 'Modo fantasma (no se puede tocar)',
   },
   en: {
-    possess: 'Possess her cards', gamer: 'Gamer mode', icon: 'Icon mode (just her mask)', community: 'Join the community', startup: 'Start with the phone', pcReact: 'React to my phone',
+    possess: 'Possess her cards', gamer: 'Gamer mode', icon: 'Icon mode (just her mask)', float: 'No gravity (stays where you put her)', community: 'Join the community', startup: 'Start with the phone', pcReact: 'React to my phone',
     motionAuto: 'Like the phone', restTaskbar: 'Sitting on the bottom edge', theme: 'Her panels’ style',
     soundsDir: 'Where to put my own sounds',
     lookNow: 'Look at my screen', lookAuto: 'Watch my screen live', ghost: 'Ghost mode (can’t be touched)',
@@ -625,6 +630,7 @@ function menuTemplate() {
     { label: t.lookAuto, type: 'checkbox', checked: Boolean(cfg.watchScreen), click: (item) => sendCommand('watchScreen', { on: item.checked }) },
     { label: t.ghost || 'Ghost mode', type: 'checkbox', checked: Boolean(cfg.ghost), click: (item) => updateConfig({ ghost: item.checked }) },
     { label: t.icon || 'Icon mode', type: 'checkbox', checked: Boolean(cfg.icon), click: (item) => updateConfig({ icon: item.checked, ...(item.checked && { visible: true }) }) },
+    { label: t.float || 'No gravity', type: 'checkbox', checked: Boolean(cfg.float), click: (item) => updateConfig({ float: item.checked }) },
     { label: t.gamer || 'Gamer mode', type: 'checkbox', checked: Boolean(cfg.gamer), click: (item) => updateConfig({ gamer: item.checked }) },
     { label: t.wander, type: 'checkbox', checked: cfg.wander, click: (item) => updateConfig({ wander: item.checked }) },
     { label: t.possess, type: 'checkbox', checked: cfg.possess, click: (item) => updateConfig({ possess: item.checked }) },
@@ -946,6 +952,7 @@ on('settings:apply', async (p = {}) => {
   if ('ghost' in p) updateConfig({ ghost: Boolean(p.ghost) });
   if (p.lively) updateConfig({ lively: String(p.lively) });
   if ('gamer' in p) updateConfig({ gamer: Boolean(p.gamer) });
+  if ('float' in p) updateConfig({ float: Boolean(p.float) });
   if ('icon' in p) updateConfig({ icon: Boolean(p.icon), ...(p.icon && { visible: true }) });
   if ('musicCard' in p) updateConfig({ musicCard: Boolean(p.musicCard) });
   if (p.musicStay) updateConfig({ musicStay: String(p.musicStay) });
@@ -988,6 +995,7 @@ ready.then(() => {
     clearInterval(tuned);
     tweak({ cfg: () => cfg, onConfig: (fn) => listeners.config.add(fn) });
     iconMode({ cfg: () => cfg, onConfig: (fn) => listeners.config.add(fn), setConfig: updateConfig });
+    floatMode({ cfg: () => cfg, setConfig: updateConfig });
   }, 300);
 });
 

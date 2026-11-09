@@ -186,6 +186,8 @@
     <string name="community_discord">Entrar al Discord</string>
     <string name="community_tiktok">Seguir en TikTok</string>
     <string name="community_later">Ahora no</string>
+    <string name="settings_float">Sin gravedad</string>
+    <string name="settings_float_how">Se queda justo donde la pongas, aunque sea en el aire: la sueltas y ahí flota. No se va a pasear sola ni brinca a tus notificaciones, y si la avientas no sale volando, así que no se enoja. Ponla en una esquina o junto a tus chats y ahí se queda.</string>
     <string name="settings_icon">Modo ícono</string>
     <string name="settings_icon_how">En la pantalla solo queda su máscara verde, con los ojos abiertos, y desde ahí sigue comentando (tu pantalla, tus juegos, su chat). Arrástrala con el dedo a donde menos te estorbe; tócala para abrir su menú. Útil si te gusta grande: afuera es grande, de ícono casi no ocupa.</string>
     <string name="settings_gamer">Modo gamer</string>

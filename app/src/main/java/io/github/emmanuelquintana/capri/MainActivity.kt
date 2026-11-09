@@ -465,6 +465,11 @@ class MainActivity : Activity() {
             addView(ui.text(getString(R.string.settings_ghost_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
             addView(choice(listOf(R.string.off to false, R.string.on to true),
                 { Store(this@MainActivity).configFlag("ghost", false) }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "ghost", it) }, ui.block(6))
+            // without gravity: she stays where you put her, isn't thrown, doesn't wander off
+            addView(ui.text(getString(R.string.settings_float), 14f, Hud.PAPER, ui.head), ui.block(14))
+            addView(ui.text(getString(R.string.settings_float_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
+            addView(choice(listOf(R.string.off to false, R.string.on to true),
+                { Store(this@MainActivity).configFlag("float", false) }, { a, b -> a == b }) { CapriSettings.set(this@MainActivity, "float", it) }, ui.block(6))
             // icon mode: only her mask, wherever you put it, still talking
             addView(ui.text(getString(R.string.settings_icon), 14f, Hud.PAPER, ui.head), ui.block(14))
             addView(ui.text(getString(R.string.settings_icon_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(4))
