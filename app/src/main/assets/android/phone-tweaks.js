@@ -97,6 +97,12 @@ export function tweak({ cfg, onConfig }) {
   let lively = LIVELY[cfg().lively || 'normal'];
   const wanderStep = capri.wanderStep.bind(capri);
   capri.wanderStep = () => {
+    // never while you type to her (her chat, or a box of her setup): she'd jump away with the box
+    // you're typing in, and the keyboard would close
+    if (chat?.open || dev.panel?.current?.chat) {
+      capri.nextMove = performance.now() + 15000;
+      return;
+    }
     wanderStep();
     if (lively) capri.nextMove = performance.now() + rand(...lively.move);
   };
@@ -107,7 +113,7 @@ export function tweak({ cfg, onConfig }) {
     const now = performance.now();
     if (now < nextAct) return;
     nextAct = now + rand(...lively.act);
-    if (!capri.free || capri.mode !== 'idle' || chat?.open || dev.guide?.running) return;
+    if (!capri.free || capri.mode !== 'idle' || chat?.open || dev.panel?.current?.chat || dev.guide?.running) return;
     capri.perform(pick(ACTS[capri.stance] || ACTS.stand), Math.random() < 0.5 ? -1 : 1);
   }, 1000);
 
