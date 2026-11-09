@@ -94,6 +94,12 @@ async function handle(text, { toggleVisible, visible }) {
     setTimeout(() => toggleVisible(false), 1800);
     return;
   }
+  // her icon mode, before "sal…" / "ven…" (come back) would take "sal del ícono"
+  if (ICON_ASK.test(text)) {
+    const on = !iconOff(text);
+    window.host.setConfig({ icon: on, visible: true }); // (put away: out again, as an icon or whole)
+    return setTimeout(() => answer(on ? t.iconOn : t.iconOff, on ? 'smug' : 'laugh'), 1200);
+  }
   // anything else, she's out for it
   if (!visible()) {
     toggleVisible(true);
@@ -133,11 +139,6 @@ async function handle(text, { toggleVisible, visible }) {
   if (CHAT_ASK.test(text)) return chat.start();
   // gamer mode: she says so herself (host.js gamerMode), and her ears rest until it's off
   if (GAMER_ASK.test(text)) return window.host.setConfig({ gamer: true });
-  if (ICON_ASK.test(text)) {
-    const on = !iconOff(text);
-    window.host.setConfig({ icon: on });
-    return setTimeout(() => answer(on ? t.iconOn : t.iconOff, on ? 'smug' : 'laugh'), 1200);
-  }
 
   // her chat open: what you said goes into it, as if you typed it
   if (chat.open) return chat.send(text);

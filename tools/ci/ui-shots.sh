@@ -166,9 +166,9 @@ hear "Capri ven"
 shot 29-heard-back 4
 # her icon mode: only her mask, still talking; then back out
 hear "Capri modo ícono"
-shot 30-icon 5
+shot 30-icon 9
 hear "Capri sal del ícono"
-shot 31-icon-off 5
+shot 31-icon-off 8
 adb shell dumpsys activity services $PKG | grep -iE "foregroundServiceType|types=" | head -4
 adb logcat -d | grep -iE "capri|chromium|torch" | grep -viE "regions|keyboard" | tail -40
 adb shell dumpsys window windows | grep -E "Window #" | head -16
