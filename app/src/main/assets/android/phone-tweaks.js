@@ -156,7 +156,7 @@ export function tweak({ cfg, onConfig }) {
   if (look) {
     look.active = () => 0; // a phone's screen is on: you're there
     const LIVE_EVERY = 4 * 60 * 1000; // a look this often while live…
-    const SOONEST = 75 * 1000;        // …or sooner when the screen changed a lot, but not more often
+    const SOONEST = 50 * 1000;        // …or sooner when the screen changed a lot (a new video), but not more often
     look.tick = function tick() {
       if (!this.auto || !this.asked || this.looking || !this.free()) return;
       const since = Date.now() - this.lastAt;

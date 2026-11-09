@@ -384,6 +384,42 @@ async function pickProvider(provider) {
 
 const snaps = new Map();
 
+// What went wrong, said the way a person would (the raw error goes to the app's Registro): no
+// "signal is aborted" or "messages[1].content must be a string" in her panel
+const FRIENDLY = {
+  es: [
+    [/must be a string|image_url|vision|multimodal|modalit/i, 'esa IA no puede ver imágenes'],
+    [/^not allowed/i, 'no me diste permiso de ver tu pantalla'],
+    [/screen off/i, 'la pantalla está apagada'],
+    [/no picture|picture is gone/i, 'no me llegó la imagen, intenta otra vez'],
+    [/40[13]|invalid.*key|api key|unauthori[sz]ed|incorrect/i, 'la clave de la IA no funciona; revísala en Ajustes'],
+    [/402|429|rate|limit|quota|too many/i, 'la IA está saturada, espera un momentito'],
+    [/50\d|unavailable|overloaded|high demand|bad gateway/i, 'el servicio de la IA está caído, intenta en un rato'],
+    [/timeout|timed out|tardó/i, 'la IA tardó demasiado en contestar'],
+    [/abort|signal|cancel/i, 'se cortó la conexión, intenta otra vez'],
+    [/network|fetch|resolve|offline|connect|socket|host/i, 'no hay internet o el servicio no responde'],
+  ],
+  en: [
+    [/must be a string|image_url|vision|multimodal|modalit/i, 'that AI can’t see pictures'],
+    [/^not allowed/i, 'you didn’t let me see your screen'],
+    [/screen off/i, 'the screen is off'],
+    [/no picture|picture is gone/i, 'the picture didn’t reach me, try again'],
+    [/40[13]|invalid.*key|api key|unauthori[sz]ed|incorrect/i, 'the AI key doesn’t work; check it in Settings'],
+    [/402|429|rate|limit|quota|too many/i, 'the AI is busy, give it a moment'],
+    [/50\d|unavailable|overloaded|high demand|bad gateway/i, 'the AI service is down, try again later'],
+    [/timeout|timed out/i, 'the AI took too long to answer'],
+    [/abort|signal|cancel/i, 'the connection dropped, try again'],
+    [/network|fetch|resolve|offline|connect|socket|host/i, 'no internet, or the service isn’t answering'],
+  ],
+};
+function friendly(message) {
+  const raw = String(message || '');
+  send('log', { level: 'W', text: `AI: ${raw.slice(0, 300)}` });
+  const lang = resolveLang(cfg.lang) === 'es' ? 'es' : 'en';
+  const hit = FRIENDLY[lang].find(([re]) => re.test(raw));
+  return hit ? hit[1] : lang === 'es' ? 'algo falló, intenta otra vez' : 'something went wrong, try again';
+}
+
 // her AI can't look at pictures: why, before Android asks you to share your screen for nothing
 async function cantSee() {
   if (!chatModels?.length) await refreshModels();
@@ -434,6 +470,8 @@ async function sayAboutSnap({ id, persona, prompt, history = [] }) {
   if (blind) return blind;
   if (!image) return { ok: false, error: 'the picture is gone' };
   const model = lookModel();
+  // on a phone it's often a video, a reel or a post: she reacts to it like a friend watching with you
+  prompt = `${prompt}\n(On a phone: if it's a video, a reel or a post, TikTok, Instagram, YouTube or the like, react to what happens in it or what it says, like a friend watching it with them. Never describe the phone's own buttons or bars.)`;
   const user = cfg.provider === 'ollama'
     ? { role: 'user', content: prompt, images: [image] }
     : { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } }] };
@@ -449,7 +487,7 @@ async function sayAboutSnap({ id, persona, prompt, history = [] }) {
         continue;
       }
       const novision = /image|vision|multimodal|modalit|image_url|content.*(part|type)|must be a string|content.*string/i.test(err.message);
-      return { ok: false, error: err.message, code: novision ? 'novision' : err.code || null, model };
+      return { ok: false, error: friendly(err.message), code: novision ? 'novision' : err.code || null, model };
     }
   }
 }
@@ -743,7 +781,7 @@ window.host = {
       const text = await chatWithFallback(cfg, messages, sendDelta, abort.signal, () => streamed);
       return { ok: true, text };
     } catch (err) {
-      return { ok: false, error: abort.signal.aborted ? 'stopped' : err.message, code: err.code || null };
+      return { ok: false, error: abort.signal.aborted ? 'stopped' : friendly(err.message), code: err.code || null };
     } finally {
       chats.delete(id);
     }
@@ -761,7 +799,7 @@ window.host = {
       setTimeout(() => snaps.delete(id), 120000);
       return { ok: true, id };
     } catch (err) {
-      return { ok: false, error: err.message };
+      return { ok: false, error: friendly(err.message) };
     }
   }),
   lookSay: after((request) => sayAboutSnap(request || {})),
