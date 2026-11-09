@@ -3,6 +3,15 @@
 Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se ve en su página de
 *Releases* y en el aviso de actualización de la app.
 
+## 1.6.1
+
+- **El modo gamer automático ahora sí nota cuando sales del juego:** antes esperaba 20 segundos y a veces no se
+  enteraba (por ejemplo, si al salir el teléfono no decía qué app quedaba enfrente, o con las herramientas de juego
+  de Samsung). Ahora también nota cuando el juego se va, ignora los paneles flotantes como la cortina de
+  notificaciones o Game Booster, y se quita a los 10 segundos de salir.
+- En *Ajustes → Registro* queda anotado qué app ve enfrente y cuándo entra o sale del modo gamer, por si algún juego
+  no se detecta bien.
+
 ## 1.6.0
 
 - **Modo gamer (idea de la misma Capri):** para cuando juegas. Se hace chiquita en una esquina, no se puede tocar

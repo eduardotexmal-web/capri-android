@@ -48,6 +48,7 @@ class GameWatch(private val service: CapriService) {
         }
         if (!service.getSystemService(PowerManager::class.java)!!.isInteractive) return
         val app = front() ?: lastApp
+        if (app != lastApp) Diag.add("I", "games: in front ${app.ifEmpty { "(home or nothing)" }}${if (app.isNotEmpty() && isGame(app)) " (game)" else ""}")
         lastApp = app
         val playing = app.isNotEmpty() && isGame(app)
         val now = System.currentTimeMillis()
@@ -67,7 +68,10 @@ class GameWatch(private val service: CapriService) {
             onByMe && CapriService.gamer -> {
                 if (leftAt == 0L) leftAt = now
                 // a quick look at a message mid-game doesn't end it
-                if (now - leftAt > LEAVE_AFTER) gamer(false)
+                if (now - leftAt > LEAVE_AFTER) {
+                    Diag.add("I", "games: left the game, gamer mode off")
+                    gamer(false)
+                }
             }
         }
     }
@@ -78,25 +82,35 @@ class GameWatch(private val service: CapriService) {
         onByMe = on && told
     }
 
-    // the app in front: the last one Android says came to the front in the last minute
+    // The app in front, from what Android says came to the front or went away in the last minute:
+    // null when nothing happened (the same app is still there), "" when the one in front went away
+    // and nothing it can name came after (the home screen often says nothing).
     private fun front(): String? {
         val usm = service.getSystemService(UsageStatsManager::class.java) ?: return null
         val now = System.currentTimeMillis()
         val events = usm.queryEvents(now - 60_000, now)
         val e = UsageEvents.Event()
-        var last: String? = null
+        var cur: String? = null
+        var seen = false
         @Suppress("DEPRECATION")
         val resumed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) UsageEvents.Event.ACTIVITY_RESUMED else UsageEvents.Event.MOVE_TO_FOREGROUND
+        @Suppress("DEPRECATION")
+        val paused = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) UsageEvents.Event.ACTIVITY_PAUSED else UsageEvents.Event.MOVE_TO_BACKGROUND
         while (events.hasNextEvent()) {
             events.getNextEvent(e)
-            if (e.eventType == resumed) last = e.packageName
+            val pkg = e.packageName ?: continue
+            if (pkg in OVERLAYS || pkg == service.packageName) continue // floating panels, not where you are
+            when (e.eventType) {
+                resumed -> { cur = pkg; seen = true }
+                paused -> if (pkg == cur || cur == null) { cur = ""; seen = true }
+            }
         }
-        return last
+        return if (seen) cur else null
     }
 
     // a game, as its store filed it (or as it says of itself)
     private fun isGame(pkg: String): Boolean = games.getOrPut(pkg) {
-        if (pkg == service.packageName) return@getOrPut false
+        if (pkg == service.packageName || pkg.startsWith("com.samsung.android.game.")) return@getOrPut false // Samsung's game tools aren't the game
         val info = runCatching { service.packageManager.getApplicationInfo(pkg, 0) }.getOrNull() ?: return@getOrPut false
         @Suppress("DEPRECATION")
         val flagged = info.flags and ApplicationInfo.FLAG_IS_GAME != 0
@@ -105,7 +119,10 @@ class GameWatch(private val service: CapriService) {
 
     companion object {
         private const val EVERY = 4000L
-        private const val LEAVE_AFTER = 20_000L
+        private const val LEAVE_AFTER = 10_000L
+        // panels that float over the app you're in (the notification shade, Samsung's game tools):
+        // their coming and going doesn't mean you left your game
+        private val OVERLAYS = setOf("com.android.systemui", "com.samsung.android.game.gametools", "com.samsung.android.game.gos")
         private const val PREF = "autoGamer"
 
         fun enabled(context: Context) = context.getSharedPreferences("app", Context.MODE_PRIVATE).getBoolean(PREF, false)
