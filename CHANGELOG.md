@@ -14,6 +14,8 @@ Cada versión, lo nuevo primero. El apartado de cada versión es el texto que se
   a tus chats. En *Ajustes* o en su menú; recuerda dónde la dejaste.
 - **Idioma de la app:** en *Ajustes → Idioma · Language* eliges Automático, Español o English, para la app y para lo
   que dice ella.
+- **Nueva pestaña Comunidad** en la barra de abajo de la app: ahí están ahora el Discord y el TikTok (antes estaban al
+  final de *Ajustes*), y ahí irá lo nuevo de la comunidad.
 - **Comenta lo que ves:** con «Ver mi pantalla en vivo» encendido, cuando cambias de video en TikTok, Reels o
   YouTube opina de lo que ve (como mucho una vez cada 50 segundos).
 - **Ahora sí ve tu pantalla con más IAs:** si tu clave es de un servicio cuyo modelo de chat no ve imágenes (por

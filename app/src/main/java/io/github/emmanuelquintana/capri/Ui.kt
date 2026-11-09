@@ -214,7 +214,7 @@ class Ui(private val a: Activity) {
 
     // ---------- the pill bar's icons ----------
 
-    /** Drawn, not from a font: a spark (what's new), a shield (permissions), sliders (settings). */
+    /** Drawn, not from a font: a spark (what's new), a shield (permissions), sliders (settings), two people (community). */
     class Icon(private val kind: String, var color: Int) : Drawable() {
         private val p = Paint(Paint.ANTI_ALIAS_FLAG)
         private val path = Path()
@@ -260,6 +260,15 @@ class Ui(private val a: Activity) {
                     c.drawArc(cx - s * 0.3f, cy - s * 0.3f, cx + s * 0.3f, cy + s * 0.22f, 20f, 140f, false, p)
                     c.drawLine(cx, cy + s * 0.22f, cx, cy + s * 0.42f, p)
                     c.drawLine(cx - s * 0.16f, cy + s * 0.42f, cx + s * 0.16f, cy + s * 0.42f, p)
+                }
+                "people" -> { // two heads and shoulders: the community
+                    p.style = Paint.Style.STROKE
+                    p.strokeWidth = s * 0.09f
+                    p.strokeCap = Paint.Cap.ROUND
+                    c.drawCircle(cx - s * 0.13f, cy - s * 0.17f, s * 0.15f, p)
+                    c.drawArc(cx - s * 0.42f, cy + s * 0.06f, cx + s * 0.16f, cy + s * 0.64f, 200f, 140f, false, p)
+                    c.drawCircle(cx + s * 0.2f, cy - s * 0.22f, s * 0.12f, p)
+                    c.drawArc(cx + s * 0.02f, cy - s * 0.02f, cx + s * 0.46f, cy + s * 0.42f, 215f, 125f, false, p)
                 }
                 else -> { // sliders
                     p.style = Paint.Style.FILL

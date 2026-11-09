@@ -80,6 +80,8 @@ tap "permisos"
 shot 13-perms-tab 2
 tap "ajustes"
 shot 14-settings-tab 2
+tap "comunidad"
+shot 14a-community-tab 2
 tap "comandos"
 shot 14b-commands-tab 2
 adb shell input swipe 500 1800 500 700 300

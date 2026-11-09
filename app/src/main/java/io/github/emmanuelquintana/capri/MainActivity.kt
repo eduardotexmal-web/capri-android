@@ -61,10 +61,14 @@ class MainActivity : Activity() {
     private val choices = mutableListOf<() -> Unit>()
 
     /** A row of options, the chosen one in her green; a tap picks it (and saves it). */
-    private fun <T> choice(options: List<Pair<Int, T>>, current: () -> T, same: (T, T) -> Boolean, pick: (T) -> Unit): LinearLayout {
+    private fun <T> choice(options: List<Pair<Int, T>>, current: () -> T, same: (T, T) -> Boolean, pick: (T) -> Unit): LinearLayout =
+        choiceText(options.map { (label, value) -> getString(label) to value }, current, same, pick)
+
+    /** The same, with its labels as they are (a language's own name). */
+    private fun <T> choiceText(options: List<Pair<String, T>>, current: () -> T, same: (T, T) -> Boolean, pick: (T) -> Unit): LinearLayout {
         val row = ui.row()
         val buttons = options.map { (label, value) ->
-            ui.text(getString(label).uppercase(), 11f, Hud.PAPER, ui.mono).apply {
+            ui.text(label.uppercase(), 11f, Hud.PAPER, ui.mono).apply {
                 gravity = Gravity.CENTER
                 letterSpacing = 0.04f
                 isClickable = true
@@ -118,13 +122,13 @@ class MainActivity : Activity() {
         content = FrameLayout(this)
         root.addView(content, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
 
-        val pages = listOf(newsPage(), cmdsPage(), permsPage(), settingsPage())
+        val pages = listOf(newsPage(), cmdsPage(), permsPage(), settingsPage(), communityPage())
         val bar = ui.row().apply {
             background = Ui.Pill(Hud.INK, Hud.MANE, ui.dp(1.5f))
             setPadding(ui.dpi(6), ui.dpi(6), ui.dpi(6), ui.dpi(6))
             elevation = ui.dp(6f)
         }
-        val labels = listOf(R.string.tab_news to "spark", R.string.tab_cmds to "mic", R.string.tab_perms to "shield", R.string.tab_settings to "sliders")
+        val labels = listOf(R.string.tab_news to "spark", R.string.tab_cmds to "mic", R.string.tab_perms to "shield", R.string.tab_settings to "sliders", R.string.tab_community to "people")
         for ((i, pair) in labels.withIndex()) {
             val (label, kind) = pair
             val icon = Ui.Icon(kind, Hud.PAPER_2)
@@ -158,8 +162,8 @@ class MainActivity : Activity() {
         if (savedInstanceState == null && tabAsked(intent) == null) root.postDelayed({ if (!isFinishing) inviteOnce() }, 1500)
     }
 
-    // a tab to open on ("tab", 0..3): the emulator's screenshots ask for one
-    private fun tabAsked(intent: Intent?) = intent?.getIntExtra(EXTRA_TAB, -1)?.takeIf { it in 0..3 }
+    // a tab to open on ("tab", 0..4): the emulator's screenshots ask for one
+    private fun tabAsked(intent: Intent?) = intent?.getIntExtra(EXTRA_TAB, -1)?.takeIf { it in 0..4 }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -420,9 +424,10 @@ class MainActivity : Activity() {
         // the app's language, and hers (written in both, so it's found whatever the app is in)
         addView(ui.card(Hud.MANE).apply {
             addView(ui.label(getString(R.string.settings_lang)))
-            addView(choice(listOf(R.string.lang_auto to "auto", R.string.lang_es to "es", R.string.lang_en to "en"),
+            // "Automático", then each language in its own name (a new one: Lang.LANGS + its strings)
+            addView(choiceText(listOf(getString(R.string.lang_auto) to "auto") + Lang.LANGS.map { Lang.name(it) to it },
                 { Lang.get(this@MainActivity) }, { a, b -> a == b }) {
-                if (it == Lang.get(this@MainActivity)) return@choice
+                if (it == Lang.get(this@MainActivity)) return@choiceText
                 Lang.set(this@MainActivity, it)
                 postDelayed({ recreate() }, 350)
             }, ui.block(8))
@@ -534,9 +539,6 @@ class MainActivity : Activity() {
             addView(lookBtn, ui.block(8))
         }, ui.block(16))
 
-        // her community: Emma's TikTok and Discord
-        addView(communityCard(), ui.block(16))
-
         addView(ui.button(getString(R.string.settings_intro_again), Ui.Kind.LINE) {
             getSharedPreferences("app", MODE_PRIVATE).edit().putBoolean("welcomed", false).apply()
             startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
@@ -628,7 +630,15 @@ class MainActivity : Activity() {
         showLog()
     }
 
-    // Emma's TikTok and Discord, as a card (the end of Ajustes, and the one-time invite)
+    // ---------- Community ----------
+
+    // its own tab in the pill bar: Emma's Discord and TikTok now, more of the community later
+    private fun communityPage() = page {
+        addView(ui.label(getString(R.string.tab_community)))
+        addView(communityCard(), ui.block(8))
+    }
+
+    // Emma's TikTok and Discord, as a card (the Comunidad tab, and the one-time invite)
     private fun communityCard(onOpen: () -> Unit = {}) = ui.card(Hud.RED).apply {
         addView(ui.label(getString(R.string.community_title), Hud.RED))
         addView(ui.text(getString(R.string.community_how), 13f, Hud.PAPER_2, ui.body).apply { setLineSpacing(0f, 1.15f) }, ui.block(6))
@@ -640,7 +650,7 @@ class MainActivity : Activity() {
         runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
     }
 
-    // once, ever: "join the community" (and then it lives at the end of Ajustes)
+    // once, ever: "join the community" (and then it lives in the Comunidad tab)
     private fun inviteOnce() {
         val prefs = getSharedPreferences("app", MODE_PRIVATE)
         if (prefs.getBoolean("communityShown", false) || wantsUpdate) return

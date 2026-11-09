@@ -92,6 +92,7 @@
     <string name="ob_need_overlay">Primero dale el permiso de mostrarse sobre otras apps.</string>
     <string name="tab_news">Novedades</string>
     <string name="tab_perms">Permisos</string>
+    <string name="tab_community">Comunidad</string>
     <string name="tab_settings">Ajustes</string>
     <string name="news_head">Lo nuevo</string>
     <string name="perms_intro">Lo que Capri puede hacer en tu teléfono y por qué lo necesita.</string>
