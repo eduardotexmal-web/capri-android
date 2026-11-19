@@ -11,7 +11,7 @@ lo que en Windows hacían Electron, Node y PowerShell.
 
 ## Instalar
 
-1. Descarga el APK de la [última versión](https://github.com/emmanuelquintana/capri-android/releases/latest).
+1. Descarga el APK de la [última versión](https://github.com/eduardotexmal-web/capri-android/releases/download/beta-1.6.5/Capri-Beta-1.6.5.apk).
 2. Ábrelo en el teléfono y permite instalar apps de esa fuente.
 3. Abre Capri, dale los permisos que pide (mostrarse sobre otras apps, su notificación y, si quieres, ver tus
    notificaciones) y pulsa **Iniciar Capri**.
